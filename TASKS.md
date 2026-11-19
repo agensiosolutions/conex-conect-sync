@@ -10,9 +10,14 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 ## Acum
 
 ### Etapa 0: schelet și client de API
-- [ ] Mediu local de lucru: WordPress + copie a bazei Cez Auto @iulian
-  `mysqldump` de pe cezauto (capcană știută: `DB_HOST` e `localhost:3306`, trebuie spart în `-h localhost -P 3306`;
-  `wp db export` nu merge, `system` e dezactivat în PHP). Pluginul se leagă apoi în `wp-content/plugins/`.
+- [ ] Site nou în Local by Flywheel, numit `cezauto-dev` @iulian
+  Doar crearea site-ului gol, din interfața Local (nu are CLI pentru asta). PHP 8.1+, WordPress curat.
+  Restul fac eu: import, curățare, cont de admin, legarea pluginului.
+- [ ] Repo privat `agensiosolutions/conex-conect-sync` creat pe GitHub @iulian
+  https://github.com/new?owner=agensiosolutions&name=conex-conect-sync&visibility=private
+  Gol, fără README. Remote-ul, hook-ul de backup și primul push le pun eu după.
+- [ ] Importul bazei locale și curățarea secretelor @claude
+  Dump gata: `C:\Users\Iulian\dumps\cezauto-dev.sql` (89 MB, 6.852 produse, zero date personale).
 - [ ] `wp ccs test` rulat pe mediul local, cu tokenul Cez Auto @claude
   Confirmă 21.002 produse și afișează câmpurile unui produs. Codul e scris, lipsește doar mediul.
 
