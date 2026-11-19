@@ -25,8 +25,12 @@ define( 'CCS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CCS_URL', plugin_dir_url( __FILE__ ) );
 
 require CCS_DIR . 'includes/configurare.php';
+require CCS_DIR . 'includes/schema.php';
 require CCS_DIR . 'includes/api.php';
 require CCS_DIR . 'includes/jurnal.php';
+require CCS_DIR . 'includes/catalog.php';
+require CCS_DIR . 'includes/potrivire.php';
+require CCS_DIR . 'includes/raport.php';
 require CCS_DIR . 'includes/cli.php';
 
 add_action(

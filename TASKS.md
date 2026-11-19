@@ -9,20 +9,17 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Acum
 
-### Etapa 1: legare și raport
-- [ ] Tabelele proprii (`ccs_products`, `ccs_links`, `ccs_runs`, `ccs_log`), cu `dbDelta` @claude
-  Primul lucru la reluare. Mediul local e gata și testat.
+### Etapa 2: preț și stoc
+- [ ] WooCommerce instalat pe mediul local @claude
+  Până acum n-a trebuit: etapa 1 citește SKU-urile și prețurile direct din `postmeta`. De la aplicare încolo e nevoie
+  de CRUD-ul WooCommerce, ca să se actualizeze și tabelele de căutare, nu doar meta.
+- [ ] Discuția de preț cu ownerul, pe raportul din 19 nov. @iulian
+  3.724 de prețuri s-ar schimba. Întrebările: adaos, cotă, marjă minimă (4 lei pune un clips la 5 lei), ce facem cu
+  cele 65 de produse sub cost și cu cele 394 care ar trece pe epuizat.
 
 ## Urmează
 
-### Etapa 1: legare și raport
-- [ ] Preluarea catalogului în staging, cu hash per produs ca să vedem ce s-a schimbat @claude
-- [ ] Legarea pe `codEAN` = SKU, plus recuperarea prin `codProducator` @claude
-  La Cez Auto: 3.988 legate, 2.443 orfane, 26 recuperabile prin cod producător. Zero ambiguități.
-- [ ] Raport CSV „ce aș face”, fără să atingă WooCommerce @claude
-
 ### Etapa 2: preț și stoc
-- [ ] `ccs_pret()` legat de produsele reale, cu raport înainte de aplicare @claude
 - [ ] Aplicarea stocului, în loturi, prin CRUD WooCommerce @claude
 - [ ] Flag „preț manual” per produs, ca să nu suprascriem ce a pus clientul @claude
 
@@ -53,6 +50,10 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Etapa 1 închisă: tabele proprii, preluare cu amprentă, legare și raport CSV (19.11.2026)
+      Pe date reale: 20.755 produse preluate, 3.980 legate (3.954 pe cod exact, 26 pe cod producător), zero ambiguități.
+      Raportul spune 3.724 prețuri de schimbat, 3.485 stocuri, 394 de epuizat, 345 de reactivat, 65 sub cost.
+      A doua rulare a catalogului: 3,26 secunde, pentru că amprentele nu s-au schimbat.
 - [x] Mediu local gata: site `cezauto-dev` în Local, baza importată (6.852 produse, zero date personale), secretele
       șterse, pluginul legat prin symlink, tokenul în wp-config (19.11.2026)
 - [x] `wp ccs test` rulează pe date reale: 20.755 produse în 2,43 s, 108 branduri (19.11.2026)

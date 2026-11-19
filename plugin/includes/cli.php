@@ -3,6 +3,10 @@
  * Comenzile WP-CLI.
  *
  *   wp ccs test               verifică tokenul și numără produsele din portofoliu
+ *   wp ccs schema             creează sau pune la zi tabelele proprii
+ *   wp ccs catalog            preia catalogul în tabelul propriu și arată diferențele
+ *   wp ccs potriveste         leagă produsele de pe site de catalog
+ *   wp ccs raport             scrie CSV-ul „ce aș face”, fără să atingă nimic
  *   wp ccs noapte <endpoint>  sondează un endpoint din fereastra 19:00-05:00
  *   wp ccs pret <cost>        arată ce preț ar ieși pentru un cost dat, cu setările curente
  *
@@ -123,6 +127,129 @@ class CCS_CLI {
 		}
 
 		WP_CLI::success( sprintf( '%s: %d rânduri pe %d produse distincte.', $endpoint, $randuri, count( $produse ) ) );
+	}
+
+	/**
+	 * Creează sau pune la zi tabelele pluginului.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs schema
+	 *
+	 * @return void
+	 */
+	public function schema() {
+		ccs_schema_instaleaza();
+		global $wpdb;
+		foreach ( array( 'products', 'links', 'runs', 'log' ) as $t ) {
+			$nume = ccs_tabel( $t );
+			$n    = $wpdb->get_var( "SELECT COUNT(*) FROM $nume" ); // phpcs:ignore WordPress.DB.PreparedSQL
+			WP_CLI::line( sprintf( '  %-28s %s rânduri', $nume, null === $n ? 'lipsește' : $n ) );
+		}
+		WP_CLI::success( 'Schema e la zi.' );
+	}
+
+	/**
+	 * Preia catalogul furnizorului în tabelul propriu și arată ce s-a schimbat.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs catalog
+	 *
+	 * @return void
+	 */
+	public function catalog() {
+		$inceput = microtime( true );
+		$r       = ccs_catalog_preia();
+		if ( is_wp_error( $r ) ) {
+			WP_CLI::error( $r->get_error_message() );
+		}
+		WP_CLI::success( sprintf( '%d produse primite în %s secunde.', $r['primite'], round( microtime( true ) - $inceput, 2 ) ) );
+		WP_CLI::line( sprintf( '  noi                %d', $r['noi'] ) );
+		WP_CLI::line( sprintf( '  schimbate          %d  (cost %d, stoc %d)', $r['schimbate'], $r['cost_schimbat'], $r['stoc_schimbat'] ) );
+		WP_CLI::line( sprintf( '  neatinse           %d', $r['neatinse'] ) );
+		WP_CLI::line( sprintf( '  absente din feed   %d', $r['absente'] ) );
+	}
+
+	/**
+	 * Leagă produsele de pe site de catalogul furnizorului.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--proba]
+	 * : Doar calculează, fără să scrie legăturile.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs potriveste --proba
+	 *     wp ccs potriveste
+	 *
+	 * @param array $args       Argumentele.
+	 * @param array $asociative Opțiunile.
+	 * @return void
+	 */
+	public function potriveste( $args, $asociative ) {
+		$proba = isset( $asociative['proba'] );
+		$r     = ccs_potriveste( ! $proba );
+
+		WP_CLI::success(
+			sprintf(
+				'%d din %d produse de pe site, legate de catalog%s.',
+				$r['legate'],
+				$r['produse_site'],
+				$proba ? ' (probă, nu am scris nimic)' : ''
+			)
+		);
+		foreach ( $r['pe_metoda'] as $metoda => $n ) {
+			WP_CLI::line( sprintf( '  %-18s %d', $metoda, $n ) );
+		}
+		WP_CLI::line( sprintf( '  %-18s %d', 'ambigue', $r['ambigue'] ) );
+		WP_CLI::line( sprintf( '  %-18s %d  (nu mai sunt în catalog)', 'orfane', $r['orfane'] ) );
+		WP_CLI::line( sprintf( '  %-18s %d  (în catalog, nu pe site)', 'nelegate la Conex', $r['nelegate_conex'] ) );
+	}
+
+	/**
+	 * Scrie raportul „ce aș face”, fără să atingă nimic.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--dir=<dir>]
+	 * : Unde se scriu fișierele. Implicit, folderul curent.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs raport --dir=C:/Users/Iulian/dumps
+	 *
+	 * @param array $args       Argumentele.
+	 * @param array $asociative Opțiunile.
+	 * @return void
+	 */
+	public function raport( $args, $asociative ) {
+		$dir  = rtrim( $asociative['dir'] ?? getcwd(), "/\\" );
+		$data = gmdate( 'Y-m-d' );
+
+		$fisier = $dir . '/ccs-raport-' . $data . '.csv';
+		$r      = ccs_raport_scrie( $fisier );
+		if ( is_wp_error( $r ) ) {
+			WP_CLI::error( $r->get_error_message() );
+		}
+
+		WP_CLI::success( sprintf( 'Raport scris: %s', $fisier ) );
+		WP_CLI::line( sprintf( '  produse legate      %d', $r['produse'] ) );
+		WP_CLI::line( sprintf( '  preț de schimbat    %d', $r['pret_schimbat'] ) );
+		WP_CLI::line( sprintf( '  stoc de schimbat    %d', $r['stoc_schimbat'] ) );
+		WP_CLI::line( sprintf( '  de trecut epuizat   %d', $r['de_epuizat'] ) );
+		WP_CLI::line( sprintf( '  de reactivat        %d', $r['de_reactivat'] ) );
+		WP_CLI::line( sprintf( '  vândute sub cost    %d', $r['sub_cost'] ) );
+		WP_CLI::line( sprintf( '  fără nicio schimbare %d', $r['neatinse'] ) );
+
+		$potrivire = ccs_potriveste( false );
+		if ( $potrivire['lista_orfane'] ) {
+			$fo = $dir . '/ccs-orfane-' . $data . '.csv';
+			$n  = ccs_raport_orfane( $fo, $potrivire['lista_orfane'] );
+			WP_CLI::line( '' );
+			WP_CLI::success( sprintf( '%d produse care nu mai sunt în catalog: %s', $n, $fo ) );
+		}
 	}
 
 	/**

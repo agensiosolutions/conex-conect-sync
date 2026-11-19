@@ -31,6 +31,31 @@ Regula de preț, probată pe cazuri-limită: un cost de 0,22 lei dă 5 lei preț
 lei dau 68 de lei, adică exact 35% adaos. De discutat cu ownerul dacă 4 lei marjă minimă e valoarea potrivită: pune
 un clips de carosierie la 5 lei, ceea ce poate fi prea scump pentru piață. E un parametru în setări, nu o constantă.
 
+**Etapa 1, gata.** Tabele proprii, preluarea catalogului cu amprentă pe produs, legarea și raportul CSV. Nimic nu
+atinge WooCommerce; de fapt WooCommerce nici nu e instalat pe mediul local, pentru că SKU-urile, prețurile și
+stocurile se citesc direct din `postmeta`. E de zeci de ori mai rapid pe 6.800 de produse și scoate o dependență
+din calea unui raport care trebuie să poată rula oriunde.
+
+Cifrele de pe date reale: 20.755 de produse preluate, **3.980 legate** (3.954 pe cod exact, 26 pe cod de producător),
+**zero ambiguități**, 2.743 orfane și 16.795 produse Conex care nu sunt pe site. Se potrivesc cu analiza din
+octombrie, ajustate cu cele 247 de produse pe care furnizorul le-a retras între timp.
+
+Raportul: 3.724 de prețuri s-ar schimba, 3.485 de stocuri, 394 de produse ar trece pe epuizat, 345 s-ar reactiva,
+65 se vând sub cost. Un caz nou, care nu apăruse în octombrie: SKU 25540, blister cu 6 siguranțe fuzibile, 4 lei pe
+site la un cost de 114,50 lei. Nu e derapaj de preț, e aproape sigur o greșeală de tastare. Raportul l-a scos la
+suprafață fără să-l caute cineva.
+
+`Lecție:` Într-o sincronizare care rulează des, ține o copie locală a catalogului furnizorului cu o amprentă pe
+produs și compară amprentele, nu valorile. Prima preluare a durat 109 secunde pentru 20.755 de produse, a doua 3,26,
+pentru că nimic nu se schimbase. Fără amprentă, fiecare rulare la 30 de minute ar fi rescris tot catalogul degeaba.
+Amprenta se calculează doar peste câmpurile care, dacă se schimbă, cer o acțiune: dacă furnizorul modifică ceva ce
+nu folosești, produsul nu trebuie atins.
+
+`Lecție:` Un raport „ce aș face”, scos înainte de prima aplicare, găsește greșeli pe care nu le căuta nimeni. La
+Cez Auto a scos un produs listat la 4 lei cu un cost de 114 lei, adică 110 lei pierdere la fiecare bucată vândută.
+Simptomul după care merită rulat: orice magazin care n-a mai comparat prețurile de vânzare cu costurile de achiziție
+de mai mult de câteva luni.
+
 `Lecție:` Local by Flywheel nu pune WP-CLI în PATH și n-are CLI pentru site-uri, dar are tot ce trebuie în instalare:
 PHP-ul propriu în `lightning-services`, `wp-cli.phar` în `resources/extraResources`, clientul MySQL tot acolo. Trei
 capcane, în ordinea în care apar: PHP-ul de sistem n-are `mysqli`, deci trebuie folosit cel din Local cu `php.ini`-ul
