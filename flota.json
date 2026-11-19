@@ -1,0 +1,14 @@
+{
+  "$comment": "Site-urile pe care rulează pluginul. Fără secrete: doar aliasul SSH din ~/.ssh/config, calea WordPress și canalul. Tokenul Conex stă în wp-config (CCS_API_TOKEN) sau în setările din admin, niciodată aici.",
+  "site_uri": [
+    {
+      "id": "cezauto",
+      "nume": "cezauto.ro",
+      "url": "https://cezauto.ro/",
+      "ssh": "cezauto",
+      "cale": "/home/cezauto/public_html",
+      "wp": "wp",
+      "canal": "test"
+    }
+  ]
+}
