@@ -9,22 +9,13 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Acum
 
-### Etapa 0: schelet și client de API
-- [ ] Site nou în Local by Flywheel, numit `cezauto-dev` @iulian
-  Doar crearea site-ului gol, din interfața Local (nu are CLI pentru asta). PHP 8.1+, WordPress curat.
-  Restul fac eu: import, curățare, cont de admin, legarea pluginului.
-- [ ] Repo privat `agensiosolutions/conex-conect-sync` creat pe GitHub @iulian
-  https://github.com/new?owner=agensiosolutions&name=conex-conect-sync&visibility=private
-  Gol, fără README. Remote-ul, hook-ul de backup și primul push le pun eu după.
-- [ ] Importul bazei locale și curățarea secretelor @claude
-  Dump gata: `C:\Users\Iulian\dumps\cezauto-dev.sql` (89 MB, 6.852 produse, zero date personale).
-- [ ] `wp ccs test` rulat pe mediul local, cu tokenul Cez Auto @claude
-  Confirmă 21.002 produse și afișează câmpurile unui produs. Codul e scris, lipsește doar mediul.
+### Etapa 1: legare și raport
+- [ ] Tabelele proprii (`ccs_products`, `ccs_links`, `ccs_runs`, `ccs_log`), cu `dbDelta` @claude
+  Primul lucru la reluare. Mediul local e gata și testat.
 
 ## Urmează
 
 ### Etapa 1: legare și raport
-- [ ] Tabelele proprii (`ccs_products`, `ccs_links`, `ccs_runs`, `ccs_log`), cu `dbDelta` @claude
 - [ ] Preluarea catalogului în staging, cu hash per produs ca să vedem ce s-a schimbat @claude
 - [ ] Legarea pe `codEAN` = SKU, plus recuperarea prin `codProducator` @claude
   La Cez Auto: 3.988 legate, 2.443 orfane, 26 recuperabile prin cod producător. Zero ambiguități.
@@ -61,6 +52,11 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
   `ProductMatcher` are o singură strategie implementată, dar interfața rămâne deschisă.
 
 ## Gata
+
+- [x] Mediu local gata: site `cezauto-dev` în Local, baza importată (6.852 produse, zero date personale), secretele
+      șterse, pluginul legat prin symlink, tokenul în wp-config (19.11.2026)
+- [x] `wp ccs test` rulează pe date reale: 20.755 produse în 2,43 s, 108 branduri (19.11.2026)
+- [x] Repo privat pe GitHub, primul push făcut (19.11.2026)
 
 - [x] Repo creat, cu structura Agensio și convențiile de plugin din `agensio-consent` (19.11.2026)
 - [x] Clientul de API în PHP, cu tot ce am măsurat pe API-ul real: paginare fără `total`, 404 = sfârșit, retry cu
