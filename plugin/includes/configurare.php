@@ -34,6 +34,21 @@ function ccs_setari_implicite() {
 		'stoc_absent_runde'  => 2,       // De câte ori la rând lipsește un produs din feed înainte să treacă pe stoc 0.
 		'poze_per_produs'    => 4,
 		'mod_raport'         => true,    // Pornit: nu scrie nimic în WooCommerce, doar raportează.
+
+		// Două frâne pentru scriere, fiecare pentru alt fel de accident.
+		// `scadere_pret_maxima`: cât poate scădea prețul unui produs într-o singură rulare, ca fracție din prețul de
+		// acum. Sub pragul ăsta nu scriem, raportăm. Un preț care se face jumătate peste noapte e, în practică, un
+		// cost greșit la furnizor, nu o reducere.
+		// `prag_schimbari`: ce fracție din produsele legate poate atinge o rulare fără confirmare explicită. Prima
+		// aplicare trece peste el o singură dată, cu `--forteaza`, după ce clientul a văzut raportul. Pe urmă, o
+		// rulare care vrea să atingă un sfert din magazin e un semnal, nu o treabă de rutină.
+		'scadere_pret_maxima' => 0.5,
+		// Cât trebuie să semene numele de pe site cu numele de la furnizor ca potrivirea pe cod să fie de încredere.
+		// Măsurat pe cele 3.980 de legături de la Cez Auto: tot ce trece de 67% e potrivire bună (nume trunchiate,
+		// „VW” în loc de „VOLKSWAGEN”, alt interval de ani), tot ce stă sub 33% e alt produs. Între ele nu e nimic.
+		'prag_nume'           => 0.5,
+		'prag_schimbari'      => 0.25,
+		'lot_aplicare'        => 200,    // Câte produse se scriu între două pauze de golire a cache-ului.
 	);
 }
 

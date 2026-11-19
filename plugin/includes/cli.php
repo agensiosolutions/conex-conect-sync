@@ -7,6 +7,9 @@
  *   wp ccs catalog            preia catalogul în tabelul propriu și arată diferențele
  *   wp ccs potriveste         leagă produsele de pe site de catalog
  *   wp ccs raport             scrie CSV-ul „ce aș face”, fără să atingă nimic
+ *   wp ccs aplica             scrie prețul și stocul în WooCommerce
+ *   wp ccs revino <rulare>    dă înapoi o rulare de aplicare
+ *   wp ccs setare <cheie>     arată sau schimbă o setare
  *   wp ccs noapte <endpoint>  sondează un endpoint din fereastra 19:00-05:00
  *   wp ccs pret <cost>        arată ce preț ar ieși pentru un cost dat, cu setările curente
  *
@@ -141,7 +144,7 @@ class CCS_CLI {
 	public function schema() {
 		ccs_schema_instaleaza();
 		global $wpdb;
-		foreach ( array( 'products', 'links', 'runs', 'log' ) as $t ) {
+		foreach ( array( 'products', 'links', 'runs', 'log', 'modificari' ) as $t ) {
 			$nume = ccs_tabel( $t );
 			$n    = $wpdb->get_var( "SELECT COUNT(*) FROM $nume" ); // phpcs:ignore WordPress.DB.PreparedSQL
 			WP_CLI::line( sprintf( '  %-28s %s rânduri', $nume, null === $n ? 'lipsește' : $n ) );
@@ -203,6 +206,7 @@ class CCS_CLI {
 		foreach ( $r['pe_metoda'] as $metoda => $n ) {
 			WP_CLI::line( sprintf( '  %-18s %d', $metoda, $n ) );
 		}
+		WP_CLI::line( sprintf( '  %-18s %d  (codul potrivește, numele nu: nu se aplică automat)', 'de verificat', $r['de_verificat'] ) );
 		WP_CLI::line( sprintf( '  %-18s %d', 'ambigue', $r['ambigue'] ) );
 		WP_CLI::line( sprintf( '  %-18s %d  (nu mai sunt în catalog)', 'orfane', $r['orfane'] ) );
 		WP_CLI::line( sprintf( '  %-18s %d  (în catalog, nu pe site)', 'nelegate la Conex', $r['nelegate_conex'] ) );
@@ -228,27 +232,240 @@ class CCS_CLI {
 		$dir  = rtrim( $asociative['dir'] ?? getcwd(), "/\\" );
 		$data = gmdate( 'Y-m-d' );
 
+		$plan = ccs_plan();
+		if ( is_wp_error( $plan ) ) {
+			WP_CLI::error( $plan->get_error_message() );
+		}
+
 		$fisier = $dir . '/ccs-raport-' . $data . '.csv';
-		$r      = ccs_raport_scrie( $fisier );
+		$r      = ccs_raport_scrie( $fisier, $plan );
 		if ( is_wp_error( $r ) ) {
 			WP_CLI::error( $r->get_error_message() );
 		}
 
 		WP_CLI::success( sprintf( 'Raport scris: %s', $fisier ) );
-		WP_CLI::line( sprintf( '  produse legate      %d', $r['produse'] ) );
-		WP_CLI::line( sprintf( '  preț de schimbat    %d', $r['pret_schimbat'] ) );
-		WP_CLI::line( sprintf( '  stoc de schimbat    %d', $r['stoc_schimbat'] ) );
-		WP_CLI::line( sprintf( '  de trecut epuizat   %d', $r['de_epuizat'] ) );
-		WP_CLI::line( sprintf( '  de reactivat        %d', $r['de_reactivat'] ) );
-		WP_CLI::line( sprintf( '  vândute sub cost    %d', $r['sub_cost'] ) );
-		WP_CLI::line( sprintf( '  fără nicio schimbare %d', $r['neatinse'] ) );
+		self::arata_rezumat_plan( $r );
 
 		$potrivire = ccs_potriveste( false );
+		WP_CLI::line( '' );
+		if ( $potrivire['lista_verificat'] ) {
+			$fv = $dir . '/ccs-de-verificat-' . $data . '.csv';
+			$n  = ccs_raport_de_verificat( $fv, $potrivire['lista_verificat'] );
+			WP_CLI::success( sprintf( '%d potriviri pe cod cu nume diferit, lăsate pe loc: %s', $n, $fv ) );
+		}
 		if ( $potrivire['lista_orfane'] ) {
 			$fo = $dir . '/ccs-orfane-' . $data . '.csv';
 			$n  = ccs_raport_orfane( $fo, $potrivire['lista_orfane'] );
-			WP_CLI::line( '' );
 			WP_CLI::success( sprintf( '%d produse care nu mai sunt în catalog: %s', $n, $fo ) );
+		}
+	}
+
+	/**
+	 * Scrie prețul și stocul în WooCommerce.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--tip=<tip>]
+	 * : Ce se aplică: tot, pret sau stoc. Implicit tot.
+	 * ---
+	 * default: tot
+	 * options:
+	 *   - tot
+	 *   - pret
+	 *   - stoc
+	 * ---
+	 *
+	 * [--limita=<n>]
+	 * : Oprește-te după n produse. Bun pentru o probă pe cantitate mică.
+	 *
+	 * [--proba]
+	 * : Numără ce s-ar face, fără să scrie. Merge și cu modul raport pornit.
+	 *
+	 * [--forteaza]
+	 * : Trece peste pragul de schimbări. Pentru prima aplicare, după ce clientul a văzut raportul.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs aplica --proba
+	 *     wp ccs aplica --tip=stoc --limita=50
+	 *     wp ccs aplica --forteaza
+	 *
+	 * @param array $args       Argumentele.
+	 * @param array $asociative Opțiunile.
+	 * @return void
+	 */
+	public function aplica( $args, $asociative ) {
+		$inceput = microtime( true );
+		$progres = null;
+		$aratat  = 0;
+
+		$r = ccs_aplica(
+			array(
+				'tip'      => $asociative['tip'] ?? 'tot',
+				'limita'   => (int) ( $asociative['limita'] ?? 0 ),
+				'proba'    => isset( $asociative['proba'] ),
+				'forteaza' => isset( $asociative['forteaza'] ),
+				'raport'   => function ( $facut, $total ) use ( &$progres, &$aratat ) {
+					if ( ! $progres ) {
+						$progres = WP_CLI\Utils\make_progress_bar( 'Scriu în WooCommerce', $total );
+					}
+					$progres->tick( $facut - $aratat );
+					$aratat = $facut;
+				},
+			)
+		);
+
+		if ( is_wp_error( $r ) ) {
+			WP_CLI::error( $r->get_error_message() );
+		}
+		if ( $progres ) {
+			$progres->finish();
+		}
+
+		$durata = round( microtime( true ) - $inceput, 2 );
+
+		if ( $r['proba'] ) {
+			WP_CLI::success( sprintf( '%d produse de atins (probă, nu am scris nimic).', $r['de_atins'] ) );
+		} else {
+			WP_CLI::success( sprintf( '%d din %d produse scrise în %s secunde (rularea #%d).', $r['atinse'], $r['de_atins'], $durata, $r['rulare'] ) );
+		}
+		WP_CLI::line( sprintf( '  prețuri             %d', $r['pret'] ) );
+		WP_CLI::line( sprintf( '  stocuri             %d', $r['stoc'] ) );
+		WP_CLI::line( sprintf( '  stări de stoc       %d', $r['stare_stoc'] ) );
+		if ( $r['esuate'] ) {
+			WP_CLI::line( sprintf( '  eșuate              %d', $r['esuate'] ) );
+		}
+		if ( $r['blocate'] ) {
+			WP_CLI::line( '' );
+			WP_CLI::line( sprintf( '%d produse lăsate deoparte, pe motive:', $r['blocate'] ) );
+			foreach ( $r['pe_blocaj'] as $cod => $n ) {
+				WP_CLI::line( sprintf( '  %-20s %d', $cod, $n ) );
+			}
+		}
+		if ( ! $r['proba'] && $r['atinse'] ) {
+			WP_CLI::line( '' );
+			WP_CLI::line( sprintf( 'Dacă e ceva greșit: wp ccs revino %d', $r['rulare'] ) );
+		}
+	}
+
+	/**
+	 * Dă înapoi o rulare de aplicare.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <rulare>
+	 * : Id-ul rulării, cel afișat de `wp ccs aplica`.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs revino 7
+	 *
+	 * @param array $args Argumentele.
+	 * @return void
+	 */
+	public function revino( $args ) {
+		$r = ccs_revino( (int) ( $args[0] ?? 0 ) );
+		if ( is_wp_error( $r ) ) {
+			WP_CLI::error( $r->get_error_message() );
+		}
+		WP_CLI::success( sprintf( '%d produse readuse la valorile dinainte (%d valori).', $r['produse'], $r['valori'] ) );
+		if ( $r['esuate'] ) {
+			WP_CLI::line( sprintf( '  produse care nu mai există  %d', $r['esuate'] ) );
+		}
+	}
+
+	/**
+	 * Arată sau schimbă o setare.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [<cheie>]
+	 * : Setarea. Fără ea, se afișează toate.
+	 *
+	 * [<valoare>]
+	 * : Valoarea nouă. Fără ea, se afișează doar.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs setare
+	 *     wp ccs setare adaos
+	 *     wp ccs setare mod_raport 0
+	 *
+	 * @param array $args Argumentele.
+	 * @return void
+	 */
+	public function setare( $args ) {
+		$implicite = ccs_setari_implicite();
+		$cheie     = $args[0] ?? '';
+
+		if ( '' === $cheie ) {
+			$setari = ccs_setari();
+			foreach ( $implicite as $k => $v ) {
+				if ( 'token' === $k ) {
+					continue; // Tokenul nu se afișează niciodată.
+				}
+				$acum = $setari[ $k ];
+				WP_CLI::line(
+					sprintf(
+						'  %-22s %-10s %s',
+						$k,
+						is_bool( $acum ) ? ( $acum ? 'da' : 'nu' ) : $acum,
+						$acum === $v ? '' : sprintf( '(implicit: %s)', is_bool( $v ) ? ( $v ? 'da' : 'nu' ) : $v )
+					)
+				);
+			}
+			return;
+		}
+
+		if ( 'token' === $cheie ) {
+			WP_CLI::error( 'Tokenul se pune în wp-config, prin constanta CCS_API_TOKEN, nu de aici.' );
+		}
+		if ( ! array_key_exists( $cheie, $implicite ) ) {
+			WP_CLI::error( sprintf( 'Nu există setarea „%s”.', $cheie ) );
+		}
+
+		$setari = (array) get_option( CCS_OPTIUNE_SETARI, array() );
+
+		if ( ! isset( $args[1] ) ) {
+			$efectiv = ccs_setari();
+			WP_CLI::line( is_bool( $efectiv[ $cheie ] ) ? ( $efectiv[ $cheie ] ? 'da' : 'nu' ) : $efectiv[ $cheie ] );
+			return;
+		}
+
+		$valoare = $args[1];
+		if ( is_bool( $implicite[ $cheie ] ) ) {
+			$valoare = in_array( strtolower( $valoare ), array( '1', 'da', 'yes', 'true', 'on' ), true );
+		} elseif ( is_int( $implicite[ $cheie ] ) ) {
+			$valoare = (int) $valoare;
+		} elseif ( is_float( $implicite[ $cheie ] ) ) {
+			$valoare = (float) str_replace( ',', '.', $valoare );
+		}
+
+		$setari[ $cheie ] = $valoare;
+		update_option( CCS_OPTIUNE_SETARI, $setari );
+		WP_CLI::success( sprintf( '%s = %s', $cheie, is_bool( $valoare ) ? ( $valoare ? 'da' : 'nu' ) : $valoare ) );
+	}
+
+	/**
+	 * Afișează rezumatul unui plan.
+	 *
+	 * @param array $r Rezumatul.
+	 * @return void
+	 */
+	private static function arata_rezumat_plan( $r ) {
+		WP_CLI::line( sprintf( '  produse legate       %d', $r['produse'] ) );
+		WP_CLI::line( sprintf( '  cu ceva de schimbat  %d', $r['de_schimbat'] ) );
+		WP_CLI::line( sprintf( '  preț de schimbat     %d', $r['pret'] ) );
+		WP_CLI::line( sprintf( '  stoc de schimbat     %d', $r['stoc'] ) );
+		WP_CLI::line( sprintf( '  de trecut epuizat    %d', $r['de_epuizat'] ) );
+		WP_CLI::line( sprintf( '  de reactivat         %d', $r['de_reactivat'] ) );
+		WP_CLI::line( sprintf( '  vândute sub cost     %d', $r['sub_cost'] ) );
+		WP_CLI::line( sprintf( '  fără nicio schimbare %d', $r['neatinse'] ) );
+		if ( $r['blocate'] ) {
+			WP_CLI::line( sprintf( '  lăsate deoparte      %d', $r['blocate'] ) );
+			foreach ( $r['pe_blocaj'] as $cod => $n ) {
+				WP_CLI::line( sprintf( '    %-20s %d', $cod, $n ) );
+			}
 		}
 	}
 

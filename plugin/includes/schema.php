@@ -12,12 +12,12 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const CCS_SCHEMA_VERSIUNE = 1;
+const CCS_SCHEMA_VERSIUNE = 3;
 
 /**
  * Numele unui tabel al pluginului, cu prefixul bazei.
  *
- * @param string $nume Numele scurt: 'products', 'links', 'runs', 'log'.
+ * @param string $nume Numele scurt: 'products', 'links', 'runs', 'log', 'modificari'.
  * @return string Numele complet.
  */
 function ccs_tabel( $nume ) {
@@ -39,6 +39,7 @@ function ccs_schema_instaleaza() {
 	$links   = ccs_tabel( 'links' );
 	$rulari  = ccs_tabel( 'runs' );
 	$jurnal  = ccs_tabel( 'log' );
+	$modif   = ccs_tabel( 'modificari' );
 
 	// Copia catalogului furnizorului. `cod` e codEAN, adică ce se potrivește cu SKU-ul de pe site.
 	// `amprenta` e un md5 peste câmpurile care ne interesează: dacă nu s-a schimbat, produsul se sare.
@@ -74,6 +75,7 @@ function ccs_schema_instaleaza() {
 			product_id BIGINT UNSIGNED NOT NULL,
 			metoda VARCHAR(32) NOT NULL DEFAULT '',
 			incredere CHAR(1) NOT NULL DEFAULT 'A',
+			nume_scor TINYINT UNSIGNED NOT NULL DEFAULT 100,
 			confirmat_la DATETIME NULL,
 			PRIMARY KEY  (wc_product_id),
 			KEY product_id (product_id),
@@ -103,6 +105,24 @@ function ccs_schema_instaleaza() {
 			creat_la DATETIME NULL,
 			PRIMARY KEY  (id),
 			KEY rulare_id (rulare_id)
+		) $colatie;"
+	);
+
+	// Fiecare schimbare scrisă în WooCommerce, cu valoarea veche. De aici se poate da înapoi o rulare întreagă
+	// (`wp ccs revino`), ceea ce schimbă complet discuția cu clientul: prima aplicare nu mai e un pas fără retur.
+	dbDelta(
+		"CREATE TABLE $modif (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			rulare_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			wc_product_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			camp VARCHAR(24) NOT NULL DEFAULT '',
+			vechi VARCHAR(64) NOT NULL DEFAULT '',
+			nou VARCHAR(64) NOT NULL DEFAULT '',
+			aplicat_la DATETIME NULL,
+			revenit_la DATETIME NULL,
+			PRIMARY KEY  (id),
+			KEY rulare_id (rulare_id),
+			KEY wc_product_id (wc_product_id)
 		) $colatie;"
 	);
 

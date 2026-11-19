@@ -9,19 +9,33 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Acum
 
-### Etapa 2: preț și stoc
-- [ ] WooCommerce instalat pe mediul local @claude
-  Până acum n-a trebuit: etapa 1 citește SKU-urile și prețurile direct din `postmeta`. De la aplicare încolo e nevoie
-  de CRUD-ul WooCommerce, ca să se actualizeze și tabelele de căutare, nu doar meta.
 - [ ] Discuția de preț cu ownerul, pe raportul din 19 nov. @iulian
-  3.724 de prețuri s-ar schimba. Întrebările: adaos, cotă, marjă minimă (4 lei pune un clips la 5 lei), ce facem cu
-  cele 65 de produse sub cost și cu cele 394 care ar trece pe epuizat.
+  3.696 de prețuri s-ar schimba: 3.178 în sus (în medie +18,35 lei), 521 în jos (în medie -13,24 lei). Marja brută
+  pe bucată crește cu 44,5%. Întrebările, în ordinea în care contează:
+  - [ ] Adaosul de 35% și cota de 21% rămân? @client
+  - [ ] Marja minimă de 4 lei: pune un clips de caroserie la 5-6 lei. Prea scump? @client
+  - [ ] Cele 521 de scăderi de preț vin din produsele cu adaos acum foarte mare (88 între 60 și 100%, 26 peste
+        100%). Le lăsăm să coboare sau marcăm o parte „preț manual”? @client
+  - [ ] Cele 60 de produse vândute sub cost: cel mai rău cu 394 lei pierdere la bucată. Se corectează la prima
+        aplicare sau se verifică una cu una? @client
+  - [ ] Cele 392 de produse care ar trece pe epuizat la prima aplicare @client
+- [ ] Cele 26 de potriviri de verificat, trimise ownerului @iulian
+  `ccs-de-verificat-2026-11-19.csv`. Codul se potrivește, produsul e altul (SKU 25918: aspirator Kärcher pe site,
+  ulei Liqui Moly la Conex). Toate 26 vin din potrivirea pe cod de producător. Ownerul decide ce e corect: ori SKU-ul
+  de pe site e greșit, ori produsul e de la alt furnizor și nu trebuie legat niciodată.
+- [ ] Cele 3 scăderi mari de preț rămase, de decis cu ownerul @iulian
+  Potriviri corecte, 100% pe nume, dar prețul ar coborî la sub jumătate: clipsuri și o placă de TIR, cu adaos de
+  787% acum. Frâna `scadere_pret_maxima` le ține pe loc până zice cineva ce e corect.
 
 ## Urmează
 
 ### Etapa 2: preț și stoc
-- [ ] Aplicarea stocului, în loturi, prin CRUD WooCommerce @claude
-- [ ] Flag „preț manual” per produs, ca să nu suprascriem ce a pus clientul @claude
+- [ ] Prima aplicare pe live, după deciziile ownerului @claude
+  Comanda e `wp ccs aplica --forteaza`, după `wp ccs setare mod_raport 0`. Durează în jur de 6 minute pentru 3.900
+  de produse. Backup de bază înainte, iar dacă e ceva greșit, `wp ccs revino <rulare>`.
+- [ ] Marcarea „preț manual” din admin, per produs @claude
+  Mecanismul există deja în plan (meta `_ccs_pret_manual` blochează prețul, stocul se aplică în continuare), dar nu
+  are încă niciun loc din care clientul să-l bifeze.
 
 ### Etapa 3: curățare și joburi de noapte
 - [ ] Produsele absente N runde trec pe stoc epuizat, nu se șterg @claude
@@ -50,6 +64,12 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Etapa 2, partea de cod: planul comun, aplicarea prin CRUD, revenirea și verificarea de nume (19.11.2026)
+      WooCommerce 11.2.1 local, aceeași versiune ca pe live. Taxele sunt oprite în WooCommerce, deci prețul introdus
+      e prețul final: formula cu TVA inclus e corectă. Probat pe 40 de produse, cu revenire completă pe 78 de valori.
+- [x] Verificarea de nume la potrivire: 26 de legături false găsite și scoase din aplicare (19.11.2026)
+      Toate veneau din potrivirea pe cod de producător, 26 din 26 greșite. Pe `codEAN`, toate cele 3.954 sunt bune.
+      Raportat greșit în dimineața aceea ca „greșeală de preț la SKU 25540”; era o potrivire greșită.
 - [x] Etapa 1 închisă: tabele proprii, preluare cu amprentă, legare și raport CSV (19.11.2026)
       Pe date reale: 20.755 produse preluate, 3.980 legate (3.954 pe cod exact, 26 pe cod producător), zero ambiguități.
       Raportul spune 3.724 prețuri de schimbat, 3.485 stocuri, 394 de epuizat, 345 de reactivat, 65 sub cost.

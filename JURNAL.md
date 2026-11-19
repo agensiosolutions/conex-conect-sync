@@ -37,13 +37,80 @@ stocurile se citesc direct din `postmeta`. E de zeci de ori mai rapid pe 6.800 d
 din calea unui raport care trebuie să poată rula oriunde.
 
 Cifrele de pe date reale: 20.755 de produse preluate, **3.980 legate** (3.954 pe cod exact, 26 pe cod de producător),
-**zero ambiguități**, 2.743 orfane și 16.795 produse Conex care nu sunt pe site. Se potrivesc cu analiza din
+**zero ambiguități** pe cod, 2.743 orfane și 16.795 produse Conex care nu sunt pe site. Se potrivesc cu analiza din
 octombrie, ajustate cu cele 247 de produse pe care furnizorul le-a retras între timp.
 
 Raportul: 3.724 de prețuri s-ar schimba, 3.485 de stocuri, 394 de produse ar trece pe epuizat, 345 s-ar reactiva,
-65 se vând sub cost. Un caz nou, care nu apăruse în octombrie: SKU 25540, blister cu 6 siguranțe fuzibile, 4 lei pe
-site la un cost de 114,50 lei. Nu e derapaj de preț, e aproape sigur o greșeală de tastare. Raportul l-a scos la
-suprafață fără să-l caute cineva.
+65 se vând sub cost. Printre ele, SKU 25540, dat ca blister cu 6 siguranțe fuzibile la 4 lei cu un cost de 114,50
+lei. **L-am raportat ca greșeală de preț, și n-a fost.** A doua zi a ieșit altceva: potrivirea era greșită. Vezi mai
+jos.
+
+**Etapa 2: scrierea în WooCommerce.** WooCommerce instalat local, exact versiunea de pe live (11.2.1), ca să nu
+testez pe alt cod decât cel din producție. Două lucruri verificate înainte de prima linie de cod, amândouă schimbă
+calculul: taxele sunt complet oprite în WooCommerce (`calc_taxes = no`, zero cote definite), deci prețul introdus e
+prețul final și formula care include TVA-ul în preț e corectă; și toate cele 3.980 de produse legate au gestiunea
+stocului pornită, deci cantitatea scrisă contează (cele 419 fără gestiune sunt produsele introduse manual de client).
+
+Verificat tot în sursa WooCommerce, nu din memorie: `set_regular_price()` plus `save()` actualizează singur și
+`_price`, în `WC_Product_Data_Store_CPT::update()`. Nu trebuie pus cu mâna, dar comentariul a rămas în cod, pentru
+că e genul de lucru care se schimbă între versiuni.
+
+**Refactorizare care s-a plătit imediat.** Raportul și aplicarea cheamă acum aceeași funcție, `ccs_plan()`. Înainte
+raportul își calcula singur ce ar face. Dacă aplicarea ar fi avut al doilea calcul, raportul pe care clientul aprobă
+ar fi putut să nu fie ce se scrie pe site. Acum nu se poate întâmpla, iar fiecare rând de plan cară și lista de
+blocaje, adică motivele pentru care refuzăm să atingem un produs.
+
+**Ce a ieșit la lumină.** Prima frână pusă, cea de scădere de preț, a oprit 19 produse. M-am uitat la ele și n-au
+fost deloc ce credeam: codul se potrivea, dar produsul era altul. SKU `25918` e aspirator Kärcher pe site și ulei
+Liqui Moly la Conex. SKU `00728` e cameră auto Full HD pe site și set de clipsuri de plastic la Conex. Iar `25540`,
+pe care îl raportasem ca greșeală de preț, e siguranțe fuzibile pe site și extractor de articulație homocinetică la
+Conex. Nu era nicio greșeală de preț: era o legătură greșită.
+
+Măsurat pe toate cele 3.980 de legături, cu suprapunerea cuvintelor din nume: **26 erau false**. Separarea e curată,
+fără zonă gri: peste 67% suprapunere sunt potriviri bune (nume trunchiate, „VW” în loc de „VOLKSWAGEN”, alt interval
+de ani), sub 33% sunt alt produs, și între 33% și 67% nu cade absolut nimic. Pragul stă la 50%.
+
+Partea care contează: **toate cele 26 de potriviri false veneau din strategia pe cod de producător, și niciuna bună
+nu venea de acolo.** 26 din 26, greșite. Potrivirea pe `codEAN` e corectă pe toate cele 3.954. Strategia pe cod de
+producător rămâne în cod, pentru că la Piese Total va fi necesară, dar la Cez Auto nu produce decât zgomot, iar acum
+verificarea de nume o pune singură în carantină. Legăturile marcate `C` nu intră în plan și ies în raport separat.
+
+Cifrele corectate, pe 3.954 de legături de încredere: 3.696 de prețuri de schimbat, 3.460 de stocuri, 392 de trecut
+epuizat, 338 de reactivat, **60 vândute sub cost**.
+
+**Pentru discuția de preț cu ownerul.** 3.178 de prețuri ar urca, în medie cu 18,35 lei; 521 ar coborî, în medie cu
+13,24 lei. Marja brută totală pe bucată crește de la 115.558 la 166.970 de lei, adică **+44,5%**. Unde stă magazinul
+acum, la produsele care s-ar schimba: 60 sub cost, 660 cu adaos între 0 și 20%, 2.238 între 20 și 35%, 627 între 35
+și 60%, 88 între 60 și 100%, 26 peste 100%. Cele 521 de scăderi vin tocmai din ultimele două grupe: formula de 35%
+plus 4 lei marjă minimă taie adaosul acolo unde e acum foarte gras, mai ales pe mărunțișuri. E o decizie de politică
+de preț, nu o eroare, și ownerul trebuie să o vadă așa.
+
+**Ce s-a probat pe bani adevărați.** Aplicare pe 40 de produse: prețul, stocul și starea stocului scrise prin CRUD,
+cu `_regular_price`, `_price` și `wc_product_meta_lookup` toate de acord. Apoi `wp ccs revino 3`: 78 de valori
+readuse exact, inclusiv în tabelul de căutare, iar a doua rulare a comenzii n-a mai făcut nimic. Prima aplicare nu
+mai e un pas fără retur, și asta schimbă complet discuția cu clientul.
+
+`Lecție:` Potrivirea pe cod nu e de ajuns, nici când codurile par să se potrivească perfect. Verifică și numele, cu
+suprapunerea cuvintelor raportată la numele mai scurt (nu Jaccard: numele furnizorului e adesea mai lung și ar fi
+penalizat nedrept). La Cez Auto, 26 din 3.980 de potriviri arătau spre cu totul alt produs, iar fără verificarea de
+nume prețul și stocul s-ar fi scris greșit pe ele. Simptomul: un magazin care are produse de la mai mulți furnizori
+cu coduri scurte din aceeași plajă numerică. Corolarul, și mai util: numără câte potriviri bune și câte greșite dă
+fiecare strategie separat. O strategie care dă 26 din 26 greșite nu e o strategie slabă, e zgomot, și verificarea de
+nume o descoperă singură.
+
+`Lecție:` Când o frână de siguranță se declanșează, uită-te la ce a prins înainte să-i urci pragul. Frâna de scădere
+de preț a fost pusă contra costurilor greșite de la furnizor; ce a prins de fapt a fost o problemă de potrivire, pe
+care nu o căutam. Un prag care oprește lucruri pe care nu știi să le explici e un prag care își face treaba.
+
+`Lecție:` Scrie în WooCommerce numai prin CRUD (`wc_get_product`, `set_*`, `save()`), niciodată prin
+`update_post_meta`. Altfel prețul se schimbă în admin, dar `wc_product_meta_lookup` rămâne vechi și produsul se
+filtrează, se sortează și se afișează în magazin cu prețul de ieri. Simptomul: prețul e corect pe pagina produsului
+și greșit în listări, sau filtrul de preț nu găsește produsul. Verifică în sursa versiunii instalate ce actualizează
+singur `save()`: în WooCommerce 11.2.1, `_price` se scrie automat când se schimbă `regular_price`.
+
+`Lecție:` Jurnalizează fiecare valoare pe care o scrii, cu valoarea veche, într-un tabel propriu. Costă un `INSERT`
+pe modificare și cumpără o comandă de revenire care funcționează. Nu e doar o plasă de siguranță tehnică: schimbă
+conversația cu clientul, pentru că prima aplicare pe un magazin cu mii de produse nu mai e un pas fără retur.
 
 `Lecție:` Într-o sincronizare care rulează des, ține o copie locală a catalogului furnizorului cu o amprentă pe
 produs și compară amprentele, nu valorile. Prima preluare a durat 109 secunde pentru 20.755 de produse, a doua 3,26,
@@ -52,9 +119,9 @@ Amprenta se calculează doar peste câmpurile care, dacă se schimbă, cer o ac�
 nu folosești, produsul nu trebuie atins.
 
 `Lecție:` Un raport „ce aș face”, scos înainte de prima aplicare, găsește greșeli pe care nu le căuta nimeni. La
-Cez Auto a scos un produs listat la 4 lei cu un cost de 114 lei, adică 110 lei pierdere la fiecare bucată vândută.
-Simptomul după care merită rulat: orice magazin care n-a mai comparat prețurile de vânzare cu costurile de achiziție
-de mai mult de câteva luni.
+Cez Auto a scos 60 de produse vândute sub costul de achiziție, cel mai rău cu 394 de lei pierdere la bucată: un set
+de huse de scaun listat la 738 de lei, cu un cost de 1.132 de lei cu TVA. Simptomul după care merită rulat: orice
+magazin care n-a mai comparat prețurile de vânzare cu costurile de achiziție de mai mult de câteva luni.
 
 `Lecție:` Local by Flywheel nu pune WP-CLI în PATH și n-are CLI pentru site-uri, dar are tot ce trebuie în instalare:
 PHP-ul propriu în `lightning-services`, `wp-cli.phar` în `resources/extraResources`, clientul MySQL tot acolo. Trei
