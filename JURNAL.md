@@ -1,5 +1,55 @@
 # Jurnal conex-conect-sync
 
+## 20 noiembrie 2026
+
+**Rapoartele CSV nu sunt pentru client.** Iulian s-a uitat la cele trei fișiere de ieri și a spus direct ce era de
+spus: nu-l ajută, pentru că nu se înțeleg vizual, și oricum ownerul nu le poate folosi ca să dea un răspuns. Avea
+dreptate, iar problema e mai adâncă decât formatul. Un CSV cu 3.954 de rânduri nu e un document de decizie, e o
+groapă. Iar deciziile luate pe email se pierd: peste trei luni nimeni nu mai știe de ce are un produs preț fix.
+
+**Ce s-a construit în loc.** O pagină în admin, `Sincronizare Conex`, cu cinci întrebări numerotate și datele lângă
+fiecare. Ownerul intră cu userul lui, pentru că face deja importurile manuale, deci e administrator și știe drumul.
+
+Întrebarea 1 e un simulator: trage de adaos și de marja minimă și vede pe loc câte prețuri urcă, câte coboară, câte
+rămân sub cost și cât se schimbă câștigul brut pe tot magazinul, plus șase produse concrete de la cel mai ieftin la
+cel mai scump. Calculul se face în browser, pentru că un om care trage de un cursor vrea răspuns imediat, nu după o
+secundă. Formula din JavaScript e oglinda lui `ccs_pret()`, iar la salvare serverul recalculează și pagina arată
+cifrele lui, ca o eventuală diferență între cele două să sară în ochi.
+
+Întrebările 2, 3 și 4 sunt listele de ieri, dar cu butoane: cele 26 de potriviri dubioase apar ca două produse față
+în față, cu poza de pe site și procentul de cuvinte comune; cele 3 scăderi mari și cele 60 de produse sub cost apar
+ca tabele cu prețul de acum, prețul nou și câștigul, fiecare cu decizia lui.
+
+**Ce am adăugat după ce am văzut pagina în browser.** Cele 60 de produse sub cost cereau 60 de apăsări. Un om care
+are de dat 60 de clicuri nu dă niciunul, iar întrebarea rămâne fără răspuns și blochează tot. Am pus „la fel pentru
+toate cele rămase”, cu confirmare la al doilea clic pe același buton, nu cu fereastra de confirmare a browserului,
+care întrerupe și arată ca o eroare.
+
+**Previzualizarea fără login.** Paginile de admin cer autentificare, iar pe mediul local n-avem parola și nici nu ne
+trebuie ca să vedem cum arată pagina. `tools/previzualizare.php` randează funcția direct prin WP-CLI, îi pune
+stilurile reale de admin, care sunt fișiere statice, și scrie rezultatul în `uploads`. O capcană: nu se declanșează
+hook-ul global `admin_enqueue_scripts`, pentru că acolo se agață și WooCommerce, care cade fără context de cerere.
+Se cheamă direct funcția noastră de încărcare.
+
+**Probat.** Excluderea unui produs îi șterge legătura și potrivirea nu-l mai leagă la rulările următoare. Prețul
+marcat manual blochează prețul în plan, dar stocul continuă să se sincronizeze; am verificat-o stricând intenționat
+stocul unui produs cu preț manual și uitându-mă ce zice planul.
+
+`Lecție:` Când clientul trebuie să ia o decizie, nu-i trimite datele, pune-i întrebarea. Un raport cu mii de rânduri
+e un instrument pentru cine construiește, nu pentru cine hotărăște: ownerul nu vrea să vadă 3.954 de produse, vrea
+să răspundă la cinci întrebări. Simptomul după care recunoști situația: ai scos un export și aștepți de la client un
+răspuns care nu mai vine. Scrie deciziile într-un tabel, cu cine și când, nu într-o setare: o setare se suprascrie,
+o decizie rămâne ca dovadă peste luni.
+
+`Lecție:` Orice listă de decizii mai lungă de vreo zece rânduri are nevoie de o acțiune în masă, altfel nu primește
+niciun răspuns. Confirmarea se face cu al doilea clic pe același buton, nu cu `confirm()`: fereastra browserului
+întrerupe omul, arată ca o eroare și, în automatizări, blochează pagina de tot.
+
+`Lecție:` Un simulator care răspunde instantaneu schimbă discuția cu clientul mai mult decât orice raport. Datele
+pentru el încap în pagină dacă trimiți doar ce intră în formulă, pe liste paralele, nu obiecte cu chei repetate de
+mii de ori: pentru 3.954 de produse înseamnă trei șiruri de numere. Riscul e că formula ajunge scrisă de două ori,
+în PHP și în JavaScript; se ține în frâu dacă la salvare serverul recalculează și pagina arată cifra lui.
+
 ## 19 noiembrie 2026
 
 Prima zi de cod. Oferta Cez Auto a fost acceptată pe 17 noiembrie, deci pluginul are primul client plătitor.

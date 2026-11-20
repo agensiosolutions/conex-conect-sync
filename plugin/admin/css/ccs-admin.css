@@ -1,0 +1,417 @@
+/*
+ * Pagina de decizii.
+ *
+ * Scopul: un om care nu lucrează în WordPress toată ziua trebuie să poată răspunde la cinci întrebări fără să
+ * citească un manual. De aceea cifrele sunt mari, întrebările sunt numerotate, iar fiecare decizie are butonul ei
+ * lângă datele care o justifică. Fără tabele lungi de parcurs cu ochii.
+ */
+
+.ccs {
+	--ccs-text: #1d2327;
+	--ccs-slab: #646970;
+	--ccs-linie: #dcdcde;
+	--ccs-fundal: #fff;
+	--ccs-accent: #2271b1;
+	--ccs-bine: #00804b;
+	--ccs-atentie: #b32d2e;
+	max-width: 1180px;
+}
+
+.ccs h1 {
+	margin-bottom: 18px;
+}
+
+/* Cifrele mari de sus. */
+.ccs-sumar {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+	gap: 12px;
+	margin: 0 0 20px;
+}
+
+.ccs-cifra {
+	background: var(--ccs-fundal);
+	border: 1px solid var(--ccs-linie);
+	border-radius: 6px;
+	padding: 16px 18px;
+}
+
+.ccs-cifra strong {
+	display: block;
+	font-size: 30px;
+	line-height: 1.1;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.ccs-cifra span {
+	display: block;
+	margin-top: 4px;
+	color: var(--ccs-slab);
+	font-size: 13px;
+}
+
+.ccs-cifra.atentie {
+	border-color: var(--ccs-atentie);
+}
+
+.ccs-cifra.atentie strong {
+	color: var(--ccs-atentie);
+}
+
+.ccs-cifra.bine strong {
+	color: var(--ccs-bine);
+}
+
+/* Navigarea. Numărul din dreptul unei secțiuni spune câte întrebări au rămas acolo. */
+.ccs-nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 24px;
+}
+
+.ccs-nav a {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	background: var(--ccs-fundal);
+	border: 1px solid var(--ccs-linie);
+	border-radius: 20px;
+	padding: 7px 15px;
+	text-decoration: none;
+	color: var(--ccs-text);
+	font-size: 13px;
+}
+
+.ccs-nav a:hover {
+	border-color: var(--ccs-accent);
+	color: var(--ccs-accent);
+}
+
+.ccs-nav em {
+	background: var(--ccs-atentie);
+	color: #fff;
+	border-radius: 10px;
+	padding: 1px 7px;
+	font-style: normal;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+/* Secțiunile. */
+.ccs-sectiune {
+	background: var(--ccs-fundal);
+	border: 1px solid var(--ccs-linie);
+	border-radius: 6px;
+	padding: 22px 24px 26px;
+	margin-bottom: 20px;
+	scroll-margin-top: 50px;
+}
+
+.ccs-sectiune > h2 {
+	margin: 0 0 10px;
+	font-size: 20px;
+}
+
+.ccs-explic {
+	max-width: 72ch;
+	color: var(--ccs-text);
+	font-size: 14px;
+	line-height: 1.6;
+	margin: 0 0 14px;
+}
+
+.ccs-gol {
+	color: var(--ccs-bine);
+	font-weight: 600;
+}
+
+.ccs-formula {
+	background: #f6f7f7;
+	border-left: 3px solid var(--ccs-accent);
+	padding: 10px 14px;
+	margin-bottom: 20px;
+}
+
+.ccs-formula code {
+	background: none;
+	font-size: 13px;
+}
+
+/* Simulatorul: controale la stânga, efectul la dreapta. */
+.ccs-doua {
+	display: grid;
+	grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.3fr);
+	gap: 30px;
+	align-items: start;
+}
+
+.ccs-controale label {
+	display: block;
+	margin-bottom: 18px;
+}
+
+.ccs-controale label > span {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 6px;
+	font-size: 13px;
+}
+
+.ccs-controale input[type="range"] {
+	width: 100%;
+	max-width: 320px;
+	vertical-align: middle;
+}
+
+.ccs-controale select {
+	max-width: 320px;
+	width: 100%;
+}
+
+.ccs-controale output {
+	display: inline-block;
+	margin-top: 4px;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--ccs-accent);
+	font-variant-numeric: tabular-nums;
+}
+
+.ccs-efect h3 {
+	margin: 0 0 8px;
+	font-size: 14px;
+}
+
+.ccs-efect h3 + table {
+	margin-bottom: 22px;
+}
+
+.ccs-tabel-efect {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.ccs-tabel-efect th,
+.ccs-tabel-efect td {
+	padding: 7px 0;
+	border-bottom: 1px solid var(--ccs-linie);
+	text-align: left;
+	font-size: 13px;
+}
+
+.ccs-tabel-efect th {
+	font-weight: 400;
+	color: var(--ccs-slab);
+}
+
+.ccs-tabel-efect td {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+	font-weight: 600;
+}
+
+.ccs-tabel-efect .ccs-total th,
+.ccs-tabel-efect .ccs-total td {
+	border-bottom: none;
+	border-top: 2px solid var(--ccs-text);
+	padding-top: 9px;
+	font-size: 14px;
+}
+
+.ccs-tabel-efect .ccs-total th {
+	color: var(--ccs-text);
+	font-weight: 600;
+}
+
+.ccs-exemple th,
+.ccs-exemple td {
+	font-size: 13px;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.ccs-exemple th:first-child,
+.ccs-exemple td:first-child {
+	text-align: left;
+}
+
+.ccs-actiuni {
+	margin-top: 26px;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+/* Cardurile de potrivire: cele două produse față în față. */
+.ccs-carduri {
+	display: grid;
+	gap: 14px;
+}
+
+.ccs-card {
+	border: 1px solid var(--ccs-linie);
+	border-radius: 6px;
+	padding: 16px 18px;
+}
+
+.ccs-fata-in-fata {
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	gap: 18px;
+	align-items: start;
+}
+
+.ccs-parte h4 {
+	margin: 0 0 8px;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--ccs-slab);
+}
+
+.ccs-parte img {
+	max-width: 70px;
+	height: auto;
+	float: left;
+	margin: 0 12px 6px 0;
+	border: 1px solid var(--ccs-linie);
+	border-radius: 4px;
+}
+
+.ccs-nume {
+	margin: 0 0 4px;
+	font-weight: 600;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.ccs-meta {
+	margin: 0;
+	color: var(--ccs-slab);
+	font-size: 12px;
+}
+
+.ccs-vs {
+	align-self: center;
+	color: var(--ccs-slab);
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.ccs-butoane {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-top: 14px;
+	clear: both;
+}
+
+.ccs-stare {
+	font-size: 12px;
+	color: var(--ccs-bine);
+}
+
+.ccs-stare.ccs-eroare {
+	color: var(--ccs-atentie);
+}
+
+/* Un rând sau card la care s-a răspuns se stinge, ca ochiul să cadă pe ce a rămas. */
+.ccs-rezolvat {
+	opacity: 0.55;
+}
+
+.ccs-rezolvat:hover {
+	opacity: 1;
+}
+
+/* Bara „la fel pentru toate”. */
+.ccs-lot-bara {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	background: #f6f7f7;
+	border: 1px solid var(--ccs-linie);
+	border-radius: 4px;
+	padding: 10px 14px;
+	margin-bottom: 14px;
+}
+
+.ccs-lot-eticheta {
+	font-size: 13px;
+	color: var(--ccs-slab);
+}
+
+.ccs-lot[data-confirma="da"] {
+	border-color: var(--ccs-atentie);
+	color: var(--ccs-atentie);
+	font-weight: 600;
+}
+
+/* Tabelele de decizii. */
+.ccs-tabel {
+	border-collapse: collapse;
+	margin-top: 6px;
+}
+
+.ccs-tabel th,
+.ccs-tabel td {
+	padding: 10px 12px;
+	vertical-align: top;
+}
+
+.ccs-tabel th.num,
+.ccs-tabel td.num {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.ccs-tabel .ccs-nou {
+	font-weight: 600;
+}
+
+.ccs-tabel .ccs-rosu {
+	color: var(--ccs-atentie);
+	font-weight: 600;
+}
+
+.ccs-tabel .ccs-butoane {
+	margin-top: 0;
+	flex-wrap: nowrap;
+}
+
+/* Coloana de decizie primește lățimea ei, ca butoanele să stea pe un rând și tabelul să se citească. */
+.ccs-tabel th:last-child,
+.ccs-tabel td:last-child {
+	width: 1%;
+	white-space: nowrap;
+}
+
+.ccs-tabel td:last-child .ccs-stare {
+	display: block;
+	margin-top: 4px;
+	white-space: normal;
+	max-width: 230px;
+}
+
+.ccs-recalc {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+@media screen and (max-width: 960px) {
+	.ccs-doua,
+	.ccs-fata-in-fata {
+		grid-template-columns: 1fr;
+	}
+
+	.ccs-vs {
+		justify-self: start;
+	}
+}

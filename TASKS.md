@@ -9,7 +9,11 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Acum
 
-- [ ] Discuția de preț cu ownerul, pe raportul din 19 nov. @iulian
+- [ ] Pagina de decizii, probată de Iulian pe local, apoi pusă pe live @iulian
+  `Sincronizare Conex` în meniul de admin. Ownerul intră cu userul lui (face deja importurile manuale, deci e
+  administrator) și răspunde la cinci întrebări, cu datele lângă fiecare. Pe local se vede fără login cu
+  `sh tools/wp-local.sh eval-file tools/previzualizare.php`.
+- [ ] Discuția de preț cu ownerul, pe pagina de decizii @iulian
   3.696 de prețuri s-ar schimba: 3.178 în sus (în medie +18,35 lei), 521 în jos (în medie -13,24 lei). Marja brută
   pe bucată crește cu 44,5%. Întrebările, în ordinea în care contează:
   - [ ] Adaosul de 35% și cota de 21% rămân? @client
@@ -19,13 +23,9 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
   - [ ] Cele 60 de produse vândute sub cost: cel mai rău cu 394 lei pierdere la bucată. Se corectează la prima
         aplicare sau se verifică una cu una? @client
   - [ ] Cele 392 de produse care ar trece pe epuizat la prima aplicare @client
-- [ ] Cele 26 de potriviri de verificat, trimise ownerului @iulian
-  `ccs-de-verificat-2026-11-19.csv`. Codul se potrivește, produsul e altul (SKU 25918: aspirator Kärcher pe site,
-  ulei Liqui Moly la Conex). Toate 26 vin din potrivirea pe cod de producător. Ownerul decide ce e corect: ori SKU-ul
-  de pe site e greșit, ori produsul e de la alt furnizor și nu trebuie legat niciodată.
-- [ ] Cele 3 scăderi mari de preț rămase, de decis cu ownerul @iulian
-  Potriviri corecte, 100% pe nume, dar prețul ar coborî la sub jumătate: clipsuri și o placă de TIR, cu adaos de
-  787% acum. Frâna `scadere_pret_maxima` le ține pe loc până zice cineva ce e corect.
+  Secțiunea 1 din pagină: trage de adaos și de marja minimă și vede efectul pe tot magazinul, instantaneu. Cele
+  26 de potriviri, cele 3 scăderi mari și cele 60 de produse sub cost sunt secțiunile 2, 3 și 4, fiecare cu butoane
+  pe fiecare produs și cu „la fel pentru toate”.
 
 ## Urmează
 
@@ -64,6 +64,9 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Pagina de decizii din admin, cu simulator de preț și acțiuni în masă (20.11.2026)
+      Înlocuiește rapoartele CSV pentru discuția cu ownerul. Fiecare decizie se scrie în `ccs_decizii`, cu cine și
+      când, și are efect imediat: legătură confirmată, produs exclus definitiv, sau preț marcat manual.
 - [x] Etapa 2, partea de cod: planul comun, aplicarea prin CRUD, revenirea și verificarea de nume (19.11.2026)
       WooCommerce 11.2.1 local, aceeași versiune ca pe live. Taxele sunt oprite în WooCommerce, deci prețul introdus
       e prețul final: formula cu TVA inclus e corectă. Probat pe 40 de produse, cu revenire completă pe 78 de valori.

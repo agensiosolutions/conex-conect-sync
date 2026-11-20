@@ -139,6 +139,10 @@ function ccs_potriveste( $scrie = true ) {
 	$tabel_l = ccs_tabel( 'links' );
 
 	$produse_site = ccs_site_produse();
+	// Produsele pe care clientul a spus că nu sunt același produs nu se mai leagă, oricât de bine ar da codul.
+	foreach ( ccs_excluse() as $wc_id ) {
+		unset( $produse_site[ $wc_id ] );
+	}
 	$setari       = ccs_setari();
 	$prag_nume    = (float) $setari['prag_nume'];
 	$strategii    = ccs_potrivire_strategii();

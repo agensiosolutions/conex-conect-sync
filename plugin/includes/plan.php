@@ -38,7 +38,8 @@ function ccs_site_date_produse( $ids ) {
 				        MAX(CASE WHEN m.meta_key = '_stock'           THEN m.meta_value END) AS stoc,
 				        MAX(CASE WHEN m.meta_key = '_stock_status'    THEN m.meta_value END) AS stare_stoc,
 				        MAX(CASE WHEN m.meta_key = '_manage_stock'    THEN m.meta_value END) AS gestiune_stoc,
-				        MAX(CASE WHEN m.meta_key = '_ccs_pret_manual' THEN m.meta_value END) AS pret_manual
+				        MAX(CASE WHEN m.meta_key = '_ccs_pret_manual' THEN m.meta_value END) AS pret_manual,
+		        MAX(CASE WHEN m.meta_key = '_ccs_scadere_permisa' THEN m.meta_value END) AS scadere_permisa
 				 FROM {$wpdb->posts} p
 				 LEFT JOIN {$wpdb->postmeta} m ON m.post_id = p.ID
 				 WHERE p.ID IN ($locuri)
@@ -56,6 +57,7 @@ function ccs_site_date_produse( $ids ) {
 				'stare_stoc'    => (string) $r->stare_stoc,
 				'gestiune_stoc' => 'yes' === $r->gestiune_stoc,
 				'pret_manual'   => ! empty( $r->pret_manual ),
+				'scadere_ok'    => ! empty( $r->scadere_permisa ),
 			);
 		}
 	}
@@ -204,7 +206,8 @@ function ccs_plan( $argumente = array() ) {
 		}
 
 		// O prăbușire de preț e aproape sigur un cost greșit la furnizor, nu o reducere reală.
-		$scadere = (float) $setari['scadere_pret_maxima'];
+		// `scadere_ok` e decizia clientului pe produsul ăsta: a văzut scăderea și a spus că e corectă.
+		$scadere = $s['scadere_ok'] ? 0.0 : (float) $setari['scadere_pret_maxima'];
 		if ( ! isset( $blocaje['cost_zero'] ) && null !== $pret_site && $pret_site > 0 && $scadere > 0
 			&& $pret_tinta < $pret_site * $scadere ) {
 			$blocaje['scadere_mare'] = sprintf(

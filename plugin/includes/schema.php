@@ -12,12 +12,12 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const CCS_SCHEMA_VERSIUNE = 3;
+const CCS_SCHEMA_VERSIUNE = 4;
 
 /**
  * Numele unui tabel al pluginului, cu prefixul bazei.
  *
- * @param string $nume Numele scurt: 'products', 'links', 'runs', 'log', 'modificari'.
+ * @param string $nume Numele scurt: 'products', 'links', 'runs', 'log', 'modificari', 'decizii', 'excluse'.
  * @return string Numele complet.
  */
 function ccs_tabel( $nume ) {
@@ -40,6 +40,8 @@ function ccs_schema_instaleaza() {
 	$rulari  = ccs_tabel( 'runs' );
 	$jurnal  = ccs_tabel( 'log' );
 	$modif   = ccs_tabel( 'modificari' );
+	$decizii = ccs_tabel( 'decizii' );
+	$excluse = ccs_tabel( 'excluse' );
 
 	// Copia catalogului furnizorului. `cod` e codEAN, adică ce se potrivește cu SKU-ul de pe site.
 	// `amprenta` e un md5 peste câmpurile care ne interesează: dacă nu s-a schimbat, produsul se sare.
@@ -123,6 +125,33 @@ function ccs_schema_instaleaza() {
 			PRIMARY KEY  (id),
 			KEY rulare_id (rulare_id),
 			KEY wc_product_id (wc_product_id)
+		) $colatie;"
+	);
+
+	// Deciziile luate de client, cu cine și când. Nu sunt setări: sunt răspunsuri la întrebări concrete, iar istoricul
+	// lor e dovada pe care o avem dacă cineva întreabă mai târziu de ce s-a schimbat un preț.
+	dbDelta(
+		"CREATE TABLE $decizii (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			tip VARCHAR(32) NOT NULL DEFAULT '',
+			referinta VARCHAR(64) NOT NULL DEFAULT '',
+			valoare VARCHAR(64) NOT NULL DEFAULT '',
+			nota TEXT NULL,
+			utilizator BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			creat_la DATETIME NULL,
+			PRIMARY KEY  (id),
+			KEY tip_referinta (tip, referinta),
+			KEY creat_la (creat_la)
+		) $colatie;"
+	);
+
+	// Produse de pe site pe care clientul a spus să nu le legăm niciodată, oricât de bine s-ar potrivi codul.
+	dbDelta(
+		"CREATE TABLE $excluse (
+			wc_product_id BIGINT UNSIGNED NOT NULL,
+			motiv VARCHAR(255) NOT NULL DEFAULT '',
+			creat_la DATETIME NULL,
+			PRIMARY KEY  (wc_product_id)
 		) $colatie;"
 	);
 
