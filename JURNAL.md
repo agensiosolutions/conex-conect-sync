@@ -1,5 +1,39 @@
 # Jurnal conex-conect-sync
 
+## 24 noiembrie 2026
+
+**Pluginul e pe live.** Iulian a decis să facem verificările direct pe magazinul real: traficul e mic, iar comenzile
+se acceptă manual, deci o greșeală se vede înainte să plece ceva la client. Argument bun, iar pluginul e construit
+exact pentru situația asta: modul raport e pornit din start și nicio linie nu se scrie în WooCommerce fără ca
+cineva să-l oprească explicit.
+
+Ordinea, și motivul fiecărui pas: verificări read-only întâi, apoi backup cu `mysqldump` (12 MB, cu ultima linie
+`-- Dump completed on` verificată, pentru că pe Hosterion `wp db export` eșuează fără eroare), apoi fișierele, apoi
+activarea. Serverul n-are `rsync`, deci `tar` printr-un tunel SSH. Toate fișierele trec de `php -l` rulat cu PHP-ul
+serverului, nu cu al meu: live are PHP 8.1.34, local are 8.2.27, iar o sintaxă mai nouă s-ar fi văzut abia la prima
+cerere, pe un site în funcțiune.
+
+Live: WordPress 7.1.3, PHP 8.1.34, WooCommerce 11.2.1. Aceeași versiune de WooCommerce ca pe local, ceea ce
+înseamnă că tot ce am probat despre CRUD și `wc_product_meta_lookup` e valabil și aici.
+
+**Pasul care a rămas la Iulian.** Tokenul API trebuia pus în `wp-config`. Am scris `tools/token-live.py`, care îl
+trimite prin intrarea standard a unui PHP rulat pe server, nu ca argument de comandă: pe un server partajat,
+argumentele se pot citi din `/proc/<pid>/cmdline`, iar variabilele de mediu doar de proprietar și de root, deci
+stdin e singura cale care nu lasă tokenul nicăieri. Scriptul face și o copie a lui `wp-config.php` înainte.
+
+Rularea a fost oprită de regula care nu-mi dă voie să citesc `.env` și să-i trimit conținutul pe un server. Regula e
+corectă, scriptul rămâne scris, iar comanda o dă Iulian. Până atunci pluginul e activ, tabelele există și pagina de
+decizii spune corect că nu are încă legături.
+
+`Lecție:` Când pui cod pe un server, rulează `php -l` cu PHP-ul serverului, nu cu al tău. Versiunile diferă aproape
+întotdeauna, iar o sintaxă mai nouă nu se vede la upload: se vede la prima cerere a unui vizitator, sub forma unei
+pagini albe. Costă o comandă și se face înainte de activare.
+
+`Lecție:` Un secret care trebuie să ajungă pe un server se trimite pe intrarea standard, nu ca argument de comandă.
+Argumentele oricărui proces sunt citibile de toți utilizatorii prin `/proc/<pid>/cmdline`; variabilele de mediu sunt
+citibile doar de proprietar și de root. Simptomul că ai greșit: secretul apare în `history`, în `ps` sau în jurnalul
+de comenzi al uneltei de deploy.
+
 ## 20 noiembrie 2026
 
 **Rapoartele CSV nu sunt pentru client.** Iulian s-a uitat la cele trei fișiere de ieri și a spus direct ce era de

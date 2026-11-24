@@ -144,7 +144,7 @@ class CCS_CLI {
 	public function schema() {
 		ccs_schema_instaleaza();
 		global $wpdb;
-		foreach ( array( 'products', 'links', 'runs', 'log', 'modificari' ) as $t ) {
+		foreach ( array( 'products', 'links', 'runs', 'log', 'modificari', 'decizii', 'excluse' ) as $t ) {
 			$nume = ccs_tabel( $t );
 			$n    = $wpdb->get_var( "SELECT COUNT(*) FROM $nume" ); // phpcs:ignore WordPress.DB.PreparedSQL
 			WP_CLI::line( sprintf( '  %-28s %s rânduri', $nume, null === $n ? 'lipsește' : $n ) );
