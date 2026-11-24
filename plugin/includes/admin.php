@@ -100,6 +100,42 @@ function ccs_admin_assets( $hook ) {
 }
 add_action( 'admin_enqueue_scripts', 'ccs_admin_assets' );
 
+/**
+ * Scoate notificările celorlalte pluginuri de pe ecranul nostru.
+ *
+ * Pe o pagină de setări obișnuită, notificările își au rostul. Aici nu: pagina asta o deschide clientul ca să ia
+ * decizii despre prețurile magazinului lui, iar o alertă roșie despre licența altui plugin îl face să creadă că
+ * sincronizarea are o problemă. Pluginurile care își pun reclame și reînnoiri pe orice ecran de admin fac zgomotul
+ * ăsta peste tot, nu doar aici.
+ *
+ * Se scot doar pe ecranul nostru. În restul adminului apar ca de obicei, inclusiv anunțul de actualizare a
+ * WordPress-ului, care rămâne treaba celui care întreține site-ul, nu a celui care hotărăște prețurile.
+ *
+ * @return void
+ */
+function ccs_admin_fara_notificari() {
+	$ecran = get_current_screen();
+	if ( ! $ecran || 'toplevel_page_ccs-decizii' !== $ecran->id ) {
+		return;
+	}
+
+	/**
+	 * Permite păstrarea notificărilor, dacă cineva le vrea totuși pe ecranul ăsta.
+	 *
+	 * @param bool $ascunde Dacă se ascund.
+	 */
+	if ( ! apply_filters( 'ccs_ascunde_notificarile', true ) ) {
+		return;
+	}
+
+	foreach ( array( 'admin_notices', 'all_admin_notices', 'network_admin_notices', 'user_admin_notices' ) as $hook ) {
+		remove_all_actions( $hook );
+	}
+}
+// `in_admin_header` se execută în `admin-header.php` înainte de locul unde se tipăresc notificările, deci e
+// momentul în care mai pot fi scoase, oricât de târziu s-ar fi agățat pluginul care le pune.
+add_action( 'in_admin_header', 'ccs_admin_fara_notificari', 1000 );
+
 /* ------------------------------------------------------------------------------------------------ datele */
 
 /**

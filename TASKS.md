@@ -66,6 +66,9 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Notificările celorlalte pluginuri, scoase de pe ecranul nostru (24.11.2026)
+      Site-ul are 38 de notificări agățate de alte pluginuri, printre care una roșie despre o licență Elementor
+      expirată. Pe pagina de decizii nu se mai afișează niciuna; în restul adminului rămân toate.
 - [x] Panoul nou pe live, versiunea 0.2.0 (24.11.2026)
       Toate cele șase taburi se randează cu date reale, fără erori. Versiunea a fost urcată de la 0.1.0 tocmai ca
       stilul nou să nu fie servit din cache-ul browserelor. Setările și modul raport au rămas neatinse.

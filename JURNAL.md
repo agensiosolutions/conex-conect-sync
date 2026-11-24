@@ -67,6 +67,25 @@ culori, aceeași structură de pagină, aceeași împărțire a fișierelor. Nu 
 două panouri care arată diferit par două produse cumpărate de la oameni diferiți. Ia regula de design și structura
 din primul, și schimbă doar ce cere conținutul.
 
+**Curățat de notificări, înainte de a-l arăta ownerului.** Iulian a deschis panoul și deasupra lui stătea o alertă
+roșie: „Your License Is Inactive”, de la Elementor, plus anunțul de actualizare a WordPress-ului. Pe o pagină de
+setări ar fi fost în regulă. Aici nu: pagina asta o deschide clientul ca să hotărască prețurile magazinului lui, iar
+o alertă roșie deasupra îl face să creadă că sincronizarea are o problemă.
+
+Măsurat pe live: site-ul are **38 de notificări agățate** de alte pluginuri. Toate se scot pe ecranul nostru cu
+`remove_all_actions()` pe cele patru hook-uri de notificări, chemat din `in_admin_header`, care se execută în
+`admin-header.php` înainte de locul unde se tipăresc. Verificat cu notificări de probă: pe ecranul de produse rămân
+toate 41, pe ecranul nostru rămân zero.
+
+Am lăsat un filtru, `ccs_ascunde_notificarile`, pentru cine ar vrea totuși să le vadă.
+
+`Lecție:` Pe un ecran de admin pe care îl deschide clientul, nu dezvoltatorul, scoate notificările celorlalte
+pluginuri. Se face cu `remove_all_actions()` pe `admin_notices`, `all_admin_notices`, `network_admin_notices` și
+`user_admin_notices`, chemat din `in_admin_header`, și numai pe ecranul tău, verificat cu `get_current_screen()`.
+Motivul nu e estetic: o alertă roșie despre licența altui plugin, deasupra paginii tale, îl face pe client să
+creadă că produsul tău e stricat. Simptomul: clientul întreabă „ce s-a stricat?” despre ceva ce n-are legătură cu
+ce i-ai livrat.
+
 `Lecție:` Când schimbi CSS-ul sau JavaScript-ul unui plugin, urcă-i versiunea. WordPress pune versiunea pluginului
 în coada adresei fișierului, iar fără schimbarea ei browserele servesc din cache fișierul vechi. Simptomul e
 înșelător: pagina arată corect la cine o deschide prima oară și stricat la cine a mai văzut-o, adică fix la clientul
