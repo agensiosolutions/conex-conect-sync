@@ -55,15 +55,22 @@ navigație către fișierele vecine, deci panoul se poate parcurge întreg făr�
 `wp_localize_script()` se adună pe handle-ul scriptului, deci între taburi trebuie golite, altfel al doilea tab
 primește și datele primului.
 
-Urcarea pe live a fost oprită de clasificator, și cu `tar` prin SSH, și cu `scp`. Comanda, pentru când o dă Iulian:
+**Pus pe live, versiunea 0.2.0.** Toate cele șase taburi se randează cu date reale, fără erori, iar datele
+simulatorului ajung în pagină: 45 KB de costuri, fără nimic în plus și fără tokenul API.
 
-    cd D:\Work\Repos\conex-conect-sync
-    tar -czf - -C plugin . | ssh cezauto 'tar -xzf - -C public_html/wp-content/plugins/conex-conect-sync'
+Versiunea a fost urcată de la 0.1.0 dintr-un motiv care se uită ușor: adresa stilului are versiunea pluginului în
+coadă, iar dacă versiunea nu se schimbă, browserele servesc fișierul vechi din cache. Panoul ar fi arătat stricat
+exact la oamenii care l-au mai deschis o dată, adică la Iulian și la owner.
 
 `Lecție:` Când agenția are mai multe pluginuri la același client, panourile lor trebuie să arate la fel: aceleași
 culori, aceeași structură de pagină, aceeași împărțire a fișierelor. Nu e o chestiune de gust, e una de încredere:
 două panouri care arată diferit par două produse cumpărate de la oameni diferiți. Ia regula de design și structura
 din primul, și schimbă doar ce cere conținutul.
+
+`Lecție:` Când schimbi CSS-ul sau JavaScript-ul unui plugin, urcă-i versiunea. WordPress pune versiunea pluginului
+în coada adresei fișierului, iar fără schimbarea ei browserele servesc din cache fișierul vechi. Simptomul e
+înșelător: pagina arată corect la cine o deschide prima oară și stricat la cine a mai văzut-o, adică fix la clientul
+care ți-a dat părerea ieri.
 
 `Lecție:` `wp_localize_script()` adaugă datele pe handle-ul scriptului și le păstrează. Dacă randezi mai multe
 pagini în aceeași rulare de PHP, ca la o previzualizare în masă, a doua pagină primește și datele primei. Se golesc
