@@ -70,6 +70,9 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Panoul nou pe live, versiunea 0.3.0 (24.11.2026)
+      Toate cele șase taburi se randează fără erori, cu tonurile de decizie prezente (54 pe potriviri, 122 pe sub
+      cost). Modul raport e în continuare pornit: zero decizii luate, zero scrieri în WooCommerce.
 - [x] Panoul trecut prin unslop: grilă de 4px, o rampă, semnătura „acum → nou” (24.11.2026)
       Skillul scanat cu SkillSpector înainte: 6 HIGH și 5 MEDIUM, toate cele HIGH false pozitive, verificate de mână.
       Două dintre principiile lui n-au fost aplicate ca atare, pentru că aici conținutul nu e o pagină de prezentare.

@@ -110,6 +110,10 @@ Introducând-o, am creat imediat un conflict pe care nu-l căutam: pastila „0%
 acolo galbenul însemna „uită-te aici”, nu „rămâne cum e”. Două înțelesuri pentru o culoare pe același ecran. Am
 făcut-o neutră, cu text mono: e o măsurătoare, nu o decizie.
 
+Pus pe live ca versiunea 0.3.0, din nou cu versiunea urcată ca stilul să nu vină din cache. Toate cele șase taburi
+se randează fără erori, cu tonurile la locul lor. Modul raport e pornit, zero decizii luate, zero scrieri în
+WooCommerce.
+
 `Lecție:` Când introduci o regulă de culoare semantică într-o interfață, caută imediat unde mai folosești culoarea
 aia pentru altceva. La Cez Auto, galbenul însemna „rămâne cum e” pe butoane și „uită-te aici” pe o pastilă, la două
 centimetri distanță. O culoare cu două înțelesuri pe același ecran nu mai înseamnă nimic, iar regula se strică exact
