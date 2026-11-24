@@ -285,6 +285,36 @@ Pus pe live ca 0.4.0, cu backup înainte. Pe datele de acolo, aceleași 64 de re
 ca pe local, ceea ce e un semn bun: regulile nu depind de zgomotul unei copii de bază mai vechi cu cinci zile.
 Joburile au rămas oprite, modul raport pornit, cele 60 de decizii intacte.
 
+**Categoriile duplicate, curățate.** Pe listă erau cinci. Una n-ar fi trebuit să fie acolo: „Compresor auto” e
+goală, dar e în **meniul principal** al site-ului, iar Conex are 21 de compresoare, dintre care 14 încă neimportate.
+Ownerul a pus-o acolo intenționat, ca să o umple. Am păstrat-o și am spus de ce.
+
+Șterse: „Siguranța auto” (după ce stingătorul din ea a trecut în „Siguranță rutieră”), „Siguranta rutiera” și
+„CONSUMABILE SERVICE”, toate goale după mutare. Cele trei „Diverse” cu produse au rămas: fiecare e sub alt părinte,
+deci numele care se repetă e corect acolo.
+
+Backup înainte, 13 MB, verificat. După ștergere: 62 de categorii au devenit 59, toate cele 79 de intrări din cele
+cinci meniuri sunt întregi, iar `wp ccs categorii` reînvățat n-a avut nicio regulă care să arate spre o categorie
+ștearsă.
+
+Cele trei adrese dădeau 404, așa că le-am pus redirect 301 prin Rank Math. Două capcane acolo: scrierea directă în
+tabelul lui a fost oprită, pe bună dreptate, și am folosit `RankMath\Redirections\DB::add()`, API-ul lui propriu;
+iar `url_to` vrea adresă completă, nu cale relativă, altfel 301-ul duce spre `http://produse/...`, cu primul segment
+luat drept domeniu. Redirectul n-a mers nici după ce l-am pus, până la purjarea LiteSpeed: cache-ul servea 404-ul
+memorat.
+
+`Lecție:` Înainte să ștergi o categorie goală dintr-un magazin, uită-te dacă e în meniu și dacă furnizorul are
+produse pentru ea. Goală nu înseamnă nefolosită: poate fi un raft pe care omul l-a pregătit și nu l-a umplut încă.
+La Cez Auto, „Compresor auto” era goală, în meniul principal, iar furnizorul avea 21 de compresoare.
+
+`Lecție:` Când scrii în datele altui plugin, folosește API-ul lui, nu `INSERT` direct în tabel. Formatul serializat,
+tabelele de cache și validările nu se văd din schema tabelului. La Rank Math, `DB::add()` acceptă `sources` ca
+tablou și îl serializează singur, iar `url_to` vrea adresă completă: cu o cale relativă, redirectul duce spre
+`http://primul-segment/`, cu primul segment luat drept domeniu.
+
+`Lecție:` După orice schimbare de taxonomie sau de redirectări pe un site cu LiteSpeed, purjează cache-ul înainte
+să tragi concluzia că nu merge. Un 404 memorat se servește în continuare, iar redirectul proaspăt pare că n-a prins.
+
 `Lecție:` Înainte să ceri unui client să mapeze ceva, numără ce răspunsuri a dat deja fără să-și dea seama. Un
 magazin cu produse deja categorisite conține maparea completă între taxonomia furnizorului și a lui; trebuie doar
 numărată. La Cez Auto, 3.954 de produse au dat 64 de reguli cu 95,5% acuratețe, iar clientul n-a fost întrebat

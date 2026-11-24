@@ -31,10 +31,9 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Urmează
 
-- [ ] Categoriile duplicate și goale de pe site, de curățat @iulian
-  „Siguranță rutieră” (22 produse) lângă „Siguranta rutiara” (0), plus „CONSUMABILE SERVICE”, „Compresor auto” și
-  „Siguranta rutiera” goale. După curățare se rulează din nou `wp ccs categorii`, ca regulile să nu mai arate spre
-  categorii care nu mai există.
+- [ ] Cele 14 compresoare din catalogul Conex, de importat în „Compresor auto” @iulian
+  Categoria e în meniul principal al site-ului și e goală. Conex are 21 de compresoare, 7 sunt deja pe site dar în
+  alte categorii, 14 nu sunt deloc. Intră în etapa 4, odată cu importul.
 
 - [ ] De hotărât ce facem cu `ccs_site_skuuri()` din `plugin/includes/potrivire.php` @iulian
   Nu mai e chemată de nicăieri: a rămas ca punte de compatibilitate când am rescris potrivirea pe 19 nov. Ori o
@@ -87,6 +86,11 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Categoriile duplicate de pe site, curățate (24.11.2026)
+      Șterse: „Siguranța auto”, „Siguranta rutiera” și „CONSUMABILE SERVICE”. Stingătorul din prima a trecut în
+      „Siguranță rutieră”, care are acum 23 de produse. Cele trei adrese au redirect 301 prin Rank Math.
+      „Compresor auto” **nu** s-a șters: e în meniul principal și Conex are 21 de compresoare. 62 de categorii au
+      devenit 59, toate cele 79 de intrări din cele cinci meniuri sunt întregi.
 - [x] Versiunea 0.4.0 pe live: joburi programate și mapare de categorii (24.11.2026)
       Backup înainte: `~/backups/cezauto-inainte-de-ccs-0.4.0-20261124-1253.sql.gz`, 13 MB, verificat.
       Pe datele de pe live: 64 de reguli din 3.950 de produse legate, aceleași 7 reguli pe cuvânt. Joburile rămân
