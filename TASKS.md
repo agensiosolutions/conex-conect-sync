@@ -31,6 +31,10 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Urmează
 
+- [ ] De hotărât ce facem cu `ccs_site_skuuri()` din `plugin/includes/potrivire.php` @iulian
+  Nu mai e chemată de nicăieri: a rămas ca punte de compatibilitate când am rescris potrivirea pe 19 nov. Ori o
+  ștergem, ori o păstrăm declarat, ca funcție publică pentru alte pluginuri. Semnalată, nu ștearsă.
+
 ### Etapa 2: preț și stoc
 - [ ] Prima aplicare pe live, după deciziile ownerului @claude
   Comanda e `wp ccs aplica --forteaza`, după `wp ccs setare mod_raport 0`. Durează în jur de 6 minute pentru 3.900

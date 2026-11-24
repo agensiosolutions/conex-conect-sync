@@ -67,6 +67,48 @@ culori, aceeași structură de pagină, aceeași împărțire a fișierelor. Nu 
 două panouri care arată diferit par două produse cumpărate de la oameni diferiți. Ia regula de design și structura
 din primul, și schimbă doar ce cere conținutul.
 
+**Două lucruri împrumutate dintr-un skill.** Iulian mi-a dat
+`github.com/multica-ai/andrej-karpathy-skills`, patru principii de comportament într-un fișier de 2,5 KB, copiat de
+trei ori în repo. Nu l-am adăugat ca `CLAUDE.md`: majoritatea e deja la noi, iar două dintre cele patru principii ar
+fi stricat lucruri aici. „Fără tratare de erori pentru scenarii imposibile” ar fi tăiat retry-ul cu backoff, fereastra
+de 503 și protecția la scădere de catalog, adică exact codul scris după ce am măsurat cum pică API-ul noaptea. Un
+principiu care nu face diferența între speculație și realitate măsurată e periculos tocmai la un plugin care scrie
+prețuri într-un magazin.
+
+Am luat două lucruri. Primul, regula de schimbări chirurgicale: fiecare linie schimbată se leagă direct de ce s-a
+cerut, codul mort găsit pe drum se semnalează, nu se șterge. Aplicând-o pe loc, am găsit `ccs_site_skuuri()`, rămasă
+din rescrierea potrivirii de pe 19 noiembrie și nechemată de nicăieri. E în `TASKS.md`, nu ștearsă.
+
+Al doilea, testele. Folderul `teste/` era gol de la început, la 3.849 de linii de PHP. Acum acoperă două funcții:
+`ccs_pret()` și `ccs_nume_asemanare()`. Alese pentru că sunt singurele care hotărăsc ceva important fără să atingă
+baza de date sau API-ul, deci se pot testa curat, iar o regresie în oricare schimbă magazinul fără ca nimeni să
+observe. 28 de verificări, fără dependențe, fără WordPress, sub o secundă.
+
+Important: după ce au trecut toate, le-am probat stricând intenționat funcțiile pe o copie. Cinci mutații, toate
+prinse: marja minimă scoasă din formulă, rotunjire în jos, taxa verde ignorată, Jaccard în loc de raportare la
+numele scurt, cuvintele scurte nefiltrate. Controlul nemodificat trece.
+
+Testul a găsit și ceva ce nu căutam: PHP-ul livrat cu Local by Flywheel n-are `mbstring` fără `php.ini`-ul site-ului,
+iar `ccs_nume_cuvinte()` cade fatal fără ea. Verificat pe toate cele trei PHP-uri care contează, inclusiv cel de pe
+serverul live: toate o au. Am pus doar un mesaj clar în locul erorii fatale, nu o alternativă fără `mbstring`: ar fi
+fost exact complexitatea speculativă pe care skillul o critică pe bună dreptate.
+
+`Lecție:` Un test care n-a fost probat stricând intenționat codul pe care îl acoperă nu valorează nimic. După ce
+trece, modifică funcția într-un mod în care s-ar putea strica pe bune (o constantă scoasă, o rotunjire schimbată, o
+formulă înlocuită cu una plauzibilă) și verifică dacă testul cade. Dacă tot trece, testul verifică forma, nu
+comportamentul. Simptomul: o suită verde care n-a prins niciodată nicio regresie.
+
+`Lecție:` Când alegi ce să testezi într-un proiect fără teste, începe cu funcțiile pure care hotărăsc bani sau
+identitate: formula de preț, potrivirea de produse, calculul de reduceri. Se testează fără bază de date și fără
+rețea, în milisecunde, iar o regresie acolo nu dă eroare, ci schimbă liniștit ce vede clientul. Restul codului, cel
+care vorbește cu platforma și cu API-uri, se verifică mai bine pe date reale decât cu date inventate.
+
+`Lecție:` Un set de reguli generale de comportament pentru LLM-uri merită citit, dar nu adoptat întreg. Regulile de
+tip „fără configurabilitate care n-a fost cerută” și „fără tratare de erori pentru scenarii imposibile” nu fac
+diferența între complexitate speculativă și cod scris după o măsurătoare. Într-un proiect care integrează un API
+instabil, a doua categorie e tocmai ce ține produsul în picioare. Ia regulile care se pot verifica (fiecare linie
+schimbată se leagă de cerere, codul mort se semnalează) și lasă-le pe cele care cer judecată despre ce e „necesar”.
+
 **Curățat de notificări, înainte de a-l arăta ownerului.** Iulian a deschis panoul și deasupra lui stătea o alertă
 roșie: „Your License Is Inactive”, de la Elementor, plus anunțul de actualizare a WordPress-ului. Pe o pagină de
 setări ar fi fost în regulă. Aici nu: pagina asta o deschide clientul ca să hotărască prețurile magazinului lui, iar

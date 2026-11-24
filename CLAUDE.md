@@ -16,6 +16,11 @@ construit ca produs, nu ca lucrare pentru un singur magazin: Piese Total și al�
 - Dezvoltarea se face local, pe o copie a bazei Cez Auto (decizia Iulian, 19 nov.): valoarea pluginului stă în
   potrivirea datelor reale, deci am nevoie de cele 6.723 de produse, categoriile și atributele lor.
 - Planul pe etape e în `TASKS.md`; o schimbare de direcție se propune întâi acolo.
+- **Schimbări chirurgicale.** Fiecare linie schimbată trebuie să se lege direct de ce s-a cerut. Nu „îmbunătățești”
+  cod, comentarii sau formatare din jur și nu refactorizezi ce nu e stricat, nici dacă tu ai fi scris altfel. Cod mort
+  găsit pe drum: îl semnalezi, nu-l ștergi. Cod rămas orfan din cauza schimbării tale: îl ștergi, e mizeria ta.
+- **Testele rulează înainte de orice commit care atinge prețul sau potrivirea**: `npm run teste`, sau direct
+  `php teste/ruleaza.php`. Fără dependențe, fără WordPress, sub o secundă.
 - Lecțiile (rândurile `Lecție:` din `JURNAL.md`) trec în MasterMind doar după aprobarea lui Iulian.
 
 ## Ce știm despre API, din măsurători
@@ -62,6 +67,22 @@ cifre: `conex-fetch.py`, `conex-night-probe.py`, `conex-night-fetch.py`, `conex-
   de Iulian).
 - **Versiuni și flotă**: ca la `agensio-consent`, cu `npm run release` și `tools/flota.mjs`. Uneltele se copiază de
   acolo la etapa 5, când avem ce livra.
+
+## Teste
+
+`teste/ruleaza.php` acoperă două funcții: `ccs_pret()` și `ccs_nume_asemanare()`. Sunt singurele care hotărăsc ceva
+important fără să atingă baza de date sau API-ul, iar o regresie în oricare din ele schimbă magazinul fără ca nimeni
+să observe. Restul codului vorbește cu WooCommerce și cu Conex, unde verificarea pe date reale spune mai mult decât
+un test cu date inventate.
+
+Două reguli când adaugi cazuri:
+
+- **Cifrele vin din date reale**, nu din imaginație. Fiecare caz din fișier e un produs adevărat din catalogul Cez
+  Auto, ales pentru că a scos ceva la iveală: clipsul de 0,22 lei care a dus la marja minimă, codul 25918 care e
+  aspirator pe site și ulei la furnizor.
+- **Un test nou se probează stricând intenționat funcția.** Dacă testul tot trece, nu testează nimic. Cele cinci
+  mutații probate pe 24 nov. (marja scoasă din formulă, rotunjire în jos, taxa verde ignorată, Jaccard în loc de
+  raportare la numele scurt, cuvintele scurte nefiltrate) cad toate.
 
 ## Surse
 

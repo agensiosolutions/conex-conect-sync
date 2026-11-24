@@ -3,6 +3,7 @@
   "private": true,
   "description": "Plugin WooCommerce de sincronizare cu API-ul Conex Conect",
   "scripts": {
+    "teste": "php teste/ruleaza.php",
     "zip": "node tools/zip.mjs",
     "release": "node tools/release.mjs",
     "flota": "node tools/flota.mjs"
