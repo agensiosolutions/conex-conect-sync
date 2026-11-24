@@ -113,6 +113,108 @@ function ccs_nr( $v ) {
 }
 
 /**
+ * Semnătura panoului: o valoare care se schimbă, scrisă ca „acum → nou”.
+ *
+ * Apare peste tot unde ceva se schimbă și nicăieri altundeva. Cele patru coloane de cifre de dinainte cereau de la
+ * om să adune singur povestea; aici se citește dintr-o privire, iar procentul spune în ce direcție merge.
+ *
+ * @param float $acum Valoarea de acum.
+ * @param float $nou  Valoarea propusă.
+ * @return string HTML.
+ */
+function ccs_ui_delta( $acum, $nou ) {
+	$acum = (float) $acum;
+	$nou  = (float) $nou;
+	$dir  = $nou > $acum ? 'sus' : ( $nou < $acum ? 'jos' : '' );
+
+	$cat = '';
+	if ( $acum > 0 && $dir ) {
+		$cat = sprintf(
+			'<span class="ccs-delta__cat">%s%s%%</span>',
+			'sus' === $dir ? '+' : "\xe2\x88\x92",
+			ccs_lei( abs( $nou / $acum - 1 ) * 100, 0 )
+		);
+	}
+
+	return sprintf(
+		'<span class="ccs-delta%1$s"><span class="ccs-delta__acum">%2$s</span><span class="ccs-delta__sageata" aria-hidden="true">&rarr;</span><span class="ccs-delta__nou">%3$s</span>%4$s</span>',
+		$dir ? ' ccs-delta--' . $dir : '',
+		esc_html( ccs_lei( $acum ) ),
+		esc_html( ccs_lei( $nou ) ),
+		$cat
+	);
+}
+
+/**
+ * Cât din întrebările tabului au primit răspuns.
+ *
+ * Fără asta, un tab cu șaizeci de produse arată la fel după douăzeci de răspunsuri ca la început, iar omul nu știe
+ * cât mai are de mers.
+ *
+ * @param int $rezolvate Câte au primit răspuns.
+ * @param int $total     Câte sunt.
+ * @return void
+ */
+function ccs_ui_progres( $rezolvate, $total ) {
+	if ( ! $total ) {
+		return;
+	}
+	printf(
+		'<div class="ccs-progres"><span class="ccs-progres__pista"><span class="ccs-progres__umplut%1$s" style="width:%2$d%%"></span></span><span>%3$s</span></div>',
+		$rezolvate >= $total ? ' ccs-progres__umplut--gata' : '',
+		(int) round( 100 * $rezolvate / $total ),
+		esc_html(
+			sprintf(
+				/* translators: 1: câte au primit răspuns, 2: câte sunt în total. */
+				__( '%1$d din %2$d rezolvate', 'conex-conect-sync' ),
+				$rezolvate,
+				$total
+			)
+		)
+	);
+}
+
+/**
+ * Cele două variante de răspuns, ca un comutator.
+ *
+ * Varianta aleasă rămâne apăsată, deci rândul își spune singur starea. Înainte erau două butoane separate plus o
+ * propoziție care apărea dedesubt și muta layoutul.
+ *
+ * @param array      $opt   valoare => etichetă.
+ * @param array|null $luata Decizia deja luată, dacă există.
+ * @return void
+ */
+function ccs_ui_alegeri( $opt, $luata ) {
+	echo '<div class="ccs-alegeri">';
+	foreach ( $opt as $valoare => $eticheta ) {
+		printf(
+			'<button type="button" class="ccs-alegere ccs-decizie" data-valoare="%1$s" aria-pressed="%2$s">%3$s</button>',
+			esc_attr( $valoare ),
+			$luata && $luata['valoare'] === $valoare ? 'true' : 'false',
+			esc_html( $eticheta )
+		);
+	}
+	echo '</div>';
+}
+
+/**
+ * Câte rânduri de plan au primit deja un răspuns.
+ *
+ * @param array $randuri Rândurile.
+ * @param array $decizii Deciziile luate, pe referință.
+ * @return int Numărul.
+ */
+function ccs_ui_cate_rezolvate( $randuri, $decizii ) {
+	$n = 0;
+	foreach ( $randuri as $r ) {
+		if ( isset( $decizii[ (string) $r['wc_id'] ] ) ) {
+			$n++;
+		}
+	}
+	return $n;
+}
+
+/**
  * Bara cu „la fel pentru toate”.
  *
  * Al doilea clic confirmă. Nu folosim fereastra de confirmare a browserului: întrerupe omul și arată ca o eroare.
@@ -425,7 +527,7 @@ function ccs_admin_tab_pret() {
 		?>
 	</p>
 
-	<div class="ccs-doua" style="margin-top:20px">
+	<div class="ccs-doua">
 		<div>
 			<label class="ccs-camp" for="ccs-adaos">
 				<span><?php esc_html_e( 'Adaos comercial', 'conex-conect-sync' ); ?></span>
@@ -463,7 +565,7 @@ function ccs_admin_tab_pret() {
 				</select>
 			</label>
 
-			<div class="ccs-butoane" style="margin-top:4px">
+			<div class="ccs-butoane">
 				<button type="button" class="ccs-btn ccs-btn--principal" id="ccs-salveaza-politica">
 					<?php esc_html_e( 'Salvează politica de preț', 'conex-conect-sync' ); ?>
 				</button>
@@ -472,7 +574,7 @@ function ccs_admin_tab_pret() {
 		</div>
 
 		<div>
-			<h3 style="margin:0 0 8px;font-size:14px"><?php esc_html_e( 'Ce se întâmplă cu magazinul', 'conex-conect-sync' ); ?></h3>
+			<h3 class="ccs-subtitlu ccs-subtitlu--prim"><?php esc_html_e( 'Ce se întâmplă cu magazinul', 'conex-conect-sync' ); ?></h3>
 			<table class="ccs-efect">
 				<tbody>
 					<tr><th><?php esc_html_e( 'Prețuri care urcă', 'conex-conect-sync' ); ?></th><td id="ccs-e-sus"></td></tr>
@@ -483,14 +585,13 @@ function ccs_admin_tab_pret() {
 				</tbody>
 			</table>
 
-			<h3 style="margin:24px 0 8px;font-size:14px"><?php esc_html_e( 'Pe produse concrete', 'conex-conect-sync' ); ?></h3>
+			<h3 class="ccs-subtitlu"><?php esc_html_e( 'Pe produse concrete', 'conex-conect-sync' ); ?></h3>
 			<div class="ccs-tabel-cadru">
 				<table class="ccs-tabel">
 					<thead>
 						<tr>
 							<th class="num"><?php esc_html_e( 'Cost fără TVA', 'conex-conect-sync' ); ?></th>
-							<th class="num"><?php esc_html_e( 'Preț acum', 'conex-conect-sync' ); ?></th>
-							<th class="num"><?php esc_html_e( 'Preț nou', 'conex-conect-sync' ); ?></th>
+							<th class="num"><?php esc_html_e( 'Preț, acum și propus', 'conex-conect-sync' ); ?></th>
 							<th class="num"><?php esc_html_e( 'Câștig', 'conex-conect-sync' ); ?></th>
 						</tr>
 					</thead>
@@ -518,6 +619,7 @@ function ccs_admin_tab_potriviri() {
 		__( 'Produse de confirmat', 'conex-conect-sync' ),
 		__( 'La produsele de mai jos, codul de pe site se potrivește cu un cod de la Conex, dar numele arată cu totul alt produs. Până ne spui care e situația, nu li se schimbă nici prețul, nici stocul.', 'conex-conect-sync' )
 	);
+	ccs_ui_progres( count( array_intersect_key( $decizii, $lista ) ), count( $lista ) );
 
 	if ( ! $lista ) {
 		ccs_ui_card( __( 'Nimic de confirmat', 'conex-conect-sync' ) );
@@ -582,10 +684,17 @@ function ccs_admin_tab_potriviri() {
 							<p class="ccs-parte__nume"><?php echo esc_html( $v['nume_conex'] ); ?></p>
 							<p class="ccs-parte__meta">
 								<?php
+								// Procentul de asemănare e faptul care decide, deci iese din textul muted. Galben
+								// înseamnă „uită-te la asta”, nu „e o eroare”.
 								printf(
-									/* translators: %d: procentul. */
-									esc_html__( 'doar %d%% din cuvinte sunt la fel', 'conex-conect-sync' ),
-									(int) $v['scor']
+									'<span class="ccs-pastila ccs-pastila--atentie">%s</span>',
+									esc_html(
+										sprintf(
+											/* translators: %d: procentul. */
+											__( '%d%% cuvinte la fel', 'conex-conect-sync' ),
+											(int) $v['scor']
+										)
+									)
 								);
 								?>
 							</p>
@@ -594,8 +703,15 @@ function ccs_admin_tab_potriviri() {
 				</div>
 			</div>
 			<div class="ccs-butoane">
-				<button type="button" class="ccs-btn ccs-decizie" data-valoare="acelasi"><?php esc_html_e( 'E același produs, leagă-l', 'conex-conect-sync' ); ?></button>
-				<button type="button" class="ccs-btn ccs-decizie" data-valoare="exclus"><?php esc_html_e( 'Nu e același produs, lasă-l în pace', 'conex-conect-sync' ); ?></button>
+				<?php
+				ccs_ui_alegeri(
+					array(
+						'acelasi' => __( 'E același produs', 'conex-conect-sync' ),
+						'exclus'  => __( 'Nu e același produs', 'conex-conect-sync' ),
+					),
+					$luata
+				);
+				?>
 				<span class="ccs-stare-text"><?php echo $luata ? esc_html( ccs_ui_text_decizie( $luata ) ) : ''; ?></span>
 			</div>
 		</div>
@@ -618,6 +734,7 @@ function ccs_admin_tab_scaderi() {
 		__( 'Prețuri care ar coborî mult', 'conex-conect-sync' ),
 		__( 'Produsele astea au acum un adaos foarte mare, iar regula de preț le-ar cobori prețul la mai puțin de jumătate. Nu e o greșeală de calcul: așa iese din formulă. Dar e o scădere pe care n-o facem fără să ne spui.', 'conex-conect-sync' )
 	);
+	ccs_ui_progres( ccs_ui_cate_rezolvate( $randuri, $decizii ), count( $randuri ) );
 
 	if ( ! $randuri ) {
 		ccs_ui_card( __( 'Niciun preț nu coboară atât de mult', 'conex-conect-sync' ) );
@@ -667,6 +784,7 @@ function ccs_admin_tab_subcost() {
 			)
 			: __( 'Niciun produs nu se vinde sub costul de achiziție.', 'conex-conect-sync' )
 	);
+	ccs_ui_progres( ccs_ui_cate_rezolvate( $randuri, $decizii ), count( $randuri ) );
 
 	if ( ! $randuri ) {
 		ccs_ui_card( __( 'Totul e în regulă', 'conex-conect-sync' ) );
@@ -710,8 +828,7 @@ function ccs_ui_tabel_decizii( $randuri, $decizii, $tip, $opt ) {
 				<tr>
 					<th><?php esc_html_e( 'Produs', 'conex-conect-sync' ); ?></th>
 					<th class="num"><?php esc_html_e( 'Cost cu TVA', 'conex-conect-sync' ); ?></th>
-					<th class="num"><?php esc_html_e( 'Preț acum', 'conex-conect-sync' ); ?></th>
-					<th class="num"><?php esc_html_e( 'Preț nou', 'conex-conect-sync' ); ?></th>
+					<th class="num"><?php esc_html_e( 'Preț, acum și propus', 'conex-conect-sync' ); ?></th>
 					<th class="num"><?php esc_html_e( 'Câștig nou', 'conex-conect-sync' ); ?></th>
 					<th><?php esc_html_e( 'Ce facem', 'conex-conect-sync' ); ?></th>
 				</tr>
@@ -731,21 +848,11 @@ function ccs_ui_tabel_decizii( $randuri, $decizii, $tip, $opt ) {
 						</span>
 					</td>
 					<td class="num"><?php echo esc_html( ccs_lei( $r['cost_cu_tva'] ) ); ?></td>
-					<td class="num"><?php echo esc_html( ccs_lei( $r['pret_site'] ) ); ?></td>
-					<td class="num ccs-nou"><?php echo esc_html( ccs_lei( $r['pret_tinta'] ) ); ?></td>
+					<td class="num"><?php echo ccs_ui_delta( $r['pret_site'], $r['pret_tinta'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
 					<td class="num <?php echo $r['pret_tinta'] - $r['cost_cu_tva'] < 0 ? 'ccs-rosu' : ''; ?>">
 						<?php echo esc_html( ccs_lei( $r['pret_tinta'] - $r['cost_cu_tva'] ) ); ?>
 					</td>
-					<td>
-						<div class="ccs-butoane">
-							<?php foreach ( $opt as $valoare => $eticheta ) : ?>
-								<button type="button" class="ccs-btn ccs-btn--mic ccs-decizie" data-valoare="<?php echo esc_attr( $valoare ); ?>">
-									<?php echo esc_html( $eticheta ); ?>
-								</button>
-							<?php endforeach; ?>
-						</div>
-						<span class="ccs-stare-text"><?php echo $luata ? esc_html( ccs_ui_text_decizie( $luata ) ) : ''; ?></span>
-					</td>
+					<td><?php ccs_ui_alegeri( $opt, $luata ); ?></td>
 				</tr>
 			<?php endforeach; ?>
 			</tbody>
@@ -828,7 +935,7 @@ function ccs_admin_tab_stoc() {
 	}
 	echo '</ul>';
 	?>
-	<div class="ccs-butoane" style="margin-top:16px" data-tip="epuizare" data-referinta="">
+	<div class="ccs-butoane" data-tip="epuizare" data-referinta="">
 		<button type="button" class="ccs-btn ccs-btn--principal ccs-decizie" data-valoare="aprobat">
 			<?php esc_html_e( 'De acord, sincronizează stocul așa', 'conex-conect-sync' ); ?>
 		</button>

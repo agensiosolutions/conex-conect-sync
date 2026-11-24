@@ -1,208 +1,339 @@
 /*
- * Panoul de admin. Aceleași reguli ca la agensio-consent: fundal deschis, gri neutre, culoare doar pe butoane, pe
- * elementul ales și pe indicatorii de stare (verde = bine, galben = de văzut, roșu = problemă, albastru = acțiune).
+ * Panoul de admin.
  *
- * Diferența de conținut: acolo omul configurează, aici omul hotărăște. De aceea fiecare tab are o întrebare, nu o
- * listă de setări, iar cifra din dreptul unui tab spune câte răspunsuri lipsesc de acolo.
+ * Direcția, scrisă înainte de orice valoare din fișierul ăsta:
+ *   Produs:   panoul prin care patronul unui magazin de piese auto hotărăște ce face sincronizarea cu prețurile și
+ *             stocul lui.
+ *   Caracter: exact, liniștit, de atelier.
+ *   Lume:     fișa de lucru dintr-un service. Cifre citite în grabă, între două comenzi, pe hârtie albă.
+ *   Momente:  perechea „acum → nou”, singurul loc din pagină cu greutate și culoare, plus contorul de progres.
+ *   Semnătura: săgeata de schimbare, `738,00 → 1.529,00`, folosită peste tot unde o valoare se schimbă și nicăieri
+ *             altundeva. Dacă o vezi, înseamnă că acolo se schimbă ceva.
+ *
+ * Reguli: toate spațiile pe grila de 4px, o singură rampă neutră cu trei roluri de text, un singur accent, o singură
+ * curbă de animație. Cifrele sunt tabulare peste tot, ca să se poată compara pe coloană.
  */
 body.ccs-pagina #wpcontent,
-body.ccs-pagina #wpbody-content { background: #f7f8fa; }
+body.ccs-pagina #wpbody-content { background: #fafafa; }
 body.ccs-pagina #wpbody-content > .notice,
 body.ccs-pagina #wpbody-content > .error,
 body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 
 .ccs-admin {
+  /* Rampa graphite, varianta deschisă. Suprafețele rămân gri: lumea se vede în accent, nu în fundal. */
+  --c-fundal: #fafafa;
   --c-card: #fff;
-  --c-linie: #e6e8ec;
-  --c-linie-tare: #d3d7de;
-  --c-text: #111827;
-  --c-text-2: #374151;
-  --c-text-3: #6b7280;
-  --c-gri: #f3f4f6;
-  --c-gri-2: #f9fafb;
-  --c-albastru: #2563eb;
-  --c-albastru-inchis: #1d4ed8;
-  --c-albastru-fundal: #eff6ff;
-  --c-verde: #15803d;
-  --c-verde-fundal: #ecfdf3;
+  --c-ridicat: #f4f4f5;
+  --c-linie: rgba(23, 23, 23, .08);
+  --c-linie-tare: rgba(23, 23, 23, .14);
+  --c-text: #171717;
+  --c-text-2: #525252;
+  --c-text-3: #737373;
+
+  --c-accent: #2563eb;
+  --c-accent-inchis: #1d4ed8;
+  --c-accent-fundal: #eff6ff;
+  --c-verde: #16a34a;
+  --c-verde-fundal: #f0fdf4;
   --c-galben: #a16207;
   --c-galben-fundal: #fefce8;
-  --c-rosu: #b91c1c;
+  --c-rosu: #dc2626;
   --c-rosu-fundal: #fef2f2;
-  --c-umbra: 0 1px 2px rgb(16 24 40 / .05);
-  --c-inel: 0 0 0 3px rgb(37 99 235 / .22);
-  max-width: 1320px;
+
+  --c-umbra: 0 1px 2px rgba(0, 0, 0, .05);
+  --c-inel: 0 0 0 3px rgba(37, 99, 235, .22);
+  --c-curba: cubic-bezier(.22, 1, .36, 1);
+  --c-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+
+  max-width: 1440px;
   margin: 0 auto;
   padding: 24px 24px 64px 4px;
   color: var(--c-text-2);
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 20px;
 }
 .ccs-admin *, .ccs-admin *::before, .ccs-admin *::after { box-sizing: border-box; }
 .ccs-admin h1, .ccs-admin h2, .ccs-admin h3 { color: var(--c-text); }
-.ccs-admin code { background: var(--c-gri); border-radius: 4px; padding: 1px 6px; font-size: 12px; color: var(--c-text-2); }
-.ccs-admin .dashicons { width: 18px; height: 18px; font-size: 18px; }
+.ccs-admin .dashicons { width: 16px; height: 16px; font-size: 16px; }
 
-/* ---------------------------------------------------------------- antet și navigație */
+/* ---------------------------------------------------------------- antet */
 .ccs-antet { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
-.ccs-antet__titlu { display: flex; align-items: center; gap: 14px; }
-.ccs-antet__icon { display: grid !important; place-items: center; width: 40px !important; height: 40px !important; border-radius: 10px; background: var(--c-text); color: #fff; font-size: 22px !important; }
-.ccs-antet h1 { margin: 0; padding: 0; font-size: 20px; font-weight: 600; line-height: 1.3; }
-.ccs-antet p { margin: 0; color: var(--c-text-3); }
-.ccs-antet__dreapta { display: flex; align-items: center; gap: 12px; }
+.ccs-antet__titlu { display: flex; align-items: center; gap: 12px; }
+.ccs-antet__icon {
+  display: grid !important; place-items: center;
+  width: 40px !important; height: 40px !important;
+  border-radius: 12px; background: var(--c-text); color: #fff; font-size: 20px !important;
+}
+.ccs-antet h1 { margin: 0; padding: 0; font-size: 20px; line-height: 24px; font-weight: 500; }
+.ccs-antet p { margin: 0; font-size: 13px; color: var(--c-text-3); }
+.ccs-antet__dreapta { display: flex; align-items: center; gap: 8px; }
 
-.ccs-cadru { display: grid; grid-template-columns: 248px minmax(0, 1fr); gap: 32px; align-items: start; }
-.ccs-nav { position: sticky; top: 52px; display: flex; flex-direction: column; gap: 2px; }
-.ccs-nav__link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid transparent; border-radius: 10px; color: var(--c-text-2); text-decoration: none; }
+/* ---------------------------------------------------------------- navigație */
+.ccs-cadru { display: grid; grid-template-columns: 256px minmax(0, 1fr); gap: 32px; align-items: start; }
+.ccs-nav { position: sticky; top: 52px; display: flex; flex-direction: column; gap: 4px; }
+.ccs-nav__link {
+  display: flex; align-items: center; gap: 12px;
+  min-height: 36px; padding: 8px 12px;
+  border: 1px solid transparent; border-radius: 8px;
+  color: var(--c-text-2); text-decoration: none;
+  transition: background 140ms var(--c-curba), color 140ms var(--c-curba), border-color 140ms var(--c-curba);
+}
 .ccs-nav__link > span:nth-child(2) { flex: 1 1 auto; min-width: 0; }
-.ccs-nav__link strong { display: block; font-weight: 500; color: var(--c-text); }
-.ccs-nav__link small { display: block; font-size: 12px; color: var(--c-text-3); }
+.ccs-nav__link strong { display: block; font-size: 14px; font-weight: 400; color: var(--c-text); }
+.ccs-nav__link small { display: block; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 .ccs-nav__link .dashicons { color: var(--c-text-3); flex: none; }
-.ccs-nav__link:hover { background: var(--c-gri); color: var(--c-text); }
-.ccs-nav__link:focus { box-shadow: var(--c-inel); outline: none; }
+.ccs-nav__link:hover { background: var(--c-ridicat); color: var(--c-text); }
+.ccs-nav__link:focus-visible { box-shadow: var(--c-inel); outline: none; }
 .ccs-nav__link[aria-current="page"] { background: var(--c-card); border-color: var(--c-linie); box-shadow: var(--c-umbra); }
-.ccs-nav__link[aria-current="page"] strong { font-weight: 600; }
-.ccs-nav__link[aria-current="page"] .dashicons { color: var(--c-albastru); }
+.ccs-nav__link[aria-current="page"] strong { font-weight: 500; }
+.ccs-nav__link[aria-current="page"] .dashicons { color: var(--c-accent); }
 
-/* Cifra din dreptul unui tab: câte răspunsuri lipsesc de acolo. Dispare când nu mai e nimic. */
-.ccs-nav__rest { flex: none; min-width: 22px; padding: 1px 7px; border-radius: 999px; background: var(--c-galben-fundal); color: var(--c-galben); font-size: 11px; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
-.ccs-nav__link[aria-current="page"] .ccs-nav__rest { background: var(--c-galben); color: #fff; }
+/* Câte răspunsuri lipsesc din tabul acela. Dispare când nu mai e niciunul. */
+.ccs-nav__rest {
+  flex: none; min-width: 20px; padding: 0 6px;
+  border-radius: 4px; background: var(--c-galben-fundal); color: var(--c-galben);
+  font-family: var(--c-mono); font-size: 12px; line-height: 20px; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
 
-.ccs-tab-antet { margin: 4px 0 20px; }
-.ccs-tab-antet h2 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
-.ccs-tab-antet p { margin: 0; color: var(--c-text-3); max-width: 72ch; }
+/* ---------------------------------------------------------------- antetul unui tab */
+.ccs-tab-antet { margin: 0 0 20px; }
+.ccs-tab-antet h2 { margin: 0 0 4px; font-size: 28px; line-height: 32px; font-weight: 500; }
+.ccs-tab-antet p { margin: 0; max-width: 72ch; font-size: 14px; color: var(--c-text-3); }
+
+/* Progresul: cât din întrebările tabului au primit răspuns. */
+.ccs-progres { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+/* Pista are nevoie de contrast față de fundalul paginii, altfel la zero răspunsuri nu se vede nimic și bara pare
+   o eroare de randare. */
+.ccs-progres__pista { flex: 0 0 160px; height: 4px; border-radius: 4px; background: rgba(23, 23, 23, .1); overflow: hidden; }
+.ccs-progres__umplut { height: 100%; border-radius: 4px; background: var(--c-accent); transition: width 300ms var(--c-curba); }
+.ccs-progres__umplut--gata { background: var(--c-verde); }
+.ccs-progres span { font-size: 13px; color: var(--c-text-3); font-variant-numeric: tabular-nums; }
 
 /* ---------------------------------------------------------------- carduri */
-.ccs-card { background: var(--c-card); border: 1px solid var(--c-linie); border-radius: 12px; box-shadow: var(--c-umbra); margin-bottom: 20px; }
-.ccs-card__cap { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px 24px 4px; }
-.ccs-card__cap h2 { margin: 0; font-size: 16px; font-weight: 600; }
-.ccs-card__cap p { margin: 4px 0 0; color: var(--c-text-3); font-size: 13px; max-width: 72ch; }
-.ccs-card__corp { padding: 12px 24px 20px; }
-.ccs-card__corp > p:first-child { margin-top: 0; }
+.ccs-card {
+  background: var(--c-card); border: 1px solid var(--c-linie); border-radius: 12px;
+  box-shadow: var(--c-umbra); margin-bottom: 16px;
+}
+.ccs-card__cap { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px 20px 0; }
+.ccs-card__cap h2 { margin: 0; font-size: 16px; line-height: 20px; font-weight: 500; }
+.ccs-card__cap p { margin: 4px 0 0; max-width: 72ch; font-size: 13px; color: var(--c-text-3); }
+.ccs-card__corp { padding: 16px 20px 20px; }
+.ccs-card__corp > :first-child { margin-top: 0; }
+.ccs-card__corp > :last-child { margin-bottom: 0; }
 
-.ccs-mic { font-size: 12.5px; color: var(--c-text-3); margin: 8px 0 0; }
-.ccs-gol { margin: 8px 0; padding: 18px 16px; border: 1px dashed var(--c-linie-tare); border-radius: 10px; background: var(--c-gri-2); color: var(--c-text-3); text-align: center; }
-.ccs-gol strong { display: block; color: var(--c-verde); font-size: 15px; margin-bottom: 2px; }
+.ccs-subtitlu { margin: 24px 0 8px; font-size: 13px; font-weight: 500; color: var(--c-text); }
+.ccs-subtitlu--prim { margin-top: 0; }
+.ccs-mic { margin: 8px 0 0; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
+.ccs-gol {
+  padding: 20px 16px; border: 1px dashed var(--c-linie-tare); border-radius: 8px;
+  background: var(--c-fundal); color: var(--c-text-3); text-align: center;
+}
+.ccs-gol strong { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 500; color: var(--c-verde); }
 
-/* ---------------------------------------------------------------- cifre și stări */
-.ccs-cifre { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
-.ccs-cifra { padding: 16px 20px; background: var(--c-card); border: 1px solid var(--c-linie); border-radius: 12px; box-shadow: var(--c-umbra); }
+/* ---------------------------------------------------------------- cifre */
+.ccs-cifre { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.ccs-cifra {
+  padding: 16px; background: var(--c-card); border: 1px solid var(--c-linie);
+  border-radius: 12px; box-shadow: var(--c-umbra);
+}
 .ccs-cifra span { display: block; font-size: 13px; color: var(--c-text-3); }
-.ccs-cifra strong { display: block; margin-top: 4px; font-size: 28px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
-.ccs-cifra--atentie { border-color: #fde68a; background: var(--c-galben-fundal); }
+.ccs-cifra strong {
+  display: block; margin-top: 4px;
+  font-size: 28px; line-height: 32px; font-weight: 500; color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
 .ccs-cifra--atentie strong { color: var(--c-galben); }
 .ccs-cifra--bine strong { color: var(--c-verde); }
 
+/* ---------------------------------------------------------------- starea */
 .ccs-stari { margin: 0; padding: 0; list-style: none; }
-.ccs-stare { display: grid; grid-template-columns: 28px 220px minmax(0, 1fr); align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--c-linie); margin: 0; }
-.ccs-stare:first-child { border-top: 0; }
-.ccs-stare strong { color: var(--c-text); font-weight: 500; }
-.ccs-stare > span:last-child { color: var(--c-text-3); }
-.ccs-stare__icon { display: grid !important; place-items: center; width: 24px !important; height: 24px !important; border-radius: 50%; font-size: 16px !important; background: var(--c-gri); color: var(--c-text-3); }
+.ccs-stare {
+  display: grid; grid-template-columns: 24px 216px minmax(0, 1fr); align-items: center; gap: 12px;
+  margin: 0; padding: 12px 0; border-top: 1px solid var(--c-linie);
+}
+.ccs-stare:first-child { border-top: 0; padding-top: 0; }
+.ccs-stare:last-child { padding-bottom: 0; }
+.ccs-stare strong { font-size: 14px; font-weight: 400; color: var(--c-text); }
+.ccs-stare > span:last-child { font-size: 13px; color: var(--c-text-3); }
+.ccs-stare__icon {
+  display: grid !important; place-items: center;
+  width: 24px !important; height: 24px !important;
+  border-radius: 999px; font-size: 16px !important;
+  background: var(--c-ridicat); color: var(--c-text-3);
+}
 .ccs-stare--bine .ccs-stare__icon { background: var(--c-verde-fundal); color: var(--c-verde); }
 .ccs-stare--atentie .ccs-stare__icon { background: var(--c-galben-fundal); color: var(--c-galben); }
 .ccs-stare--problema .ccs-stare__icon { background: var(--c-rosu-fundal); color: var(--c-rosu); }
 
-/* Ce e de rezolvat: o listă de legături către taburile cu întrebări. */
+/* ---------------------------------------------------------------- de rezolvat */
 .ccs-de-rezolvat { margin: 0; padding: 0; list-style: none; }
-.ccs-de-rezolvat li { display: flex; align-items: center; gap: 12px; padding: 14px 0; margin: 0; border-top: 1px solid var(--c-linie); }
-.ccs-de-rezolvat li:first-child { border-top: 0; }
-.ccs-de-rezolvat .dashicons { color: var(--c-galben); flex: none; }
-.ccs-de-rezolvat strong { color: var(--c-text); font-weight: 500; }
-.ccs-de-rezolvat p { margin: 2px 0 0; font-size: 13px; color: var(--c-text-3); }
+.ccs-de-rezolvat li {
+  display: flex; align-items: center; gap: 12px;
+  margin: 0; padding: 16px 0; border-top: 1px solid var(--c-linie);
+}
+.ccs-de-rezolvat li:first-child { border-top: 0; padding-top: 0; }
+.ccs-de-rezolvat li:last-child { padding-bottom: 0; }
 .ccs-de-rezolvat > li > div { flex: 1 1 auto; min-width: 0; }
+.ccs-de-rezolvat .dashicons { flex: none; color: var(--c-galben); }
+.ccs-de-rezolvat strong { display: block; font-size: 14px; font-weight: 500; color: var(--c-text); }
+.ccs-de-rezolvat p { margin: 4px 0 0; font-size: 13px; color: var(--c-text-3); }
 
-/* ---------------------------------------------------------------- butoane, pastile, mesaje */
-.ccs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 14px; border: 1px solid var(--c-linie-tare); border-radius: 8px; background: #fff; color: var(--c-text); font-size: 14px; font-weight: 500; line-height: 1; text-decoration: none; cursor: pointer; white-space: nowrap; }
-.ccs-btn:hover { background: var(--c-gri); color: var(--c-text); }
-.ccs-btn:focus { box-shadow: var(--c-inel); outline: none; }
-.ccs-btn:disabled { opacity: .5; cursor: default; }
-.ccs-btn--principal { background: var(--c-albastru); border-color: var(--c-albastru); color: #fff; }
-.ccs-btn--principal:hover { background: var(--c-albastru-inchis); border-color: var(--c-albastru-inchis); color: #fff; }
-.ccs-btn--principal:disabled:hover { background: var(--c-albastru); }
-.ccs-btn--fantoma { border-color: transparent; background: transparent; color: var(--c-text-3); padding: 0 10px; }
-.ccs-btn--fantoma:hover { background: var(--c-gri); color: var(--c-text); }
-.ccs-btn--mic { min-height: 30px; padding: 0 10px; font-size: 13px; }
-/* Butonul care așteaptă al doilea clic de confirmare. */
-.ccs-btn[data-confirma="da"] { border-color: #fecaca; background: var(--c-rosu-fundal); color: var(--c-rosu); font-weight: 600; }
+/* ---------------------------------------------------------------- butoane */
+.ccs-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 36px; padding: 0 16px;
+  border: 1px solid var(--c-linie-tare); border-radius: 8px;
+  background: var(--c-card); color: var(--c-text);
+  font-size: 14px; font-weight: 400; line-height: 1; text-decoration: none;
+  cursor: pointer; white-space: nowrap;
+  transition: background 140ms var(--c-curba), border-color 140ms var(--c-curba), color 140ms var(--c-curba);
+}
+.ccs-btn:hover { background: var(--c-ridicat); color: var(--c-text); }
+.ccs-btn:focus-visible { box-shadow: var(--c-inel); outline: none; }
+.ccs-btn:active { transform: scale(.98); }
+.ccs-btn:disabled { opacity: .5; cursor: default; transform: none; }
+.ccs-btn--principal { background: var(--c-accent); border-color: var(--c-accent); color: #fff; }
+.ccs-btn--principal:hover { background: var(--c-accent-inchis); border-color: var(--c-accent-inchis); color: #fff; }
+.ccs-btn--fantoma { padding: 0 12px; border-color: transparent; background: transparent; color: var(--c-text-3); }
+.ccs-btn--fantoma:hover { background: var(--c-ridicat); color: var(--c-text); }
+.ccs-btn--mic { min-height: 32px; padding: 0 12px; font-size: 13px; }
+/* Butonul care așteaptă al doilea clic. */
+.ccs-btn[data-confirma="da"] { border-color: var(--c-rosu); background: var(--c-rosu-fundal); color: var(--c-rosu); }
 
-.ccs-pastila { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; line-height: 1.6; white-space: nowrap; background: var(--c-gri); color: var(--c-text-2); }
+.ccs-butoane { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* Alegerea dintre două variante, ca un comutator, nu ca două butoane separate. După ce s-a ales, varianta aleasă
+   rămâne apăsată: rândul își spune singur starea, fără o propoziție care mută layoutul. */
+.ccs-alegeri { display: inline-flex; padding: 2px; gap: 2px; border-radius: 8px; background: var(--c-ridicat); }
+.ccs-alegere {
+  min-height: 28px; padding: 0 12px;
+  border: 1px solid transparent; border-radius: 6px;
+  background: transparent; color: var(--c-text-2);
+  font-size: 13px; line-height: 1; white-space: nowrap; cursor: pointer;
+  transition: background 140ms var(--c-curba), color 140ms var(--c-curba), box-shadow 140ms var(--c-curba);
+}
+.ccs-alegere:hover { color: var(--c-text); }
+.ccs-alegere:focus-visible { box-shadow: var(--c-inel); outline: none; }
+.ccs-alegere[aria-pressed="true"] {
+  background: var(--c-card); color: var(--c-text); font-weight: 500;
+  box-shadow: var(--c-umbra), 0 0 0 1px var(--c-linie);
+}
+.ccs-alegere:disabled { opacity: .5; cursor: default; }
+
+/* ---------------------------------------------------------------- pastile și mesaje */
+.ccs-pastila {
+  display: inline-flex; align-items: center;
+  padding: 0 8px; border-radius: 4px;
+  background: var(--c-ridicat); color: var(--c-text-2);
+  font-size: 12px; line-height: 20px; white-space: nowrap;
+}
 .ccs-pastila--bine { background: var(--c-verde-fundal); color: var(--c-verde); }
 .ccs-pastila--atentie { background: var(--c-galben-fundal); color: var(--c-galben); }
 .ccs-pastila--problema { background: var(--c-rosu-fundal); color: var(--c-rosu); }
-.ccs-pastila--info { background: var(--c-albastru-fundal); color: var(--c-albastru-inchis); }
+.ccs-pastila--info { background: var(--c-accent-fundal); color: var(--c-accent-inchis); }
 
-.ccs-mesaj { margin-bottom: 20px; padding: 12px 16px; border: 1px solid; border-radius: 10px; font-weight: 500; }
-.ccs-mesaj--bine { background: var(--c-verde-fundal); border-color: #bbf7d0; color: var(--c-verde); }
-.ccs-mesaj--atentie { background: var(--c-galben-fundal); border-color: #fde68a; color: var(--c-galben); }
-.ccs-mesaj--problema { background: var(--c-rosu-fundal); border-color: #fecaca; color: var(--c-rosu); }
+.ccs-mesaj { margin-bottom: 16px; padding: 12px 16px; border: 1px solid; border-radius: 8px; font-size: 14px; }
+.ccs-mesaj--bine { background: var(--c-verde-fundal); border-color: var(--c-verde); color: var(--c-verde); }
+.ccs-mesaj--atentie { background: var(--c-galben-fundal); border-color: var(--c-galben); color: var(--c-galben); }
+.ccs-mesaj--problema { background: var(--c-rosu-fundal); border-color: var(--c-rosu); color: var(--c-rosu); }
 
-/* Starea unei acțiuni, scrisă lângă butoane după ce s-a salvat ceva. */
-.ccs-stare-text { font-size: 12.5px; color: var(--c-verde); }
+.ccs-stare-text { font-size: 12px; line-height: 16px; color: var(--c-verde); }
 .ccs-stare-text.ccs-eroare { color: var(--c-rosu); }
-.ccs-butoane { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
-/* ---------------------------------------------------------------- câmpuri și simulator */
-.ccs-admin .ccs-intrare { width: 100%; max-width: 340px; min-height: 38px; padding: 7px 12px; border: 1px solid var(--c-linie-tare); border-radius: 8px; background: #fff; color: var(--c-text); font-size: 14px; line-height: 1.4; box-shadow: none; }
+/* ---------------------------------------------------------------- semnătura: acum → nou */
+.ccs-delta { display: inline-flex; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
+.ccs-delta__acum { color: var(--c-text-3); }
+.ccs-delta__sageata { color: var(--c-text-3); font-size: 12px; }
+.ccs-delta__nou { font-weight: 500; color: var(--c-text); }
+.ccs-delta__cat {
+  padding: 0 6px; border-radius: 4px; background: var(--c-ridicat);
+  font-family: var(--c-mono); font-size: 12px; line-height: 20px; color: var(--c-text-3);
+}
+.ccs-delta--sus .ccs-delta__cat { background: var(--c-verde-fundal); color: var(--c-verde); }
+.ccs-delta--jos .ccs-delta__cat { background: var(--c-galben-fundal); color: var(--c-galben); }
+
+/* ---------------------------------------------------------------- câmpuri */
+.ccs-admin .ccs-intrare {
+  width: 100%; max-width: 320px; min-height: 36px; padding: 8px 12px;
+  border: 1px solid var(--c-linie-tare); border-radius: 8px;
+  background: var(--c-card); color: var(--c-text);
+  font-size: 14px; line-height: 20px; box-shadow: none;
+  transition: border-color 140ms var(--c-curba);
+}
 .ccs-admin select.ccs-intrare { padding-right: 32px; }
-.ccs-admin .ccs-intrare:focus { border-color: var(--c-albastru); box-shadow: var(--c-inel); outline: none; }
+.ccs-admin .ccs-intrare:focus { border-color: var(--c-accent); box-shadow: var(--c-inel); outline: none; }
 
-.ccs-camp { display: block; margin-bottom: 20px; }
-.ccs-camp > span { display: block; font-weight: 500; color: var(--c-text); margin-bottom: 2px; }
-.ccs-camp > small { display: block; font-size: 12.5px; color: var(--c-text-3); margin-bottom: 8px; max-width: 54ch; }
-.ccs-glisor { display: flex; align-items: center; gap: 14px; }
-.ccs-glisor input[type="range"] { flex: 1 1 auto; max-width: 300px; accent-color: var(--c-albastru); }
-.ccs-glisor output { min-width: 72px; font-size: 16px; font-weight: 600; color: var(--c-albastru); font-variant-numeric: tabular-nums; }
+.ccs-camp { display: block; margin-bottom: 24px; }
+.ccs-camp > span { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 500; color: var(--c-text); }
+.ccs-camp > small { display: block; margin-bottom: 8px; max-width: 56ch; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
+.ccs-glisor { display: flex; align-items: center; gap: 16px; }
+.ccs-glisor input[type="range"] { flex: 1 1 auto; max-width: 280px; accent-color: var(--c-accent); }
+.ccs-glisor output {
+  min-width: 72px; font-size: 16px; font-weight: 500; color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
 
-.ccs-formula { padding: 12px 16px; border-radius: 10px; background: var(--c-gri-2); border: 1px solid var(--c-linie); color: var(--c-text-2); font-size: 13px; }
-.ccs-formula b { color: var(--c-text); font-weight: 600; }
+.ccs-formula { margin: 0; padding: 12px 16px; border-radius: 8px; background: var(--c-fundal); border: 1px solid var(--c-linie); font-size: 13px; }
+.ccs-formula b { font-weight: 500; color: var(--c-text); }
 
-.ccs-doua { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 1.1fr); gap: 32px; align-items: start; }
+/* Controalele n-au nevoie de jumătate de ecran, iar efectul are. Altfel rămâne o bandă goală sub butonul de
+   salvare, cât e coloana din dreapta de lungă. */
+.ccs-doua { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 40px; align-items: start; }
 
-/* Efectul politicii: perechi etichetă/valoare, cu totalul desprins. */
+/* ---------------------------------------------------------------- efectul politicii */
 .ccs-efect { width: 100%; border-collapse: collapse; }
-.ccs-efect th, .ccs-efect td { padding: 9px 0; border-bottom: 1px solid var(--c-linie); font-size: 13px; text-align: left; }
+.ccs-efect th, .ccs-efect td { padding: 8px 0; border-bottom: 1px solid var(--c-linie); text-align: left; font-size: 13px; }
 .ccs-efect th { font-weight: 400; color: var(--c-text-3); }
-.ccs-efect td { text-align: right; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
-.ccs-efect tr:last-child th, .ccs-efect tr:last-child td { border-bottom: 0; }
-.ccs-efect .ccs-total th, .ccs-efect .ccs-total td { border-top: 2px solid var(--c-text); border-bottom: 0; padding-top: 11px; font-size: 14px; }
-.ccs-efect .ccs-total th { color: var(--c-text); font-weight: 600; }
+.ccs-efect td { text-align: right; font-weight: 500; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.ccs-efect .ccs-total th, .ccs-efect .ccs-total td { padding-top: 12px; border-top: 1px solid var(--c-linie-tare); border-bottom: 0; font-size: 14px; }
+.ccs-efect .ccs-total th { font-weight: 500; color: var(--c-text); }
 
 /* ---------------------------------------------------------------- tabele */
-.ccs-tabel-cadru { overflow-x: auto; border: 1px solid var(--c-linie); border-radius: 10px; }
+.ccs-tabel-cadru { border: 1px solid var(--c-linie); border-radius: 8px; overflow: hidden; }
 .ccs-tabel { width: 100%; border-collapse: collapse; }
-.ccs-tabel th { padding: 10px 14px; background: var(--c-gri-2); border-bottom: 1px solid var(--c-linie); color: var(--c-text-3); font-size: 12px; font-weight: 600; text-align: left; white-space: nowrap; }
-.ccs-tabel td { padding: 12px 14px; border-bottom: 1px solid #f0f1f3; vertical-align: top; }
+.ccs-tabel th {
+  padding: 8px 16px; border-bottom: 1px solid var(--c-linie);
+  background: var(--c-fundal); color: var(--c-text-3);
+  font-size: 12px; font-weight: 400; line-height: 16px; text-align: left; white-space: nowrap;
+}
+.ccs-tabel td { padding: 12px 16px; border-bottom: 1px solid var(--c-linie); vertical-align: middle; }
 .ccs-tabel tr:last-child td { border-bottom: 0; }
+.ccs-tabel tbody tr { transition: background 140ms var(--c-curba); }
+.ccs-tabel tbody tr:hover { background: var(--c-fundal); }
 .ccs-tabel th.num, .ccs-tabel td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ccs-tabel td.num { color: var(--c-text); }
-.ccs-tabel .ccs-nou { font-weight: 600; }
-.ccs-tabel .ccs-rosu { color: var(--c-rosu); font-weight: 600; }
-.ccs-tabel td:last-child { width: 1%; white-space: nowrap; }
-/* Butoanele de decizie stau pe un rând, altfel fiecare rând de tabel se face de două ori mai înalt. */
-.ccs-tabel .ccs-butoane { flex-wrap: nowrap; }
-.ccs-tabel .ccs-produs strong { display: block; color: var(--c-text); font-weight: 500; }
-.ccs-tabel .ccs-produs span { font-size: 12.5px; color: var(--c-text-3); }
-.ccs-tabel .ccs-stare-text { display: block; margin-top: 6px; white-space: normal; max-width: 240px; }
+.ccs-tabel td.ccs-rosu { color: var(--c-rosu); font-weight: 500; }
+.ccs-tabel td:last-child { width: 1%; white-space: nowrap; text-align: right; }
+.ccs-produs strong { display: block; font-size: 14px; font-weight: 400; color: var(--c-text); }
+.ccs-produs span { display: block; margin-top: 4px; font-family: var(--c-mono); font-size: 12px; line-height: 16px; color: var(--c-text-3); }
+.ccs-produs a { color: var(--c-text-3); }
+.ccs-produs a:hover { color: var(--c-accent); }
 
-/* ---------------------------------------------------------------- potriviri: cele două produse față în față */
-.ccs-potrivire { padding: 16px 18px; border: 1px solid var(--c-linie); border-radius: 10px; margin-bottom: 12px; background: #fff; }
-.ccs-fata { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 20px; align-items: start; }
-.ccs-parte__cap { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--c-text-3); }
+/* ---------------------------------------------------------------- potriviri */
+.ccs-potrivire { margin-bottom: 8px; padding: 16px; border: 1px solid var(--c-linie); border-radius: 8px; }
+.ccs-potrivire:last-of-type { margin-bottom: 0; }
+.ccs-fata { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 16px; align-items: start; }
+.ccs-parte__cap { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 .ccs-parte__corp { display: flex; gap: 12px; }
-.ccs-parte img { flex: none; width: 56px; height: 56px; object-fit: contain; border: 1px solid var(--c-linie); border-radius: 8px; background: var(--c-gri-2); }
-.ccs-parte__nume { margin: 0; font-weight: 500; color: var(--c-text); line-height: 1.4; }
-.ccs-parte__meta { margin: 4px 0 0; font-size: 12.5px; color: var(--c-text-3); }
-.ccs-contra { align-self: center; padding: 4px 10px; border-radius: 999px; background: var(--c-gri); color: var(--c-text-3); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
-.ccs-potrivire .ccs-butoane { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--c-linie); }
+.ccs-parte img { flex: none; width: 48px; height: 48px; object-fit: contain; border: 1px solid var(--c-linie); border-radius: 4px; background: var(--c-fundal); }
+.ccs-parte__nume { margin: 0; font-size: 14px; font-weight: 400; color: var(--c-text); }
+.ccs-parte__meta { margin: 4px 0 0; font-family: var(--c-mono); font-size: 12px; line-height: 16px; color: var(--c-text-3); }
+.ccs-parte__meta a { color: var(--c-text-3); }
+.ccs-contra { align-self: center; padding: 0 8px; border-radius: 4px; background: var(--c-ridicat); color: var(--c-text-3); font-size: 12px; line-height: 20px; }
+.ccs-potrivire .ccs-butoane { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--c-linie); }
 
-/* Un rând sau card la care s-a răspuns se stinge, ca ochiul să cadă pe ce a rămas. */
-.ccs-rezolvat { opacity: .5; }
+/* Ce a primit răspuns se stinge, ca ochiul să cadă pe ce a rămas. */
+.ccs-rezolvat { opacity: .5; transition: opacity 140ms var(--c-curba); }
 .ccs-rezolvat:hover { opacity: 1; }
 
 /* ---------------------------------------------------------------- bara „la fel pentru toate” */
-.ccs-lot-bara { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 16px; margin-bottom: 16px; border: 1px solid var(--c-linie); border-radius: 10px; background: var(--c-gri-2); }
-.ccs-lot-bara > span:first-child { font-size: 13px; color: var(--c-text-3); margin-right: 2px; }
+.ccs-lot-bara {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin-bottom: 16px; padding: 12px 16px;
+  border: 1px solid var(--c-linie); border-radius: 8px; background: var(--c-fundal);
+}
+.ccs-lot-bara > span:first-child { margin-right: 4px; font-size: 13px; color: var(--c-text-3); }
 
 /* ---------------------------------------------------------------- ecrane mai mici */
 @media (max-width: 1180px) {
@@ -213,11 +344,12 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   .ccs-nav { position: static; flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
   .ccs-nav__link small { display: none; }
   .ccs-cifre { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ccs-fata { grid-template-columns: 1fr; gap: 14px; }
+  .ccs-fata { grid-template-columns: 1fr; gap: 12px; }
   .ccs-contra { justify-self: start; }
-  .ccs-stare { grid-template-columns: 28px minmax(0, 1fr); }
+  .ccs-stare { grid-template-columns: 24px minmax(0, 1fr); }
   .ccs-stare > span:last-child { grid-column: 2; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ccs-admin * { transition: none !important; }
+  .ccs-btn:active { transform: none; }
 }

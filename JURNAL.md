@@ -67,6 +67,48 @@ culori, aceeași structură de pagină, aceeași împărțire a fișierelor. Nu 
 două panouri care arată diferit par două produse cumpărate de la oameni diferiți. Ia regula de design și structura
 din primul, și schimbă doar ce cere conținutul.
 
+**Panoul, trecut prin unslop.** Iulian a cerut întâi scanarea skillului cu SkillSpector, conform regulii
+`skill-nou-verificat`. 6 HIGH și 5 MEDIUM, iar toate cele HIGH sunt false pozitive: două sunt linia de instalare din
+README (`cp -r unslop/skills/unslop ~/.gemini/config/skills/`, adică scriere **în** folderul de skilluri), iar patru
+sunt teste care dovedesc că serverul local **refuză** să servească un fișier din afara rădăcinii, inclusiv prin
+symlink. Scanerul a văzut cuvântul `secret.txt`. Am verificat și ce nu vede un pattern matcher: singurele două
+`fetch` rulează în contextul paginii analizate, ca să-i încorporeze stilurile în captură, iar `ffmpeg` e chemat cu
+`execFileSync` și listă de argumente. Nimic nu pleacă în afară.
+
+Direcția, scrisă înainte de orice valoare, și păstrată în capul fișierului CSS: produsul e panoul prin care patronul
+unui magazin de piese hotărăște ce face sincronizarea; caracterul e „exact, liniștit, de atelier”; lumea e fișa de
+lucru dintr-un service, cu cifre citite în grabă între două comenzi; momentele sunt perechea „acum → nou” și
+contorul de progres; semnătura e săgeata de schimbare.
+
+Ce a găsit auditul în panoul de ieri: valori în afara grilei de 4 aproape peste tot (7, 9, 11, 14, 18, 22, 26),
+etichete cu majuscule și tracking larg pe cardurile de potrivire, unsprezece dimensiuni de text, cifre tabulare doar
+pe unele coloane, stiluri inline în PHP, zero tranziții, și o coloană „Ce facem” cu 120 de butoane pe pagina de
+produse sub cost.
+
+Cea mai utilă schimbare n-a fost însă nici una de curățenie. Înainte, prețul se citea pe patru coloane de cifre, iar
+omul trebuia să le adune singur. Acum e o singură celulă, `738,00 → 1.529,00 +107%`, folosită peste tot unde o
+valoare se schimbă, inclusiv în simulatorul care se recalculează în browser. Dacă vezi săgeata, acolo se schimbă
+ceva. A doua: cele două butoane de pe fiecare rând au devenit un comutator care rămâne apăsat pe varianta aleasă,
+deci rândul își spune singur starea, fără o propoziție care apărea dedesubt și muta layoutul.
+
+Două principii din skill nu le-am aplicat ca atare. „Un singur element luminos pe ecran” și scena generată din hero
+sunt scrise pentru pagini de prezentare; un panou unde omul ia șaizeci de decizii n-are hero și n-are nevoie de
+imagine generată, iar skillul o spune el însuși despre dashboarduri. Iar „toate rândurile dintr-o listă au aceeași
+înălțime” l-am lăsat deoparte acolo unde numele produselor au două rânduri: ca să respect regula ar fi trebuit să
+trunchiez tocmai textul după care patronul decide.
+
+`Lecție:` Un audit de design găsește lucruri de curățat, dar îmbunătățirea mare vine din a întreba ce trebuie să
+citească omul dintr-o privire. La Cez Auto, patru coloane de cifre corecte cereau din partea patronului o adunare în
+minte, de șaizeci de ori. O singură celulă `acum → nou` cu procentul alături a rezolvat mai mult decât toate
+corecturile de spațiere la un loc. Simptomul: un tabel unde două coloane vecine n-au sens decât comparate una cu
+alta.
+
+`Lecție:` O regulă de design scrisă pentru pagini de prezentare nu se aplică la un panou de lucru. „Un singur
+element luminos”, „scena care umple hero-ul”, „toate rândurile la fel de înalte”: primele două n-au obiect într-un
+ecran fără hero, iar a treia ar cere trunchierea exact a textului după care omul decide. Ia regulile verificabile
+(grila de spațiere, o singură rampă, cifre tabulare, o singură curbă de animație) și cântărește-le pe celelalte
+față de ce face ecranul.
+
 **Două lucruri împrumutate dintr-un skill.** Iulian mi-a dat
 `github.com/multica-ai/andrej-karpathy-skills`, patru principii de comportament într-un fișier de 2,5 KB, copiat de
 trei ori în repo. Nu l-am adăugat ca `CLAUDE.md`: majoritatea e deja la noi, iar două dintre cele patru principii ar

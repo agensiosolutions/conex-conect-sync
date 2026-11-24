@@ -70,6 +70,9 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Panoul trecut prin unslop: grilă de 4px, o rampă, semnătura „acum → nou” (24.11.2026)
+      Skillul scanat cu SkillSpector înainte: 6 HIGH și 5 MEDIUM, toate cele HIGH false pozitive, verificate de mână.
+      Două dintre principiile lui n-au fost aplicate ca atare, pentru că aici conținutul nu e o pagină de prezentare.
 - [x] Notificările celorlalte pluginuri, scoase de pe ecranul nostru (24.11.2026)
       Site-ul are 38 de notificări agățate de alte pluginuri, printre care una roșie despre o licență Elementor
       expirată. Pe pagina de decizii nu se mai afișează niciuna; în restul adminului rămân toate.

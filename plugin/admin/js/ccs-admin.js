@@ -50,6 +50,13 @@
 		} );
 	}
 
+	/** Lasă apăsată varianta aleasă, ca rândul să-și spună singur starea. */
+	function marcheazaAleasa( gazda, buton ) {
+		gazda.querySelectorAll( '.ccs-alegere' ).forEach( function ( b ) {
+			b.setAttribute( 'aria-pressed', b === buton ? 'true' : 'false' );
+		} );
+	}
+
 	/** Rândul sau cardul care ține o decizie. */
 	function gazdaRand( el ) {
 		return el.closest( 'tr' ) || el.closest( '.ccs-potrivire' ) || el;
@@ -82,14 +89,32 @@
 		} );
 
 		var activ = document.querySelector( '.ccs-nav__link[aria-current="page"] .ccs-nav__rest' );
-		if ( ! activ ) {
+		if ( activ ) {
+			if ( total > 0 ) {
+				activ.textContent = nr( total );
+			} else {
+				activ.remove();
+			}
+		}
+
+		actualizeazaProgres( total );
+	}
+
+	/** Mută bara de progres după câte răspunsuri mai lipsesc. */
+	function actualizeazaProgres( raman ) {
+		var bara = document.querySelector( '.ccs-progres' );
+		if ( ! bara ) {
 			return;
 		}
-		if ( total > 0 ) {
-			activ.textContent = nr( total );
-		} else {
-			activ.remove();
+		var total = document.querySelectorAll( '.ccs-principal [data-tip]:not([data-tip="epuizare"])' ).length;
+		if ( ! total ) {
+			return;
 		}
+		var gata = total - raman;
+		var umplut = bara.querySelector( '.ccs-progres__umplut' );
+		umplut.style.width = Math.round( 100 * gata / total ) + '%';
+		umplut.classList.toggle( 'ccs-progres__umplut--gata', gata >= total );
+		bara.querySelector( 'span:last-child' ).textContent = nr( gata ) + ' din ' + nr( total ) + ' rezolvate';
 	}
 
 	/* Butoanele de decizie, prinse o dată pe toată pagina. */
@@ -126,6 +151,7 @@
 				return;
 			}
 			arataStare( stare, raspuns.data.efect || texte.salvat, false );
+			marcheazaAleasa( gazda, buton );
 			rand.classList.add( 'ccs-rezolvat' );
 			actualizeazaRest();
 		} ).catch( function () {
@@ -189,8 +215,10 @@
 				arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || texte.eroare, true );
 				return;
 			}
+			var valoare = buton.getAttribute( 'data-valoare' );
 			ramase.forEach( function ( el ) {
 				var rand = gazdaRand( el );
+				marcheazaAleasa( el, el.querySelector( '.ccs-alegere[data-valoare="' + valoare + '"]' ) );
 				rand.classList.add( 'ccs-rezolvat' );
 				arataStare( rand.querySelector( '.ccs-stare-text' ), texte.salvat, false );
 			} );
@@ -206,6 +234,25 @@
 
 	if ( ! document.getElementById( 'ccs-adaos' ) || ! sim.cost || ! sim.cost.length ) {
 		return;
+	}
+
+	/**
+	 * Semnătura panoului, aceeași ca `ccs_ui_delta()` din PHP: o valoare care se schimbă, scrisă „acum → nou”.
+	 *
+	 * @param {number} acum Valoarea de acum.
+	 * @param {number} nou  Valoarea propusă.
+	 * @return {string} HTML.
+	 */
+	function delta( acum, nou ) {
+		var dir = nou > acum ? 'sus' : ( nou < acum ? 'jos' : '' );
+		var cat = acum > 0 && dir
+			? '<span class="ccs-delta__cat">' + ( 'sus' === dir ? '+' : '−' ) +
+				lei( Math.abs( nou / acum - 1 ) * 100, 0 ) + '%</span>'
+			: '';
+		return '<span class="ccs-delta' + ( dir ? ' ccs-delta--' + dir : '' ) +
+			'"><span class="ccs-delta__acum">' + lei( acum ) +
+			'</span><span class="ccs-delta__sageata" aria-hidden="true">→</span>' +
+			'<span class="ccs-delta__nou">' + lei( nou ) + '</span>' + cat + '</span>';
 	}
 
 	/** Aceeași regulă ca `ccs_pret()` din PHP. */
@@ -290,8 +337,8 @@
 			var costCuTva = sim.cost[ i ] * p.cota + ( p.include_taxa_eco ? sim.taxa[ i ] : 0 );
 			var nou = pretPropus( sim.cost[ i ], sim.taxa[ i ], p );
 			var castig = nou - costCuTva;
-			return '<tr><td class="num">' + lei( sim.cost[ i ] ) + '</td><td class="num">' + lei( sim.pret[ i ] ) +
-				'</td><td class="num ccs-nou">' + lei( nou ) + '</td><td class="num' +
+			return '<tr><td class="num">' + lei( sim.cost[ i ] ) + '</td><td class="num">' +
+				delta( sim.pret[ i ], nou ) + '</td><td class="num' +
 				( castig < 0 ? ' ccs-rosu' : '' ) + '">' + lei( castig ) + '</td></tr>';
 		} ).join( '' );
 	}
