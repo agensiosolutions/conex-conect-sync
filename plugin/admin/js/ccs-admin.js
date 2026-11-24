@@ -1,17 +1,17 @@
 /*
- * Pagina de decizii: simulatorul de preț și trimiterea deciziilor.
+ * Panoul de admin: simulatorul de preț și trimiterea deciziilor.
  *
  * Simulatorul calculează în browser pentru că trebuie să răspundă instantaneu când omul trage de un adaos. Costurile
- * celor câteva mii de produse sunt deja în pagină, iar formula e scurtă. Oglinda ei din PHP e `ccs_pret()`; dacă
- * una se schimbă, trebuie schimbată și cealaltă, iar la salvare serverul recalculează și pagina arată cifrele lui.
+ * celor câteva mii de produse sunt deja în pagină, iar formula e scurtă. Oglinda ei din PHP e `ccs_pret()`; dacă una
+ * se schimbă, trebuie schimbată și cealaltă, iar la salvare serverul recalculează și pagina arată cifrele lui.
  */
 ( function () {
 	'use strict';
 
 	var date = window.ccsDate || {};
-	var sim = date.simulator || { cost: [], taxa: [], pret: [] };
+	var sim = date.simulator || {};
+	var texte = date.texte || {};
 
-	/** Formatează lei cum se citesc în România. */
 	function lei( v, zecimale ) {
 		return new Intl.NumberFormat( 'ro-RO', {
 			minimumFractionDigits: zecimale === undefined ? 2 : zecimale,
@@ -23,104 +23,12 @@
 		return new Intl.NumberFormat( 'ro-RO' ).format( v );
 	}
 
-	/** Aceeași regulă ca `ccs_pret()` din PHP. */
-	function pretPropus( cost, taxa, p ) {
-		var c = cost * p.cota + ( p.include_taxa_eco ? taxa : 0 );
-		if ( c <= 0 ) {
-			return 0;
+	function arataStare( element, text, eroare ) {
+		if ( ! element ) {
+			return;
 		}
-		var rezultat = Math.max( c * p.adaos, c + p.marja, p.pret_minim );
-		return 'sus' === p.rotunjire ? Math.ceil( rezultat ) : Math.round( rezultat * 100 ) / 100;
-	}
-
-	/** Produsele alese ca exemple: de la cel mai ieftin la cel mai scump, pe toată plaja. */
-	var exemple = ( function () {
-		var indici = sim.cost.map( function ( _, i ) {
-			return i;
-		} );
-		indici.sort( function ( a, b ) {
-			return sim.cost[ a ] - sim.cost[ b ];
-		} );
-		if ( ! indici.length ) {
-			return [];
-		}
-		return [ 0, 0.25, 0.5, 0.75, 0.95, 0.999 ].map( function ( f ) {
-			return indici[ Math.min( indici.length - 1, Math.round( f * ( indici.length - 1 ) ) ) ];
-		} );
-	} )();
-
-	function politicaDinPagina() {
-		return {
-			adaos: parseFloat( document.getElementById( 'ccs-adaos' ).value ),
-			cota: parseFloat( document.getElementById( 'ccs-cota' ).value ),
-			marja: parseFloat( document.getElementById( 'ccs-marja' ).value ),
-			pret_minim: date.politica ? date.politica.pret_minim_lei : 0,
-			rotunjire: document.getElementById( 'ccs-rotunjire' ).value,
-			include_taxa_eco: date.politica ? date.politica.include_taxa_eco : true
-		};
-	}
-
-	function deseneaza() {
-		var p = politicaDinPagina();
-		var sus = 0;
-		var jos = 0;
-		var egal = 0;
-		var subCost = 0;
-		var marjaAcum = 0;
-		var marjaProp = 0;
-		var deltaSus = 0;
-		var deltaJos = 0;
-		var i;
-
-		for ( i = 0; i < sim.cost.length; i++ ) {
-			var costCuTva = sim.cost[ i ] * p.cota + ( p.include_taxa_eco ? sim.taxa[ i ] : 0 );
-			var nou = pretPropus( sim.cost[ i ], sim.taxa[ i ], p );
-			var acum = sim.pret[ i ];
-
-			marjaAcum += acum - costCuTva;
-			marjaProp += nou - costCuTva;
-
-			if ( nou - costCuTva < 0 ) {
-				subCost++;
-			}
-
-			var d = nou - acum;
-			if ( d > 0.009 ) {
-				sus++;
-				deltaSus += d;
-			} else if ( d < -0.009 ) {
-				jos++;
-				deltaJos += -d;
-			} else {
-				egal++;
-			}
-		}
-
-		document.getElementById( 'ccs-adaos-val' ).textContent =
-			'+' + Math.round( ( p.adaos - 1 ) * 100 ) + '%';
-		document.getElementById( 'ccs-marja-val' ).textContent = lei( p.marja ) + ' lei';
-
-		document.getElementById( 'ccs-e-sus' ).textContent =
-			nr( sus ) + ( sus ? ' (în medie +' + lei( deltaSus / sus ) + ' lei)' : '' );
-		document.getElementById( 'ccs-e-jos' ).textContent =
-			nr( jos ) + ( jos ? ' (în medie −' + lei( deltaJos / jos ) + ' lei)' : '' );
-		document.getElementById( 'ccs-e-egal' ).textContent = nr( egal );
-		document.getElementById( 'ccs-e-subcost' ).textContent = nr( subCost );
-
-		var procent = marjaAcum > 0 ? ( marjaProp / marjaAcum - 1 ) * 100 : 0;
-		document.getElementById( 'ccs-e-marja' ).textContent =
-			lei( marjaAcum, 0 ) + ' lei → ' + lei( marjaProp, 0 ) + ' lei (' +
-			( procent >= 0 ? '+' : '−' ) + lei( Math.abs( procent ), 1 ) + '%)';
-
-		var rows = exemple.map( function ( i ) {
-			var costCuTva = sim.cost[ i ] * p.cota + ( p.include_taxa_eco ? sim.taxa[ i ] : 0 );
-			var nou = pretPropus( sim.cost[ i ], sim.taxa[ i ], p );
-			var castig = nou - costCuTva;
-			return '<tr><td>' + lei( sim.cost[ i ] ) + '</td><td>' + lei( sim.pret[ i ] ) +
-				'</td><td><strong>' + lei( nou ) + '</strong></td><td' +
-				( castig < 0 ? ' class="ccs-rosu"' : '' ) + '>' + lei( castig ) + '</td></tr>';
-		} );
-		document.getElementById( 'ccs-exemple' ).innerHTML = rows.join( '' );
+		element.textContent = text;
+		element.classList.toggle( 'ccs-eroare', !! eroare );
 	}
 
 	/** Trimite ceva la server, cu nonce-ul paginii. */
@@ -142,12 +50,46 @@
 		} );
 	}
 
-	function arataStare( element, text, eroare ) {
-		if ( ! element ) {
+	/** Rândul sau cardul care ține o decizie. */
+	function gazdaRand( el ) {
+		return el.closest( 'tr' ) || el.closest( '.ccs-potrivire' ) || el;
+	}
+
+	/**
+	 * Scade cifra din dreptul tabului curent, fără să reîncarce pagina.
+	 *
+	 * Taburile sunt pagini separate, deci contorul care trebuie ținut la zi e cel din navigație, nu cifrele mari de
+	 * pe panou.
+	 */
+	function actualizeazaRest() {
+		var ramase = document.querySelectorAll( '.ccs-principal [data-tip]:not(.ccs-rezolvat) .ccs-decizie' );
+		var vazute = {};
+		var total = 0;
+		ramase.forEach( function ( b ) {
+			var gazda = b.closest( '[data-tip]' );
+			if ( 'epuizare' === gazda.getAttribute( 'data-tip' ) ) {
+				return;
+			}
+			if ( gazdaRand( gazda ).classList.contains( 'ccs-rezolvat' ) ) {
+				return;
+			}
+			var cheie = gazda.getAttribute( 'data-tip' ) + ':' + gazda.getAttribute( 'data-referinta' );
+			if ( vazute[ cheie ] ) {
+				return;
+			}
+			vazute[ cheie ] = true;
+			total++;
+		} );
+
+		var activ = document.querySelector( '.ccs-nav__link[aria-current="page"] .ccs-nav__rest' );
+		if ( ! activ ) {
 			return;
 		}
-		element.textContent = text;
-		element.classList.toggle( 'ccs-eroare', !! eroare );
+		if ( total > 0 ) {
+			activ.textContent = nr( total );
+		} else {
+			activ.remove();
+		}
 	}
 
 	/* Butoanele de decizie, prinse o dată pe toată pagina. */
@@ -162,13 +104,14 @@
 		if ( ! gazda ) {
 			return;
 		}
-		var stare = gazda.querySelector( '.ccs-stare' );
+		var rand = gazdaRand( gazda );
+		var stare = rand.querySelector( '.ccs-stare-text' ) || gazda.querySelector( '.ccs-stare-text' );
 		var butoane = gazda.querySelectorAll( '.ccs-decizie' );
 
 		butoane.forEach( function ( b ) {
 			b.disabled = true;
 		} );
-		arataStare( stare, date.texte.lucrez, false );
+		arataStare( stare, texte.lucrez, false );
 
 		trimite( 'ccs_decizie', {
 			tip: gazda.getAttribute( 'data-tip' ),
@@ -179,18 +122,17 @@
 				b.disabled = false;
 			} );
 			if ( ! raspuns || ! raspuns.success ) {
-				arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || date.texte.eroare, true );
+				arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || texte.eroare, true );
 				return;
 			}
-			arataStare( stare, raspuns.data.efect || date.texte.salvat, false );
-			var rand = gazda.closest( 'tr' ) || gazda.closest( '.ccs-card' ) || gazda;
+			arataStare( stare, raspuns.data.efect || texte.salvat, false );
 			rand.classList.add( 'ccs-rezolvat' );
-			actualizeazaContor();
+			actualizeazaRest();
 		} ).catch( function () {
 			butoane.forEach( function ( b ) {
 				b.disabled = false;
 			} );
-			arataStare( stare, date.texte.eroare, true );
+			arataStare( stare, texte.eroare, true );
 		} );
 	} );
 
@@ -204,95 +146,162 @@
 
 		var bara = buton.closest( '[data-tip-lot]' );
 		var tip = bara.getAttribute( 'data-tip-lot' );
-		var stare = bara.querySelector( '.ccs-stare' );
-		var sectiune = bara.closest( '.ccs-sectiune' );
-		var ramase = sectiune.querySelectorAll( '[data-tip="' + tip + '"]:not(.ccs-rezolvat)' );
+		var stare = bara.querySelector( '.ccs-stare-text' );
+		var zona = bara.closest( '.ccs-card' ) || document;
+		var ramase = [];
+
+		zona.querySelectorAll( '[data-tip="' + tip + '"]' ).forEach( function ( el ) {
+			if ( ! gazdaRand( el ).classList.contains( 'ccs-rezolvat' ) ) {
+				ramase.push( el );
+			}
+		} );
 
 		if ( ! ramase.length ) {
-			arataStare( stare, 'Nu a mai rămas nimic de hotărât aici.', false );
+			arataStare( stare, texte.nimic, false );
 			return;
 		}
 
 		if ( 'da' !== buton.getAttribute( 'data-confirma' ) ) {
-			// Primul clic: cerem confirmarea pe buton, și o anulăm dacă omul se duce în altă parte.
+			// Primul clic: cerem confirmarea pe buton, și o anulăm pe celelalte.
 			bara.querySelectorAll( '.ccs-lot' ).forEach( function ( b ) {
 				b.removeAttribute( 'data-confirma' );
 				b.textContent = b.getAttribute( 'data-eticheta' );
 			} );
 			buton.setAttribute( 'data-confirma', 'da' );
-			buton.textContent = date.texte.confirma + ' (' + nr( ramase.length ) + ')';
+			buton.textContent = texte.confirma + ' (' + nr( ramase.length ) + ')';
 			return;
 		}
-
-		var referinte = [];
-		ramase.forEach( function ( el ) {
-			referinte.push( el.getAttribute( 'data-referinta' ) );
-		} );
 
 		buton.disabled = true;
 		buton.textContent = buton.getAttribute( 'data-eticheta' );
 		buton.removeAttribute( 'data-confirma' );
-		arataStare( stare, date.texte.lucrez, false );
+		arataStare( stare, texte.lucrez, false );
 
 		trimite( 'ccs_decizie_lot', {
 			tip: tip,
 			valoare: buton.getAttribute( 'data-valoare' ),
-			referinte: referinte.join( ',' )
+			referinte: ramase.map( function ( el ) {
+				return el.getAttribute( 'data-referinta' );
+			} ).join( ',' )
 		} ).then( function ( raspuns ) {
 			buton.disabled = false;
 			if ( ! raspuns || ! raspuns.success ) {
-				arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || date.texte.eroare, true );
+				arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || texte.eroare, true );
 				return;
 			}
 			ramase.forEach( function ( el ) {
-				el.classList.add( 'ccs-rezolvat' );
-				arataStare( el.querySelector( '.ccs-stare' ), date.texte.salvat, false );
+				var rand = gazdaRand( el );
+				rand.classList.add( 'ccs-rezolvat' );
+				arataStare( rand.querySelector( '.ccs-stare-text' ), texte.salvat, false );
 			} );
 			arataStare( stare, raspuns.data.efect, false );
-			actualizeazaContor();
+			actualizeazaRest();
 		} ).catch( function () {
 			buton.disabled = false;
-			arataStare( stare, date.texte.eroare, true );
+			arataStare( stare, texte.eroare, true );
 		} );
 	} );
 
-	/** Scade numărul de întrebări rămase, fără să reîncarce pagina. */
-	function actualizeazaContor() {
-		var raman = document.querySelectorAll( '[data-tip]:not(.ccs-rezolvat) .ccs-decizie' );
-		var vazute = {};
-		var total = 0;
-		raman.forEach( function ( b ) {
-			var gazda = b.closest( '[data-tip]' );
-			var rand = gazda.closest( 'tr' ) || gazda.closest( '.ccs-card' ) || gazda;
-			if ( rand.classList.contains( 'ccs-rezolvat' ) || 'epuizare' === gazda.getAttribute( 'data-tip' ) ) {
-				return;
-			}
-			var cheie = gazda.getAttribute( 'data-tip' ) + ':' + gazda.getAttribute( 'data-referinta' );
-			if ( vazute[ cheie ] ) {
-				return;
-			}
-			vazute[ cheie ] = true;
-			total++;
-		} );
+	/* ---------------------------------------------------------------- simulatorul de preț */
 
-		var cifra = document.querySelector( '.ccs-cifra.atentie strong, .ccs-cifra.bine strong' );
-		if ( cifra ) {
-			cifra.textContent = nr( total );
-			cifra.parentNode.classList.toggle( 'atentie', total > 0 );
-			cifra.parentNode.classList.toggle( 'bine', 0 === total );
+	if ( ! document.getElementById( 'ccs-adaos' ) || ! sim.cost || ! sim.cost.length ) {
+		return;
+	}
+
+	/** Aceeași regulă ca `ccs_pret()` din PHP. */
+	function pretPropus( cost, taxa, p ) {
+		var c = cost * p.cota + ( p.include_taxa_eco ? taxa : 0 );
+		if ( c <= 0 ) {
+			return 0;
 		}
+		var rezultat = Math.max( c * p.adaos, c + p.marja, p.pret_minim );
+		return 'sus' === p.rotunjire ? Math.ceil( rezultat ) : Math.round( rezultat * 100 ) / 100;
 	}
 
-	/* Simulatorul. */
-	var controale = [ 'ccs-adaos', 'ccs-cota', 'ccs-marja', 'ccs-rotunjire' ];
-	if ( document.getElementById( 'ccs-adaos' ) ) {
-		controale.forEach( function ( id ) {
-			var el = document.getElementById( id );
-			el.addEventListener( 'input', deseneaza );
-			el.addEventListener( 'change', deseneaza );
+	/** Șase produse, de la cel mai ieftin la cel mai scump, alese o singură dată. */
+	var exemple = ( function () {
+		var indici = sim.cost.map( function ( _, i ) {
+			return i;
 		} );
-		deseneaza();
+		indici.sort( function ( a, b ) {
+			return sim.cost[ a ] - sim.cost[ b ];
+		} );
+		return [ 0, 0.25, 0.5, 0.75, 0.95, 0.999 ].map( function ( f ) {
+			return indici[ Math.min( indici.length - 1, Math.round( f * ( indici.length - 1 ) ) ) ];
+		} );
+	} )();
+
+	function politicaDinPagina() {
+		return {
+			adaos: parseFloat( document.getElementById( 'ccs-adaos' ).value ),
+			cota: parseFloat( document.getElementById( 'ccs-cota' ).value ),
+			marja: parseFloat( document.getElementById( 'ccs-marja' ).value ),
+			pret_minim: date.politica ? date.politica.pret_minim_lei : 0,
+			rotunjire: document.getElementById( 'ccs-rotunjire' ).value,
+			include_taxa_eco: date.politica ? date.politica.include_taxa_eco : true
+		};
 	}
+
+	function deseneaza() {
+		var p = politicaDinPagina();
+		var sus = 0, jos = 0, egal = 0, subCost = 0;
+		var marjaAcum = 0, marjaProp = 0, deltaSus = 0, deltaJos = 0;
+		var i;
+
+		for ( i = 0; i < sim.cost.length; i++ ) {
+			var costCuTva = sim.cost[ i ] * p.cota + ( p.include_taxa_eco ? sim.taxa[ i ] : 0 );
+			var nou = pretPropus( sim.cost[ i ], sim.taxa[ i ], p );
+			var acum = sim.pret[ i ];
+
+			marjaAcum += acum - costCuTva;
+			marjaProp += nou - costCuTva;
+			if ( nou - costCuTva < 0 ) {
+				subCost++;
+			}
+
+			var d = nou - acum;
+			if ( d > 0.009 ) {
+				sus++;
+				deltaSus += d;
+			} else if ( d < -0.009 ) {
+				jos++;
+				deltaJos += -d;
+			} else {
+				egal++;
+			}
+		}
+
+		document.getElementById( 'ccs-adaos-val' ).textContent = '+' + Math.round( ( p.adaos - 1 ) * 100 ) + '%';
+		document.getElementById( 'ccs-marja-val' ).textContent = lei( p.marja ) + ' lei';
+
+		document.getElementById( 'ccs-e-sus' ).textContent =
+			nr( sus ) + ( sus ? '  (în medie +' + lei( deltaSus / sus ) + ' lei)' : '' );
+		document.getElementById( 'ccs-e-jos' ).textContent =
+			nr( jos ) + ( jos ? '  (în medie −' + lei( deltaJos / jos ) + ' lei)' : '' );
+		document.getElementById( 'ccs-e-egal' ).textContent = nr( egal );
+		document.getElementById( 'ccs-e-subcost' ).textContent = nr( subCost );
+
+		var procent = marjaAcum > 0 ? ( marjaProp / marjaAcum - 1 ) * 100 : 0;
+		document.getElementById( 'ccs-e-marja' ).textContent =
+			lei( marjaAcum, 0 ) + ' → ' + lei( marjaProp, 0 ) + ' lei  (' +
+			( procent >= 0 ? '+' : '−' ) + lei( Math.abs( procent ), 1 ) + '%)';
+
+		document.getElementById( 'ccs-exemple' ).innerHTML = exemple.map( function ( i ) {
+			var costCuTva = sim.cost[ i ] * p.cota + ( p.include_taxa_eco ? sim.taxa[ i ] : 0 );
+			var nou = pretPropus( sim.cost[ i ], sim.taxa[ i ], p );
+			var castig = nou - costCuTva;
+			return '<tr><td class="num">' + lei( sim.cost[ i ] ) + '</td><td class="num">' + lei( sim.pret[ i ] ) +
+				'</td><td class="num ccs-nou">' + lei( nou ) + '</td><td class="num' +
+				( castig < 0 ? ' ccs-rosu' : '' ) + '">' + lei( castig ) + '</td></tr>';
+		} ).join( '' );
+	}
+
+	[ 'ccs-adaos', 'ccs-cota', 'ccs-marja', 'ccs-rotunjire' ].forEach( function ( id ) {
+		var el = document.getElementById( id );
+		el.addEventListener( 'input', deseneaza );
+		el.addEventListener( 'change', deseneaza );
+	} );
+	deseneaza();
 
 	var salveaza = document.getElementById( 'ccs-salveaza-politica' );
 	if ( salveaza ) {
@@ -301,7 +310,7 @@
 			var stare = document.getElementById( 'ccs-politica-stare' );
 			var p = politicaDinPagina();
 			salveaza.disabled = true;
-			arataStare( stare, date.texte.lucrez, false );
+			arataStare( stare, texte.lucrez, false );
 
 			trimite( 'ccs_politica', {
 				adaos: p.adaos,
@@ -311,20 +320,20 @@
 			} ).then( function ( raspuns ) {
 				salveaza.disabled = false;
 				if ( ! raspuns || ! raspuns.success ) {
-					arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || date.texte.eroare, true );
+					arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || texte.eroare, true );
 					return;
 				}
 				var e = raspuns.data.efect;
 				arataStare(
 					stare,
-					'Salvat. Pe server: ' + nr( e.sus ) + ' prețuri în sus, ' + nr( e.jos ) +
+					'Salvat. Verificat pe server: ' + nr( e.sus ) + ' prețuri în sus, ' + nr( e.jos ) +
 						' în jos, câștig brut ' + ( e.marja_delta >= 0 ? '+' : '−' ) +
 						lei( Math.abs( e.marja_delta ), 1 ) + '%.',
 					false
 				);
 			} ).catch( function () {
 				salveaza.disabled = false;
-				arataStare( stare, date.texte.eroare, true );
+				arataStare( stare, texte.eroare, true );
 			} );
 		} );
 	}

@@ -9,6 +9,11 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Acum
 
+- [ ] Panoul nou urcat pe live @iulian
+  Clasificatorul mi-a blocat scrierea pe server (și `tar` prin SSH, și `scp`). Fișierele schimbate sunt cinci:
+  `plugin/conex-conect-sync.php`, `plugin/includes/admin.php`, `plugin/includes/admin-ui.php`,
+  `plugin/admin/css/ccs-admin.css`, `plugin/admin/js/ccs-admin.js`. Comanda e în JURNAL.md, la ziua de azi.
+  Până atunci, pe live e panoul vechi, cu o singură pagină lungă.
 - [ ] Discuția de preț cu ownerul, pe pagina de decizii de pe live @iulian
   `Sincronizare Conex` în meniul de admin. Ownerul are cont de administrator (`cezauto`). Pagina are date reale:
   3.950 de produse legate, 88 de întrebări fără răspuns (26 potriviri, 2 scăderi de preț, 60 sub cost).
@@ -66,6 +71,10 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Panoul de admin refăcut după design-ul din `agensio-consent` (24.11.2026)
+      Șase taburi cu navigație laterală, în loc de o pagină lungă cu cinci secțiuni. Cifra din dreptul unui tab
+      spune câte răspunsuri lipsesc de acolo. `tools/previzualizare.php` randează acum toate taburile, cu
+      navigația rescrisă către fișierele vecine, deci panoul se poate parcurge fără login.
 - [x] Live: token pus, catalog preluat, potrivire făcută, pagina de decizii are date reale (24.11.2026)
       20.725 de produse în 7,16 secunde la prima preluare, 2,74 la a doua, cu zero atinse. 3.950 legate pe cod
       exact, 26 de verificat, zero ambiguități. Pagina se randează în 0,89 secunde. Zero erori PHP, site-ul

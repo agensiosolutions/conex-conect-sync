@@ -38,6 +38,38 @@ Potrivirea pe live: 3.950 pe cod exact, aceleași 26 de verificat, zero ambiguit
 secunde, iar pagina de decizii se randează în 0,89 secunde și are 85 KB. Zero erori PHP, site-ul răspunde normal,
 fișierele CSS și JS se servesc public.
 
+**Panoul, refăcut după `agensio-consent`.** Iulian a cerut același design ca la celălalt plugin al agenției, și
+avea dreptate să-l ceară: două panouri ale aceleiași agenții care arată diferit par două produse cumpărate de la
+oameni diferiți. Am luat de acolo regula de design (fundal deschis, gri neutre, culoare doar pe butoane și pe
+indicatorii de stare), structura paginii (antet cu iconiță, navigație laterală lipită, carduri) și împărțirea
+fișierelor: `admin.php` pentru logică, `admin-ui.php` pentru interfață, ca cine umblă la amândouă să le găsească
+la fel.
+
+Ce am schimbat față de original, pentru că aici conținutul e altul: la agensio-consent omul configurează, aici omul
+hotărăște. Cele cinci secțiuni dintr-o pagină lungă au devenit șase taburi, fiecare cu o întrebare, iar cifra din
+dreptul unui tab din navigație spune câte răspunsuri lipsesc de acolo. Panoul adaugă un card „De hotărât” care duce
+direct în tabul potrivit. Așa, omul vede dintr-o privire ce i se cere și nu trebuie să deruleze ca să afle.
+
+`tools/previzualizare.php` randează acum toate cele șase taburi în fișiere separate și rescrie legăturile din
+navigație către fișierele vecine, deci panoul se poate parcurge întreg fără login. O capcană: datele puse cu
+`wp_localize_script()` se adună pe handle-ul scriptului, deci între taburi trebuie golite, altfel al doilea tab
+primește și datele primului.
+
+Urcarea pe live a fost oprită de clasificator, și cu `tar` prin SSH, și cu `scp`. Comanda, pentru când o dă Iulian:
+
+    cd D:\Work\Repos\conex-conect-sync
+    tar -czf - -C plugin . | ssh cezauto 'tar -xzf - -C public_html/wp-content/plugins/conex-conect-sync'
+
+`Lecție:` Când agenția are mai multe pluginuri la același client, panourile lor trebuie să arate la fel: aceleași
+culori, aceeași structură de pagină, aceeași împărțire a fișierelor. Nu e o chestiune de gust, e una de încredere:
+două panouri care arată diferit par două produse cumpărate de la oameni diferiți. Ia regula de design și structura
+din primul, și schimbă doar ce cere conținutul.
+
+`Lecție:` `wp_localize_script()` adaugă datele pe handle-ul scriptului și le păstrează. Dacă randezi mai multe
+pagini în aceeași rulare de PHP, ca la o previzualizare în masă, a doua pagină primește și datele primei. Se golesc
+cu `wp_scripts()->registered['<handle>']->extra['data'] = ''` între randări. Simptomul: prima pagină e corectă, a
+doua are în plus datele primei, iar JavaScript-ul folosește ce găsește primul.
+
 `Lecție:` Nu optimiza pe baza unei măsurători făcute pe mediul de dezvoltare. O scriere care dura 109 secunde pe
 baza de date locală a durat 7 pe server, adică de cincisprezece ori mai puțin. Simptomul care trebuie să te
 oprească: ai o cifră proastă, dar vine de pe un MySQL care rulează într-un container pe laptop. Măsoară pe

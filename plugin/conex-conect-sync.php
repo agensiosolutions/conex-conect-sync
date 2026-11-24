@@ -35,6 +35,7 @@ require CCS_DIR . 'includes/raport.php';
 require CCS_DIR . 'includes/aplica.php';
 require CCS_DIR . 'includes/decizii.php';
 require CCS_DIR . 'includes/admin.php';
+require CCS_DIR . 'includes/admin-ui.php';
 require CCS_DIR . 'includes/cli.php';
 
 add_action(
