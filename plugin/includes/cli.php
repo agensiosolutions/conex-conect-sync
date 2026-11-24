@@ -12,6 +12,8 @@
  *   wp ccs setare <cheie>     arată sau schimbă o setare
  *   wp ccs joburi             arată joburile programate; --porneste, --opreste, --acum
  *   wp ccs categorii          învață maparea categoriilor din produsele deja legate
+ *   wp ccs imagini            preia adresele pozelor din fereastra de noapte; fără opțiuni, doar arată starea
+ *   wp ccs import             arată ce produse s-ar putea importa și de ce nu se pot celelalte
  *   wp ccs noapte <endpoint>  sondează un endpoint din fereastra 19:00-05:00
  *   wp ccs pret <cost>        arată ce preț ar ieși pentru un cost dat, cu setările curente
  *
@@ -146,7 +148,7 @@ class CCS_CLI {
 	public function schema() {
 		ccs_schema_instaleaza();
 		global $wpdb;
-		foreach ( array( 'products', 'links', 'runs', 'log', 'modificari', 'decizii', 'excluse', 'categorii' ) as $t ) {
+		foreach ( array( 'products', 'links', 'runs', 'log', 'modificari', 'decizii', 'excluse', 'categorii', 'imagini' ) as $t ) {
 			$nume = ccs_tabel( $t );
 			$n    = $wpdb->get_var( "SELECT COUNT(*) FROM $nume" ); // phpcs:ignore WordPress.DB.PreparedSQL
 			WP_CLI::line( sprintf( '  %-28s %s rânduri', $nume, null === $n ? 'lipsește' : $n ) );
@@ -373,6 +375,92 @@ class CCS_CLI {
 		WP_CLI::success( sprintf( '%d produse readuse la valorile dinainte (%d valori).', $r['produse'], $r['valori'] ) );
 		if ( $r['esuate'] ) {
 			WP_CLI::line( sprintf( '  produse care nu mai există  %d', $r['esuate'] ) );
+		}
+	}
+
+	/**
+	 * Preia adresele pozelor, sau arată ce știm deja.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--preia]
+	 * : Cere imaginile de la furnizor. Merge doar între 19:00 și 05:00.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs imagini
+	 *     wp ccs imagini --preia
+	 *
+	 * @param array $args       Argumentele.
+	 * @param array $asociative Opțiunile.
+	 * @return void
+	 */
+	public function imagini( $args, $asociative ) {
+		if ( isset( $asociative['preia'] ) ) {
+			if ( ! ccs_api_fereastra_deschisa() ) {
+				WP_CLI::warning( 'După ora serverului Conex, fereastra de noapte e închisă. Încerc oricum.' );
+			}
+			$inceput = microtime( true );
+			$r       = ccs_imagini_preia();
+			if ( is_wp_error( $r ) ) {
+				WP_CLI::error( $r->get_error_message() );
+			}
+			WP_CLI::success( sprintf( '%d poze pentru %d produse, în %s secunde.', $r['poze'], $r['produse'], round( microtime( true ) - $inceput, 2 ) ) );
+		}
+
+		$s = ccs_imagini_stare();
+		WP_CLI::line( '' );
+		WP_CLI::line( sprintf( '  poze știute          %s', number_format( $s['poze'], 0, ',', '.' ) ) );
+		WP_CLI::line(
+			sprintf(
+				'  produse cu poză      %s din %s (%d%%)',
+				number_format( $s['produse'], 0, ',', '.' ),
+				number_format( $s['din_catalog'], 0, ',', '.' ),
+				$s['din_catalog'] ? round( 100 * $s['produse'] / $s['din_catalog'] ) : 0
+			)
+		);
+		WP_CLI::line( sprintf( '  ultima preluare      %s', $s['ultima_preluare'] ? $s['ultima_preluare'] : 'niciodată' ) );
+	}
+
+	/**
+	 * Arată ce produse s-ar putea importa și de ce nu se pot celelalte.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs import
+	 *
+	 * @return void
+	 */
+	public function import() {
+		$r = ccs_import_candidati();
+
+		WP_CLI::success( sprintf( '%s produse se pot importa acum.', number_format( $r['gata'], 0, ',', '.' ) ) );
+		WP_CLI::line( '' );
+		WP_CLI::line( sprintf( '  produse Conex care nu sunt pe site   %s', number_format( $r['nelegate'], 0, ',', '.' ) ) );
+		WP_CLI::line( sprintf( '    nu au poză                         %s', number_format( $r['fara_poza'], 0, ',', '.' ) ) );
+		WP_CLI::line( sprintf( '    nu au cost                         %s', number_format( $r['fara_cost'], 0, ',', '.' ) ) );
+		WP_CLI::line( sprintf( '    nu au stoc                         %s', number_format( $r['fara_stoc'], 0, ',', '.' ) ) );
+		WP_CLI::line( sprintf( '    nu știm în ce categorie merg       %s', number_format( $r['fara_categorie'], 0, ',', '.' ) ) );
+		WP_CLI::line( sprintf( '    gata de import                     %s', number_format( $r['gata'], 0, ',', '.' ) ) );
+
+		if ( ! $r['lista'] ) {
+			return;
+		}
+		WP_CLI::line( '' );
+		WP_CLI::line( 'Primele zece:' );
+		foreach ( array_slice( $r['lista'], 0, 10 ) as $p ) {
+			$t = get_term( ccs_categorie_pentru( $p ), 'product_cat' );
+			WP_CLI::line(
+				sprintf(
+					'  %-10s %-44s %7.2f lei  stoc %3d  %d poze  -> %s',
+					$p->cod,
+					mb_substr( $p->nume, 0, 42 ),
+					ccs_pret( $p->cost ),
+					$p->stoc,
+					$p->poze,
+					$t && ! is_wp_error( $t ) ? $t->name : '?'
+				)
+			);
 		}
 	}
 

@@ -48,12 +48,14 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
   are încă niciun loc din care clientul să-l bifeze.
 
 ### Etapa 3: curățare și joburi de noapte
-- [ ] Jobul de noapte pentru imagini și criterii @claude
-  Mecanismul de programare există, inclusiv calculul ferestrei de noapte. Jobul propriu-zis vine la etapa 4, odată
-  cu imaginile: un job programat care nu face nimic e cod mort.
+- [ ] Prima preluare reală de imagini, după ora 19:00 @claude
+  Comanda: `wp ccs imagini --preia` pe live. Lanțul e probat pe datele sondate în octombrie; preluarea adevărată se
+  poate face doar în fereastra furnizorului.
 
 ### Etapa 4: import de produse noi
-- [ ] Importul celor 993 de produse complete @claude
+- [ ] Importul produselor complete @claude
+  Pe datele din octombrie ies **1.618 produse**, nu 993: maparea categoriilor acoperă acum mai mult decât știam
+  în octombrie. Cifra se recalculează după prima preluare reală de imagini.
 - [ ] Mecanismul care urcă un produs când furnizorul îi adaugă poza @claude
 - [ ] Maparea celor 96 de căi rămase, cu ownerul @client
   Sunt aproape toate piese OE: bare față, hayoane, oglinzi, plăcuțe și discuri de frână, amortizoare. Depinde de
@@ -86,6 +88,13 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Jobul de noapte pentru imagini, plus lista de produse importabile (24.11.2026)
+      Tabel propriu cu adresele pozelor, job programat la 19:10 în fereastra furnizorului, și `wp ccs import` care
+      spune câte produse se pot importa și de ce nu se pot celelalte. Probat pe datele din octombrie: 1.618 gata de
+      import, 9.519 fără poză, 4.963 fără categorie știută, 700 fără stoc.
+- [x] Un bug de fus orar la programarea joburilor de noapte, găsit și acoperit cu teste (24.11.2026)
+      Jobul s-ar fi programat la 21:10 în loc de 19:10. Regula ferestrei e acum o funcție separată, probată pe 12
+      ore și pe marginile intervalului, plus trei mutații.
 - [x] Categoriile duplicate de pe site, curățate (24.11.2026)
       Șterse: „Siguranța auto”, „Siguranta rutiera” și „CONSUMABILE SERVICE”. Stingătorul din prima a trecut în
       „Siguranță rutieră”, care are acum 23 de produse. Cele trei adrese au redirect 301 prin Rank Math.

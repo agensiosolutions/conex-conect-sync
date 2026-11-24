@@ -285,6 +285,42 @@ Pus pe live ca 0.4.0, cu backup înainte. Pe datele de acolo, aceleași 64 de re
 ca pe local, ceea ce e un semn bun: regulile nu depind de zgomotul unei copii de bază mai vechi cu cinci zile.
 Joburile au rămas oprite, modul raport pornit, cele 60 de decizii intacte.
 
+**Jobul de noapte pentru imagini, și cifra adevărată a importului.** Piesa care deblochează etapa 4: fără să știm
+ce produse au poze, regula „un produs fără poză nu urcă pe site” rămâne pe hârtie. Tabel propriu cu adresele
+pozelor, job programat la 19:10 în fereastra furnizorului, plus `wp ccs import`, care spune câte produse se pot
+importa **și de ce nu se pot celelalte**.
+
+Nu s-a putut proba cu API-ul, pentru că endpoint-ul răspunde doar între 19:00 și 05:00, iar era 13:30. Dar sondajul
+din 14 octombrie e salvat în `cez-auto/tools/conex-images.json`, în exact forma agregată de care era nevoie. Am
+scris `tools/imagini-de-proba.php`, care îl încarcă în tabel pe mediul local, și tot lanțul s-a putut verifica ziua.
+
+Rezultatul, pe datele alea: **1.618 produse se pot importa**, nu 993 cât credeam în octombrie. Diferența vine din
+maparea categoriilor, care acoperă acum mai mult decât atunci. Restul: 9.519 fără poză, 4.963 fără categorie știută
+(piesele OE), 700 fără stoc.
+
+**Un bug găsit la verificare.** Jobul de noapte s-ar fi programat la 21:10, nu la 19:10. Cauza:
+`current_time('timestamp')` întoarce ora locală deghizată în timestamp UTC, `strtotime()` citește șirul în fusul
+PHP, iar `wp_date()` adaugă încă o dată offsetul. Trei funcții, fiecare corectă singură, greșit împreună. Acum ora se
+socotește în fusul furnizorului și se întoarce ca timestamp real.
+
+Am despărțit regula ferestrei într-o funcție proprie, `ccs_api_in_fereastra()`, tocmai ca să poată fi probată:
+fereastra trece peste miezul nopții, deci condiția nu e un interval obișnuit. Testele: 12 ore plus marginile, iar
+trei mutații (începe la 20, ține și la 5, `și` în loc de `sau`) cad toate. Suita a ajuns la 40 de verificări.
+
+`Lecție:` Când nu poți proba ceva din cauza unei ferestre de timp, caută dacă n-ai deja datele salvate dintr-un
+sondaj mai vechi. La Cez Auto, endpoint-ul de imagini răspunde doar noaptea, dar sondajul din octombrie era pe disc
+în forma potrivită, iar tot lanțul de după el s-a putut verifica la prânz. Un script de încărcare marcat clar ca
+fiind doar pentru dezvoltare costă zece minute și scutește o zi de așteptare.
+
+`Lecție:` Nu amesteca `current_time('timestamp')` cu `strtotime()` și `wp_date()`. Prima întoarce ora locală
+deghizată în timestamp UTC, a doua citește în fusul PHP, a treia adaugă iar offsetul: fiecare e corectă singură și
+greșite împreună. Pentru o oră viitoare, lucrează cu `DateTimeImmutable` într-un fus explicit și întoarce
+`getTimestamp()`. Simptomul: un job programat apare cu ora deplasată exact cu offsetul fusului.
+
+`Lecție:` O condiție care trece peste miezul nopții se desparte într-o funcție proprie și se testează. `$ora >= 19
+|| $ora < 5` nu e un interval obișnuit, iar o greșeală în ea se vede abia la 3 dimineața, când jobul fie refuză să
+pornească, fie pornește când serviciul e închis.
+
 **Categoriile duplicate, curățate.** Pe listă erau cinci. Una n-ar fi trebuit să fie acolo: „Compresor auto” e
 goală, dar e în **meniul principal** al site-ului, iar Conex are 21 de compresoare, dintre care 14 încă neimportate.
 Ownerul a pus-o acolo intenționat, ca să o umple. Am păstrat-o și am spus de ce.

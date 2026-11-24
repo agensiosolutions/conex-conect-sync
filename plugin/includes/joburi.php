@@ -126,10 +126,19 @@ function ccs_job_interval_programat( $hook ) {
  * @return int Timestamp.
  */
 function ccs_joburi_urmatoarea_noapte() {
-	$acum = current_time( 'timestamp' ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp
-	$azi  = strtotime( gmdate( 'Y-m-d 19:10:00', $acum ) );
+	// Ora se socotește în fusul furnizorului și se întoarce ca timestamp real, cum vrea Action Scheduler.
+	// Amestecul dintre `current_time('timestamp')` și `strtotime()` dă o oră deplasată cu offsetul fusului: pe un
+	// site pe Europe/Bucharest, un job gândit pentru 19:10 ajunge programat la 21:10.
+	$acum = ccs_api_ora_furnizor();
+	if ( ! $acum ) {
+		return time() + HOUR_IN_SECONDS;
+	}
 
-	return $azi > $acum ? $azi : $azi + DAY_IN_SECONDS;
+	$tinta = $acum->setTime( CCS_NOAPTE_DE_LA, 10, 0 );
+	if ( $tinta <= $acum ) {
+		$tinta = $tinta->modify( '+1 day' );
+	}
+	return $tinta->getTimestamp();
 }
 
 /**

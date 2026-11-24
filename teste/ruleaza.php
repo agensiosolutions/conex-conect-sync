@@ -63,8 +63,24 @@ function wp_parse_args( $argumente, $implicite = array() ) {
 	return array_merge( $implicite, (array) $argumente );
 }
 
+/**
+ * Filtrele cu mai multe argumente, pentru `api.php`.
+ *
+ * @param string $hook    Numele.
+ * @param mixed  $valoare Valoarea.
+ * @return mixed Valoarea, neatinsă.
+ */
+function ccs_test_nimic( $hook, $valoare = null ) {
+	return $valoare;
+}
+
 require __DIR__ . '/../plugin/includes/configurare.php';
 require __DIR__ . '/../plugin/includes/potrivire.php';
+
+// Din `api.php` ne trebuie doar regula ferestrei, dar fișierul se încarcă întreg; funcțiile lui care cheamă rețeaua
+// nu se apelează aici.
+define( 'MINUTE_IN_SECONDS', 60 );
+require __DIR__ . '/../plugin/includes/api.php';
 
 /* ------------------------------------------------------------------------------------------------ ajutoare */
 
@@ -286,6 +302,23 @@ verifica(
 	1.0,
 	ccs_nume_asemanare( 'FILTRU ULEI', 'FILTRU ULEI MANN W712 PENTRU VOLKSWAGEN GOLF' )
 );
+
+/* ------------------------------------------------------------------------------------------------ fereastra */
+
+sectiune( 'ccs_api_in_fereastra(), 19:00-05:00 după ora furnizorului' );
+
+// Fereastra trece peste miezul nopții, deci condiția nu e un interval obișnuit. O greșeală aici se vede abia la 3
+// dimineața, când jobul de noapte refuză să pornească sau pornește când API-ul e închis.
+foreach ( array( 19, 20, 23, 0, 3, 4 ) as $ora ) {
+	verifica_ca( sprintf( 'ora %02d:00 e în fereastră', $ora ), ccs_api_in_fereastra( $ora ) );
+}
+foreach ( array( 5, 6, 12, 18 ) as $ora ) {
+	verifica_ca( sprintf( 'ora %02d:00 e în afara ferestrei', $ora ), ! ccs_api_in_fereastra( $ora ) );
+}
+
+// Marginile, scrise explicit: 19 intră, 5 nu.
+verifica( 'exact 19:00 intră', true, ccs_api_in_fereastra( 19 ) );
+verifica( 'exact 05:00 nu mai intră', false, ccs_api_in_fereastra( 5 ) );
 
 /* ------------------------------------------------------------------------------------------------ rezultatul */
 

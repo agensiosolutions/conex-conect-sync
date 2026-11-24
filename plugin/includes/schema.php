@@ -12,12 +12,12 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const CCS_SCHEMA_VERSIUNE = 5;
+const CCS_SCHEMA_VERSIUNE = 6;
 
 /**
  * Numele unui tabel al pluginului, cu prefixul bazei.
  *
- * @param string $nume Numele scurt: 'products', 'links', 'runs', 'log', 'modificari', 'decizii', 'excluse', 'categorii'.
+ * @param string $nume Numele scurt: 'products', 'links', 'runs', 'log', 'modificari', 'decizii', 'excluse', 'categorii', 'imagini'.
  * @return string Numele complet.
  */
 function ccs_tabel( $nume ) {
@@ -43,6 +43,7 @@ function ccs_schema_instaleaza() {
 	$decizii = ccs_tabel( 'decizii' );
 	$excluse = ccs_tabel( 'excluse' );
 	$categ   = ccs_tabel( 'categorii' );
+	$imagini = ccs_tabel( 'imagini' );
 
 	// Copia catalogului furnizorului. `cod` e codEAN, adică ce se potrivește cu SKU-ul de pe site.
 	// `amprenta` e un md5 peste câmpurile care ne interesează: dacă nu s-a schimbat, produsul se sare.
@@ -171,6 +172,18 @@ function ccs_schema_instaleaza() {
 			PRIMARY KEY  (id),
 			UNIQUE KEY cale_contine (cale, contine),
 			KEY sursa (sursa)
+		) $colatie;"
+	);
+
+	// Adresele pozelor, luate din fereastra de noapte. Nu descărcăm nimic aici: tabelul răspunde la întrebarea
+	// „care produse au poză”, de care depinde ce se poate importa.
+	dbDelta(
+		"CREATE TABLE $imagini (
+			product_id BIGINT UNSIGNED NOT NULL,
+			pozitie SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+			url VARCHAR(255) NOT NULL DEFAULT '',
+			vazut_la DATETIME NULL,
+			PRIMARY KEY  (product_id, pozitie)
 		) $colatie;"
 	);
 

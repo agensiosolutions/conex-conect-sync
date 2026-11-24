@@ -28,6 +28,11 @@ defined( 'ABSPATH' ) || exit;
 
 const CCS_API_BAZA = 'https://api.conexdist.ro/api/Products/All';
 
+// Fereastra în care răspund endpoint-urile grele, după ora serverului furnizorului.
+const CCS_FUS_FURNIZOR   = 'Europe/Bucharest';
+const CCS_NOAPTE_DE_LA   = 19;
+const CCS_NOAPTE_PANA_LA = 5;
+
 /**
  * Tokenul de acces. Constanta din wp-config bate setarea din admin, ca pe staging să se poată pune altul.
  *
@@ -232,11 +237,39 @@ function ccs_api_noapte( $endpoint, $la_pagina = null ) {
  * @return bool
  */
 function ccs_api_fereastra_deschisa() {
-	try {
-		$acum = new DateTime( 'now', new DateTimeZone( 'Europe/Bucharest' ) );
-	} catch ( Exception $e ) {
+	$acum = ccs_api_ora_furnizor();
+	if ( ! $acum ) {
 		return false;
 	}
-	$ora = (int) $acum->format( 'G' );
-	return $ora >= 19 || $ora < 5;
+	return ccs_api_in_fereastra( (int) $acum->format( 'G' ) );
+}
+
+/**
+ * Dacă o oră cade în fereastra de noapte.
+ *
+ * Despărțită de citirea ceasului ca să poată fi probată: fereastra trece peste miezul nopții, deci condiția nu e
+ * un interval obișnuit, iar o greșeală aici se vede abia la 3 dimineața.
+ *
+ * @param int $ora Ora, de la 0 la 23.
+ * @return bool Dacă e în fereastră.
+ */
+function ccs_api_in_fereastra( $ora ) {
+	$ora = (int) $ora;
+	return $ora >= CCS_NOAPTE_DE_LA || $ora < CCS_NOAPTE_PANA_LA;
+}
+
+/**
+ * Ora de la furnizor, acum.
+ *
+ * Fereastra de noapte e a serverului Conex, nu a magazinului. Un magazin al unui client din altă țară ar avea alt
+ * fus, iar jobul ar porni la ora greșită: de aceea ancora e aici, nu în setările WordPress.
+ *
+ * @return DateTimeImmutable|null Ora, sau null dacă fusul nu se poate încărca.
+ */
+function ccs_api_ora_furnizor() {
+	try {
+		return new DateTimeImmutable( 'now', new DateTimeZone( CCS_FUS_FURNIZOR ) );
+	} catch ( Exception $e ) {
+		return null;
+	}
 }
