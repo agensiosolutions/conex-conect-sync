@@ -281,6 +281,10 @@ planetare. Adică exact lucrurile despre care ownerul n-a hotărât încă dacă
 categorie pentru tot, „Piese auto”, cu 112 produse. N-am construit tabul de mapare manuală tocmai de asta: n-are
 rost să-i punem în față 96 de căi care poate nu-l interesează.
 
+Pus pe live ca 0.4.0, cu backup înainte. Pe datele de acolo, aceleași 64 de reguli și aceleași 7 reguli pe cuvânt
+ca pe local, ceea ce e un semn bun: regulile nu depind de zgomotul unei copii de bază mai vechi cu cinci zile.
+Joburile au rămas oprite, modul raport pornit, cele 60 de decizii intacte.
+
 `Lecție:` Înainte să ceri unui client să mapeze ceva, numără ce răspunsuri a dat deja fără să-și dea seama. Un
 magazin cu produse deja categorisite conține maparea completă între taxonomia furnizorului și a lui; trebuie doar
 numărată. La Cez Auto, 3.954 de produse au dat 64 de reguli cu 95,5% acuratețe, iar clientul n-a fost întrebat

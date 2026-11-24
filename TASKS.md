@@ -31,6 +31,11 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Urmează
 
+- [ ] Categoriile duplicate și goale de pe site, de curățat @iulian
+  „Siguranță rutieră” (22 produse) lângă „Siguranta rutiara” (0), plus „CONSUMABILE SERVICE”, „Compresor auto” și
+  „Siguranta rutiera” goale. După curățare se rulează din nou `wp ccs categorii`, ca regulile să nu mai arate spre
+  categorii care nu mai există.
+
 - [ ] De hotărât ce facem cu `ccs_site_skuuri()` din `plugin/includes/potrivire.php` @iulian
   Nu mai e chemată de nicăieri: a rămas ca punte de compatibilitate când am rescris potrivirea pe 19 nov. Ori o
   ștergem, ori o păstrăm declarat, ca funcție publică pentru alte pluginuri. Semnalată, nu ștearsă.
@@ -82,6 +87,10 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Versiunea 0.4.0 pe live: joburi programate și mapare de categorii (24.11.2026)
+      Backup înainte: `~/backups/cezauto-inainte-de-ccs-0.4.0-20261124-1253.sql.gz`, 13 MB, verificat.
+      Pe datele de pe live: 64 de reguli din 3.950 de produse legate, aceleași 7 reguli pe cuvânt. Joburile rămân
+      oprite, modul raport rămâne pornit, cele 60 de decizii sunt intacte.
 - [x] Maparea categoriilor, învățată din cele 3.954 de produse legate (24.11.2026)
       64 de reguli: 57 pe cale, 7 pe cuvânt din nume. Probată pe un set de test de 1.157 de produse din care n-a
       învățat: **95,5% corect**, 3 fără răspuns. Regula covorașelor a fost găsită singură („PORTBAGAJ” duce în
