@@ -25,6 +25,24 @@ Rularea a fost oprită de regula care nu-mi dă voie să citesc `.env` și să-i
 corectă, scriptul rămâne scris, iar comanda o dă Iulian. Până atunci pluginul e activ, tabelele există și pagina de
 decizii spune corect că nu are încă legături.
 
+**Seara: live-ul merge pe date reale.** Iulian a pus tokenul, iar restul a mers dintr-o bucată. API-ul răspunde de
+pe server în 2,54 secunde cu 20.725 de produse, cu 30 mai puține decât pe 19 noiembrie: furnizorul retrage produse
+în continuare, cam șase pe zi.
+
+Surpriza plăcută: prima preluare a catalogului, care pe local durase 109 secunde, a durat **7,16 secunde pe live**.
+A doua rulare, 2,74 secunde, cu toate cele 20.725 de amprente neschimbate. Îngrijorarea pe care o notasem pe 19
+noiembrie, că scrierea rând cu rând ar fi prea lentă și ar trebui trecută pe inserturi în bloc, era un artefact al
+bazei de date din Local by Flywheel, nu o problemă reală. Bine că n-am optimizat-o înainte s-o măsor unde contează.
+
+Potrivirea pe live: 3.950 pe cod exact, aceleași 26 de verificat, zero ambiguități. Planul se calculează în 0,9
+secunde, iar pagina de decizii se randează în 0,89 secunde și are 85 KB. Zero erori PHP, site-ul răspunde normal,
+fișierele CSS și JS se servesc public.
+
+`Lecție:` Nu optimiza pe baza unei măsurători făcute pe mediul de dezvoltare. O scriere care dura 109 secunde pe
+baza de date locală a durat 7 pe server, adică de cincisprezece ori mai puțin. Simptomul care trebuie să te
+oprească: ai o cifră proastă, dar vine de pe un MySQL care rulează într-un container pe laptop. Măsoară pe
+infrastructura reală înainte să rescrii ceva.
+
 `Lecție:` Când pui cod pe un server, rulează `php -l` cu PHP-ul serverului, nu cu al tău. Versiunile diferă aproape
 întotdeauna, iar o sintaxă mai nouă nu se vede la upload: se vede la prima cerere a unui vizitator, sub forma unei
 pagini albe. Costă o comandă și se face înainte de activare.

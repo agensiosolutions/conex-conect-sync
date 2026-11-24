@@ -9,13 +9,13 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Acum
 
-- [ ] Tokenul Conex pus în `wp-config` pe live @iulian
-  O comandă: `python -I tools/token-live.py D:/Work/Repos/cez-auto/.env --gazda cezauto`. Claude n-are voie să
-  citească `.env` și să trimită conținutul pe server, deci pasul ăsta îl faci tu. Până atunci pluginul e activ pe
-  live dar n-are catalog, iar pagina de decizii spune corect că lipsesc legăturile.
-- [ ] După token: `wp ccs catalog` și `wp ccs potriveste` pe live @claude
 - [ ] Discuția de preț cu ownerul, pe pagina de decizii de pe live @iulian
-  `Sincronizare Conex` în meniul de admin. Ownerul are cont de administrator (`cezauto`).
+  `Sincronizare Conex` în meniul de admin. Ownerul are cont de administrator (`cezauto`). Pagina are date reale:
+  3.950 de produse legate, 88 de întrebări fără răspuns (26 potriviri, 2 scăderi de preț, 60 sub cost).
+  Modul raport e pornit, deci orice ar apăsa ownerul nu schimbă niciun preț pe site: se înregistrează doar decizia.
+- [ ] De hotărât dacă punem catalogul pe cron zilnic, până la prima aplicare @iulian
+  Ar ține cifrele din pagină proaspete dacă ownerul o deschide peste câteva zile. Scrie doar în tabelele noastre,
+  niciodată în WooCommerce, deci e fără risc. N-am pus-o singur: e o schimbare pe live care n-a fost cerută.
   3.696 de prețuri s-ar schimba: 3.178 în sus (în medie +18,35 lei), 521 în jos (în medie -13,24 lei). Marja brută
   pe bucată crește cu 44,5%. Întrebările, în ordinea în care contează:
   - [ ] Adaosul de 35% și cota de 21% rămân? @client
@@ -66,6 +66,10 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Live: token pus, catalog preluat, potrivire făcută, pagina de decizii are date reale (24.11.2026)
+      20.725 de produse în 7,16 secunde la prima preluare, 2,74 la a doua, cu zero atinse. 3.950 legate pe cod
+      exact, 26 de verificat, zero ambiguități. Pagina se randează în 0,89 secunde. Zero erori PHP, site-ul
+      răspunde normal.
 - [x] Pluginul pus pe live: fișiere urcate, activat, tabele create, modul raport pornit (24.11.2026)
       Backup înainte: `~/backups/cezauto-inainte-de-ccs-20261124-1016.sql.gz`, 12 MB, dump verificat.
       Live are WP 7.1.3, PHP 8.1.34, WooCommerce 11.2.1, aceeași versiune ca pe local. Toate fișierele trec de
