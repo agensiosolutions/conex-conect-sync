@@ -305,8 +305,15 @@ function ccs_categorii_reguli( $sursa = '' ) {
 function ccs_categorie_pentru( $produs ) {
 	static $reguli = null;
 	if ( null === $reguli ) {
-		$reguli = array();
+		$setari  = ccs_setari();
+		$min_n   = (int) $setari['categorie_min_produse'];
+		$min_inc = (int) $setari['categorie_min_incredere'];
+		$reguli  = array();
 		foreach ( ccs_categorii_reguli() as $r ) {
+			// O regulă învățată dintr-un singur produs nu e o regulă, e o coincidență. Cele puse de om trec oricum.
+			if ( 'om' !== $r['sursa'] && ( (int) $r['produse'] < $min_n || (int) $r['incredere'] < $min_inc ) ) {
+				continue;
+			}
 			$reguli[ $r['cale'] ][] = $r;
 		}
 	}

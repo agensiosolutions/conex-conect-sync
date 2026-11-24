@@ -14,6 +14,7 @@
  *   wp ccs categorii          învață maparea categoriilor din produsele deja legate
  *   wp ccs imagini            preia adresele pozelor din fereastra de noapte; fără opțiuni, doar arată starea
  *   wp ccs import             arată ce produse s-ar putea importa și de ce nu se pot celelalte
+ *   wp ccs produs <cod>       ia un produs de la furnizor și arată ce s-ar crea, fără să scrie nimic
  *   wp ccs noapte <endpoint>  sondează un endpoint din fereastra 19:00-05:00
  *   wp ccs pret <cost>        arată ce preț ar ieși pentru un cost dat, cu setările curente
  *
@@ -420,6 +421,101 @@ class CCS_CLI {
 			)
 		);
 		WP_CLI::line( sprintf( '  ultima preluare      %s', $s['ultima_preluare'] ? $s['ultima_preluare'] : 'niciodată' ) );
+	}
+
+	/**
+	 * Ia un produs de la furnizor și arată exact ce s-ar crea pe site.
+	 *
+	 * Nu scrie nimic. Preluarea e reală: catalogul se cere de la API, nu din tabelul propriu, pentru că asta se
+	 * verifică aici. API-ul nu filtrează pe produs, deci vine tot catalogul, în jur de 7 secunde.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <cod>
+	 * : Codul EAN sau id-ul de produs de la furnizor.
+	 *
+	 * [--local]
+	 * : Ia produsul din tabelul propriu, fără să ceară nimic de la furnizor.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs produs 01152
+	 *     wp ccs produs 01152 --local
+	 *
+	 * @param array $args       Argumentele.
+	 * @param array $asociative Opțiunile.
+	 * @return void
+	 */
+	public function produs( $args, $asociative ) {
+		global $wpdb;
+		$cod = (string) ( $args[0] ?? '' );
+		if ( '' === $cod ) {
+			WP_CLI::error( 'Spune-mi un cod.' );
+		}
+
+		if ( isset( $asociative['local'] ) ) {
+			$tabel = ccs_tabel( 'products' );
+			$p     = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tabel WHERE cod = %s OR product_id = %s", $cod, $cod ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL
+			if ( ! $p ) {
+				WP_CLI::error( 'Codul nu e în tabelul propriu. Rulează `wp ccs catalog` sau scoate `--local`.' );
+			}
+			WP_CLI::line( 'Din tabelul propriu, fără să cer nimic de la furnizor.' );
+		} else {
+			$inceput = microtime( true );
+			$p       = ccs_import_adu_produs( $cod );
+			if ( is_wp_error( $p ) ) {
+				WP_CLI::error( $p->get_error_message() );
+			}
+			WP_CLI::line( sprintf( 'Luat de la furnizor în %s secunde.', round( microtime( true ) - $inceput, 2 ) ) );
+		}
+
+		WP_CLI::line( '' );
+		WP_CLI::line( 'CE TRIMITE FURNIZORUL' );
+		foreach ( $p as $cheie => $valoare ) {
+			if ( is_scalar( $valoare ) && '' !== (string) $valoare ) {
+				WP_CLI::line( sprintf( '  %-24s %s', $cheie, $valoare ) );
+			}
+		}
+
+		$r = ccs_import_pregateste( $p );
+
+		WP_CLI::line( '' );
+		WP_CLI::line( 'CE S-AR CREA PE SITE' );
+		$d = $r['date'];
+		WP_CLI::line( sprintf( '  %-24s %s', 'nume', $d['nume'] ) );
+		WP_CLI::line( sprintf( '  %-24s %s', 'cod (SKU)', $d['sku'] ) );
+		WP_CLI::line( sprintf( '  %-24s %s lei', 'preț', ccs_lei( $d['pret'] ) ) );
+		WP_CLI::line( sprintf( '  %-24s %d bucăți, %s', 'stoc', $d['stoc'], $d['stare_stoc'] ) );
+		$t = $d['categorie'] ? get_term( $d['categorie'], 'product_cat' ) : null;
+		WP_CLI::line( sprintf( '  %-24s %s', 'categorie', $t && ! is_wp_error( $t ) ? $t->name : '(niciuna)' ) );
+		foreach ( $d['atribute'] as $nume => $valoare ) {
+			WP_CLI::line( sprintf( '  %-24s %s', mb_strtolower( $nume ), $valoare ) );
+		}
+		WP_CLI::line( sprintf( '  %-24s %s', 'descriere', $d['descriere'] ? $d['descriere'] : '(furnizorul nu trimite)' ) );
+		if ( $d['poze'] ) {
+			WP_CLI::line( sprintf( '  %-24s %d', 'poze', count( $d['poze'] ) ) );
+			foreach ( $d['poze'] as $url ) {
+				WP_CLI::line( sprintf( '  %-24s %s', '', $url ) );
+			}
+		} else {
+			WP_CLI::line( sprintf( '  %-24s %s', 'poze', 'niciuna' ) );
+		}
+
+		WP_CLI::line( '' );
+		WP_CLI::line( 'DE CE AȘA' );
+		foreach ( $r['motive'] as $ce => $motiv ) {
+			WP_CLI::line( sprintf( '  %-12s %s', $ce, $motiv ) );
+		}
+
+		WP_CLI::line( '' );
+		if ( $r['gata'] ) {
+			WP_CLI::success( 'Produsul e gata de importat. N-am scris nimic.' );
+			return;
+		}
+		WP_CLI::warning( 'Produsul nu se poate importa acum:' );
+		foreach ( $r['piedici'] as $cod_piedica => $motiv ) {
+			WP_CLI::line( sprintf( '  %-16s %s', $cod_piedica, $motiv ) );
+		}
 	}
 
 	/**

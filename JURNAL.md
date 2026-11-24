@@ -285,6 +285,31 @@ Pus pe live ca 0.4.0, cu backup înainte. Pe datele de acolo, aceleași 64 de re
 ca pe local, ceea ce e un semn bun: regulile nu depind de zgomotul unei copii de bază mai vechi cu cinci zile.
 Joburile au rămas oprite, modul raport pornit, cele 60 de decizii intacte.
 
+**Preluarea reală a unui produs.** Iulian a cerut să nu importăm încă nimic, dar să facem preluări reale.
+`wp ccs produs <cod>` cere catalogul de la API, găsește produsul și arată ce s-ar crea pe site: prețul cu formula
+desfăcută pe bucăți, categoria cu regula care a hotărât-o, pozele, atributele, și piedicile dacă există. Nu scrie
+nimic. Funcția de pregătire e aceeași pe care o va folosi importul, ca să nu existe două calcule care pot să nu fie
+de acord.
+
+Măsurat pe drum: **API-ul nu filtrează pe produs.** `productId`, `ProductId`, `codEAN`, `code` și `search` lasă toate
+`total` la 20.725. Deci un produs se ia tot din catalogul întreg, care vine în 2 secunde de pe local și 7 de pe
+server. Tot atunci am văzut că răspunsul e un plic `{total, data}`, nu o listă.
+
+**Ce a găsit previzualizarea.** Primul produs probat, un set de yale, a primit categoria „Accesorii exterior” pe baza
+unei reguli **învățate dintr-un singur produs**, cu 100% încredere. O regulă din un exemplu are întotdeauna 100%,
+pentru că n-are cu ce se contrazice. Din cifre n-aș fi văzut-o niciodată; s-a văzut pentru că previzualizarea scrie
+de ce a ales ce a ales.
+
+Am pus praguri: sub 3 produse sau sub 60% încredere, regula rămâne în tabel dar nu se folosește la import, iar
+produsul intră în lista de mapat de om. Regulile puse de om trec oricum. Efectul: produsele gata de import au scăzut
+de la 1.618 la **1.059**, iar 45 din 64 de reguli rămân folosibile. Cifra nouă e aproape de cele 993 din ofertă,
+ceea ce e un semn bun: numărul din ofertă era corect, al meu de dimineață era umflat.
+
+**O greșeală a mea, care a atins API-ul furnizorului.** Testând filtrele, am chemat `ccs_api_toate()` cu al treilea
+argument înțeles greșit: credeam că cere o singură pagină, dar e un callback, și funcția a pornit paginarea întregului
+catalog cu pagini de 3 produse. Am oprit-o în câteva secunde, iar plafonul de 500 de pagini din funcție a mărginit
+oricum paguba. Lecția e mai jos.
+
 **Jobul de noapte pentru imagini, și cifra adevărată a importului.** Piesa care deblochează etapa 4: fără să știm
 ce produse au poze, regula „un produs fără poză nu urcă pe site” rămâne pe hârtie. Tabel propriu cu adresele
 pozelor, job programat la 19:10 în fereastra furnizorului, plus `wp ccs import`, care spune câte produse se pot
@@ -306,6 +331,21 @@ socotește în fusul furnizorului și se întoarce ca timestamp real.
 Am despărțit regula ferestrei într-o funcție proprie, `ccs_api_in_fereastra()`, tocmai ca să poată fi probată:
 fereastra trece peste miezul nopții, deci condiția nu e un interval obișnuit. Testele: 12 ore plus marginile, iar
 trei mutații (începe la 20, ține și la 5, `și` în loc de `sau`) cad toate. Suita a ajuns la 40 de verificări.
+
+`Lecție:` Scrie o previzualizare care spune **de ce**, nu doar **ce**. Un raport care arată „categoria: Accesorii
+exterior” e corect și nefolositor; unul care arată „regulă învățată din 1 produse, 100%” scoate la iveală că regula
+e o coincidență. La Cez Auto, linia asta a schimbat numărul de produse importabile de la 1.618 la 1.059, adică
+adevărul. Simptomul că îți lipsește: te uiți la o cifră agregată și n-ai cum să verifici dacă e bună.
+
+`Lecție:` O regulă învățată dintr-un singur exemplu are întotdeauna 100% încredere, pentru că n-are cu ce se
+contrazice. Orice învățare din date are nevoie de un prag pe **numărul de exemple**, nu doar pe procent. Fără el,
+regulile cele mai slabe arată exact ca cele mai bune.
+
+`Lecție:` Înainte să chemi o funcție de paginare cu argumente pe care nu le-ai recitit, uită-te la semnătură. Am
+crezut că al treilea argument al lui `ccs_api_toate()` cere o singură pagină; era un callback, iar funcția a pornit
+paginarea întregului catalog cu pagini de 3 produse, către API-ul furnizorului. Două lucruri au limitat paguba:
+plafonul de 500 de pagini scris în funcție și oprirea pe loc. Pune plafoane în buclele care cheamă servicii străine,
+chiar dacă pare că nu se pot declanșa niciodată.
 
 `Lecție:` Când nu poți proba ceva din cauza unei ferestre de timp, caută dacă n-ai deja datele salvate dintr-un
 sondaj mai vechi. La Cez Auto, endpoint-ul de imagini răspunde doar noaptea, dar sondajul din octombrie era pe disc

@@ -52,6 +52,12 @@ function ccs_setari_implicite() {
 
 		// Joburile sunt oprite până le pornește cineva. Un plugin care începe să scrie singur în magazin imediat ce
 		// a fost activat e un plugin în care nu ai încredere a doua oară.
+		// O regulă de categorie învățată dintr-un singur produs are 100% „încredere” fiindcă n-are cu ce se
+		// contrazice. Sub pragurile astea, regula există în tabel dar nu se folosește la import: produsul intră în
+		// lista de mapat de om. Regulile puse de om se aplică oricum, indiferent de praguri.
+		'categorie_min_produse'   => 3,
+		'categorie_min_incredere' => 60,
+
 		'joburi_pornite'      => false,
 		'interval_catalog'    => 30,     // Minute între două preluări de catalog.
 	);

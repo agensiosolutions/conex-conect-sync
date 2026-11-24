@@ -54,8 +54,10 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ### Etapa 4: import de produse noi
 - [ ] Importul produselor complete @claude
-  Pe datele din octombrie ies **1.618 produse**, nu 993: maparea categoriilor acoperă acum mai mult decât știam
-  în octombrie. Cifra se recalculează după prima preluare reală de imagini.
+  **1.059 produse** gata de import, pe datele din octombrie. Pregătirea e scrisă și probată (`wp ccs produs <cod>`
+  arată exact ce s-ar crea); ce lipsește e scrierea propriu-zisă în WooCommerce, cu `--limita` pentru prima rulare.
+- [ ] Cele 19 reguli de categorie prea slabe, de confirmat cu ownerul @client
+  Învățate din unul sau două produse, deci nefolosite. Intră în aceeași discuție cu cele 96 de căi nemapate.
 - [ ] Mecanismul care urcă un produs când furnizorul îi adaugă poza @claude
 - [ ] Maparea celor 96 de căi rămase, cu ownerul @client
   Sunt aproape toate piese OE: bare față, hayoane, oglinzi, plăcuțe și discuri de frână, amortizoare. Depinde de
@@ -88,6 +90,14 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Preluarea reală a unui produs, cu previzualizare completă (24.11.2026)
+      `wp ccs produs <cod>` ia produsul de la furnizor în ~2 secunde și arată ce s-ar crea: preț cu formula
+      desfăcută, categorie cu regula care a decis-o, poze, atribute, plus piedicile. Nu scrie nimic.
+      Măsurat atunci: API-ul **nu filtrează pe produs**, `total` rămâne 20.725 pentru `productId`, `ProductId`,
+      `codEAN`, `code` și `search`.
+- [x] Praguri pentru regulile de categorie, după ce previzualizarea a scos o regulă din 1 produs (24.11.2026)
+      Sub 3 produse sau sub 60% încredere, regula nu se mai folosește la import. Cele gata de import au scăzut de la
+      1.618 la **1.059**, aproape de cele 993 din ofertă. 45 de reguli folosibile din 64.
 - [x] Jobul de noapte pentru imagini, plus lista de produse importabile (24.11.2026)
       Tabel propriu cu adresele pozelor, job programat la 19:10 în fereastra furnizorului, și `wp ccs import` care
       spune câte produse se pot importa și de ce nu se pot celelalte. Probat pe datele din octombrie: 1.618 gata de
