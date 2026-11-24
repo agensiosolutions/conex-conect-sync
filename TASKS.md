@@ -51,7 +51,12 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 ### Etapa 4: import de produse noi
 - [ ] Importul celor 993 de produse complete @claude
 - [ ] Mecanismul care urcă un produs când furnizorul îi adaugă poza @claude
-- [ ] Maparea categoriilor, învățată din produsele deja legate, plus regula covorașelor @claude
+- [ ] Maparea celor 96 de căi rămase, cu ownerul @client
+  Sunt aproape toate piese OE: bare față, hayoane, oglinzi, plăcuțe și discuri de frână, amortizoare. Depinde de
+  decizia lui dacă intră pe piese OE. Site-ul are o singură categorie pentru tot, „Piese auto”, cu 112 produse.
+- [ ] Un tab de categorii în panou, pentru căile pe care regula nu le știe @claude
+  Are rost după ce ownerul hotărăște dacă intră pe piese OE: altfel îi punem în față 96 de căi care poate nu-l
+  interesează.
 
 ### Etapa 5: panou, cron, predare
 - [ ] Panoul de admin: tablou de bord, setări, catalog, jurnal @claude
@@ -77,6 +82,10 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Maparea categoriilor, învățată din cele 3.954 de produse legate (24.11.2026)
+      64 de reguli: 57 pe cale, 7 pe cuvânt din nume. Probată pe un set de test de 1.157 de produse din care n-a
+      învățat: **95,5% corect**, 3 fără răspuns. Regula covorașelor a fost găsită singură („PORTBAGAJ” duce în
+      „Accesorii interior”, 431 de produse). Cuvintele care sunt branduri se sar.
 - [x] Joburile programate pe Action Scheduler, cu comutator în panou (24.11.2026)
       Catalogul se preia la un interval configurabil, cu lacăt contra rulărilor suprapuse. Cu modul raport pornit,
       jobul ține doar cifrele din panou la zi. Pornit din panou sau cu `wp ccs joburi --porneste`; implicit oprit.

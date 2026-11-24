@@ -11,6 +11,7 @@
  *   wp ccs revino <rulare>    dă înapoi o rulare de aplicare
  *   wp ccs setare <cheie>     arată sau schimbă o setare
  *   wp ccs joburi             arată joburile programate; --porneste, --opreste, --acum
+ *   wp ccs categorii          învață maparea categoriilor din produsele deja legate
  *   wp ccs noapte <endpoint>  sondează un endpoint din fereastra 19:00-05:00
  *   wp ccs pret <cost>        arată ce preț ar ieși pentru un cost dat, cu setările curente
  *
@@ -145,7 +146,7 @@ class CCS_CLI {
 	public function schema() {
 		ccs_schema_instaleaza();
 		global $wpdb;
-		foreach ( array( 'products', 'links', 'runs', 'log', 'modificari', 'decizii', 'excluse' ) as $t ) {
+		foreach ( array( 'products', 'links', 'runs', 'log', 'modificari', 'decizii', 'excluse', 'categorii' ) as $t ) {
 			$nume = ccs_tabel( $t );
 			$n    = $wpdb->get_var( "SELECT COUNT(*) FROM $nume" ); // phpcs:ignore WordPress.DB.PreparedSQL
 			WP_CLI::line( sprintf( '  %-28s %s rânduri', $nume, null === $n ? 'lipsește' : $n ) );
@@ -372,6 +373,86 @@ class CCS_CLI {
 		WP_CLI::success( sprintf( '%d produse readuse la valorile dinainte (%d valori).', $r['produse'], $r['valori'] ) );
 		if ( $r['esuate'] ) {
 			WP_CLI::line( sprintf( '  produse care nu mai există  %d', $r['esuate'] ) );
+		}
+	}
+
+	/**
+	 * Învață maparea categoriilor din produsele deja legate și arată acoperirea.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--proba]
+	 * : Doar calculează, fără să scrie regulile.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs categorii --proba
+	 *     wp ccs categorii
+	 *
+	 * @param array $args       Argumentele.
+	 * @param array $asociative Opțiunile.
+	 * @return void
+	 */
+	public function categorii( $args, $asociative ) {
+		global $wpdb;
+		$proba = isset( $asociative['proba'] );
+		$r     = ccs_categorii_invata( ! $proba );
+
+		WP_CLI::success(
+			sprintf(
+				'%d reguli din %d produse legate%s.',
+				count( $r['lista'] ),
+				$r['produse'],
+				$proba ? ' (probă, n-am scris nimic)' : ''
+			)
+		);
+		WP_CLI::line( sprintf( '  căi la furnizor      %d', $r['cai'] ) );
+		WP_CLI::line( sprintf( '  reguli pe cale       %d', $r['pe_cale'] ) );
+		WP_CLI::line( sprintf( '  reguli pe cuvânt     %d', $r['pe_cuvant'] ) );
+		WP_CLI::line( sprintf( '  căi nesigure         %d', $r['nesigure'] ) );
+
+		if ( $r['pe_cuvant'] ) {
+			WP_CLI::line( '' );
+			WP_CLI::line( 'Căile care se împart după un cuvânt din nume:' );
+			foreach ( $r['lista'] as $x ) {
+				if ( '' === $x['contine'] ) {
+					continue;
+				}
+				$t = get_term( $x['term_id'], 'product_cat' );
+				WP_CLI::line(
+					sprintf(
+						'  %-44s + „%s” -> %s (%d produse)',
+						mb_substr( $x['cale'], 0, 42 ),
+						$x['contine'],
+						$t && ! is_wp_error( $t ) ? $t->name : '?',
+						$x['produse']
+					)
+				);
+			}
+		}
+
+		// Cât din catalogul nelegat ar ști unde să meargă.
+		$tp   = ccs_tabel( 'products' );
+		$tl   = ccs_tabel( 'links' );
+		$noi  = $wpdb->get_results( "SELECT c.cat1, c.cat2, c.cat3, c.nume FROM $tp c LEFT JOIN $tl l ON l.product_id = c.product_id WHERE l.product_id IS NULL" ); // phpcs:ignore WordPress.DB.PreparedSQL
+		$stiu = 0;
+		$fara = array();
+		foreach ( $noi as $p ) {
+			if ( ccs_categorie_pentru( $p ) ) {
+				$stiu++;
+			} else {
+				$cale          = ccs_categorie_cale( $p );
+				$fara[ $cale ] = ( $fara[ $cale ] ?? 0 ) + 1;
+			}
+		}
+		arsort( $fara );
+
+		WP_CLI::line( '' );
+		WP_CLI::line( sprintf( 'Din %d produse Conex care nu sunt pe site:', count( $noi ) ) );
+		WP_CLI::line( sprintf( '  știm unde merg      %d', $stiu ) );
+		WP_CLI::line( sprintf( '  nu știm             %d, pe %d căi', count( $noi ) - $stiu, count( $fara ) ) );
+		foreach ( array_slice( $fara, 0, 8, true ) as $cale => $n ) {
+			WP_CLI::line( sprintf( '    %5d  %s', $n, mb_substr( $cale, 0, 62 ) ) );
 		}
 	}
 

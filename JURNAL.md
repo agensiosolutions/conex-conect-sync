@@ -251,6 +251,50 @@ niciodată. Pe un produs real, cu `lipsa_runde` dus de la 0 la 3.
 Jobul de noapte pentru imagini nu l-am scris: mecanismul de programare și calculul ferestrei există, dar un job
 programat care nu face nimic e cod mort. Vine la etapa 4, odată cu imaginile.
 
+**Maparea categoriilor, scoasă din date.** Cele două taxonomii nu se pot traduce mecanic: Conex împarte catalogul
+pe sisteme ale mașinii („Elemente de caroserie / Elemente frontale / Bara fata”), magazinul pe logica vânzării
+(„Accesorii auto / Covorașe auto”). Nimeni n-a scris vreodată corespondența. Dar magazinul are 3.954 de produse
+legate, fiecare cu o cale la furnizor și o categorie pusă de om: sunt răspunsuri date deja, fără ca cineva să-și dea
+seama.
+
+Prima încercare a dat rezultate proaste, și motivul merită reținut: WooCommerce pune produsul și în categoria copil
+și în părinte, iar dacă înveți din părinte toate căile ajung în „Accesorii auto” și maparea nu mai spune nimic.
+Luând categoria cea mai adâncă, aceleași date au dat 100%, 99%, 96% pe căile mari.
+
+A doua descoperire a venit din cifre: calea „Covorase auto” avea doar 63% încredere. M-am uitat de ce, și acolo era
+regula covorașelor din `TASKS.md`, pe care n-o înțelesesem: 744 de seturi de covorașe merg în „Covorașe auto”, dar
+431 de covoare de portbagaj merg în „Accesorii interior”. Aceeași cale, două categorii, despărțite de un cuvânt din
+nume. Am scris căutarea de cuvânt separator generic, iar ea a găsit singură „PORTBAGAJ”.
+
+Căutarea a găsit însă și „HICO” și „JBM”, care sunt **branduri**. Despart perfect grupurile, pentru că cineva a pus
+cândva toate produsele unei mărci într-o categorie, dar o regulă pe brand spune ce s-a întâmplat în trecut, nu ce
+fel de produs e, și ar trimite greșit orice produs nou al mărcii. Cuvintele care apar ca brand în catalog se sar
+acum.
+
+**Probat cum trebuie.** Am scos 30% din legături, am reînvățat fără ele și am testat pe ele: **95,5% corect**, 3
+produse din 1.157 fără răspuns. Greșelile sunt toate în zonele unde magazinul însuși e inconsecvent: „Scule auto”
+contra „Diverse”, „Cric auto” contra „Diverse”.
+
+Acoperirea: din cele 16.800 de produse Conex care nu sunt pe site, regula știe unde merg 6.598. Restul de 10.202
+sunt pe 96 de căi, aproape toate piese OE: bare față, hayoane, oglinzi, plăcuțe și discuri de frână, amortizoare,
+planetare. Adică exact lucrurile despre care ownerul n-a hotărât încă dacă intră pe ele. Site-ul are o singură
+categorie pentru tot, „Piese auto”, cu 112 produse. N-am construit tabul de mapare manuală tocmai de asta: n-are
+rost să-i punem în față 96 de căi care poate nu-l interesează.
+
+`Lecție:` Înainte să ceri unui client să mapeze ceva, numără ce răspunsuri a dat deja fără să-și dea seama. Un
+magazin cu produse deja categorisite conține maparea completă între taxonomia furnizorului și a lui; trebuie doar
+numărată. La Cez Auto, 3.954 de produse au dat 64 de reguli cu 95,5% acuratețe, iar clientul n-a fost întrebat
+nimic. Simptomul că ai în față cazul ăsta: urmează să trimiți un tabel de completat cu sute de rânduri.
+
+`Lecție:` Când înveți reguli din date, verifică dacă nu cumva înveți istoria în loc de regulă. Un cuvânt care
+desparte perfect două grupuri poate fi un nume de brand, iar asta înseamnă „cineva a pus cândva toate produsele
+mărcii astea într-o categorie”, nu „produsele astea sunt de alt fel”. Se recunoaște ușor: cuvântul e un brand, un
+furnizor sau o dată, nu o însușire a produsului. Exclude-le explicit.
+
+`Lecție:` Când înveți dintr-o taxonomie cu părinți și copii, învață din categoria cea mai adâncă. WooCommerce pune
+produsul în toate categoriile de pe lanț, iar dacă nu alegi, ajungi să înveți din părinte, unde intră tot. Simptomul:
+o mapare care pare că merge dar trimite aproape totul în una sau două categorii largi.
+
 `Lecție:` Când clientul îți cere să înlocuiești niște date cu „cele noi”, verifică întâi că sunt într-adevăr aceleași
 lucruri. La Cez Auto, codul comun era o coincidență între EAN-ul unui produs și codul de producător al altuia, iar
 înlocuirea ar fi pus clipsuri de plastic la adresa unei pompe de aer. Simptomul: o potrivire făcută pe un câmp care

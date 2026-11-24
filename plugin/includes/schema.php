@@ -12,12 +12,12 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const CCS_SCHEMA_VERSIUNE = 4;
+const CCS_SCHEMA_VERSIUNE = 5;
 
 /**
  * Numele unui tabel al pluginului, cu prefixul bazei.
  *
- * @param string $nume Numele scurt: 'products', 'links', 'runs', 'log', 'modificari', 'decizii', 'excluse'.
+ * @param string $nume Numele scurt: 'products', 'links', 'runs', 'log', 'modificari', 'decizii', 'excluse', 'categorii'.
  * @return string Numele complet.
  */
 function ccs_tabel( $nume ) {
@@ -42,6 +42,7 @@ function ccs_schema_instaleaza() {
 	$modif   = ccs_tabel( 'modificari' );
 	$decizii = ccs_tabel( 'decizii' );
 	$excluse = ccs_tabel( 'excluse' );
+	$categ   = ccs_tabel( 'categorii' );
 
 	// Copia catalogului furnizorului. `cod` e codEAN, adică ce se potrivește cu SKU-ul de pe site.
 	// `amprenta` e un md5 peste câmpurile care ne interesează: dacă nu s-a schimbat, produsul se sare.
@@ -152,6 +153,24 @@ function ccs_schema_instaleaza() {
 			motiv VARCHAR(255) NOT NULL DEFAULT '',
 			creat_la DATETIME NULL,
 			PRIMARY KEY  (wc_product_id)
+		) $colatie;"
+	);
+
+	// Maparea categoriilor furnizorului pe cele ale magazinului. `contine` e gol pentru o regulă pe toată calea, sau
+	// un cuvânt din numele produsului când aceeași cale se împarte în două categorii.
+	dbDelta(
+		"CREATE TABLE $categ (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			cale VARCHAR(255) NOT NULL DEFAULT '',
+			contine VARCHAR(64) NOT NULL DEFAULT '',
+			term_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			incredere TINYINT UNSIGNED NOT NULL DEFAULT 0,
+			produse INT UNSIGNED NOT NULL DEFAULT 0,
+			sursa VARCHAR(16) NOT NULL DEFAULT 'invatat',
+			creat_la DATETIME NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY cale_contine (cale, contine),
+			KEY sursa (sursa)
 		) $colatie;"
 	);
 
