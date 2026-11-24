@@ -230,6 +230,33 @@
 		} );
 	} );
 
+	/* Comutatorul de rulare automată. Pagina se reîncarcă după, ca ora următoarei rulări să fie cea reală, nu una
+	   ghicită în browser. */
+	var joburi = document.getElementById( 'ccs-joburi' );
+	if ( joburi ) {
+		joburi.addEventListener( 'click', function ( ev ) {
+			ev.preventDefault();
+			var stare = document.getElementById( 'ccs-joburi-stare' );
+			joburi.disabled = true;
+			arataStare( stare, texte.lucrez, false );
+
+			trimite( 'ccs_joburi', { pornit: 'true' === joburi.dataset.pornit ? 'false' : 'true' } )
+				.then( function ( raspuns ) {
+					if ( ! raspuns || ! raspuns.success ) {
+						joburi.disabled = false;
+						arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || texte.eroare, true );
+						return;
+					}
+					arataStare( stare, raspuns.data.efect, false );
+					window.location.reload();
+				} )
+				.catch( function () {
+					joburi.disabled = false;
+					arataStare( stare, texte.eroare, true );
+				} );
+		} );
+	}
+
 	/* ---------------------------------------------------------------- simulatorul de preț */
 
 	if ( ! document.getElementById( 'ccs-adaos' ) || ! sim.cost || ! sim.cost.length ) {

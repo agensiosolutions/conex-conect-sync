@@ -49,6 +49,11 @@ function ccs_setari_implicite() {
 		'prag_nume'           => 0.5,
 		'prag_schimbari'      => 0.25,
 		'lot_aplicare'        => 200,    // Câte produse se scriu între două pauze de golire a cache-ului.
+
+		// Joburile sunt oprite până le pornește cineva. Un plugin care începe să scrie singur în magazin imediat ce
+		// a fost activat e un plugin în care nu ai încredere a doua oară.
+		'joburi_pornite'      => false,
+		'interval_catalog'    => 30,     // Minute între două preluări de catalog.
 	);
 }
 

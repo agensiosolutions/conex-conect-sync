@@ -44,8 +44,9 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
   are încă niciun loc din care clientul să-l bifeze.
 
 ### Etapa 3: curățare și joburi de noapte
-- [ ] Produsele absente N runde trec pe stoc epuizat, nu se șterg @claude
-- [ ] Joburile de noapte (imagini, criterii) pe Action Scheduler, programate 19:00-20:00 @claude
+- [ ] Jobul de noapte pentru imagini și criterii @claude
+  Mecanismul de programare există, inclusiv calculul ferestrei de noapte. Jobul propriu-zis vine la etapa 4, odată
+  cu imaginile: un job programat care nu face nimic e cod mort.
 
 ### Etapa 4: import de produse noi
 - [ ] Importul celor 993 de produse complete @claude
@@ -59,6 +60,12 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Așteaptă
 
+- [ ] Ce facem cu cele 26 de produse pe cod comun @client
+  Produsul Conex de pe acel cod e alt produs, nu o versiune nouă: la `10000`, site-ul are o pompă de aer, Conex un
+  set de clipsuri. Toate 26 vin din potrivirea pe cod de producător, care la Cez Auto n-a nimerit nimic. Unul
+  singur, SKU `20465`, chiar e același produs sub alt cod (`1.633-453.0`, aspirator de geamuri Kärcher).
+  Întrebarea pentru owner: cele 25 le mai poate aduce de undeva?
+
 - [ ] Deciziile de preț ale ownerului: adaos, cotă, marjă minimă, excepții @client
   Întrebările și cifrele sunt în oferta acceptată. Se stabilesc la prima discuție din etapa 2.
 - [ ] Confirmarea de la Conex că avem dreptul să afișăm public compatibilitățile auto @iulian
@@ -70,6 +77,13 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Joburile programate pe Action Scheduler, cu comutator în panou (24.11.2026)
+      Catalogul se preia la un interval configurabil, cu lacăt contra rulărilor suprapuse. Cu modul raport pornit,
+      jobul ține doar cifrele din panou la zi. Pornit din panou sau cu `wp ccs joburi --porneste`; implicit oprit.
+- [x] Regula de produse absente din feed, probată: la 2 runde lipsă trec pe stoc 0 și „epuizat” (24.11.2026)
+      Nu se șterg niciodată. Verificat pe un produs real, cu lipsa_runde de la 0 la 3.
+- [x] Cele 60 de produse sub cost, confirmate de owner pe „corectează” (24.11.2026)
+      Înregistrate în `ccs_decizii`. Neaplicate: așteaptă politica de preț.
 - [x] Panoul nou pe live, versiunea 0.3.0 (24.11.2026)
       Toate cele șase taburi se randează fără erori, cu tonurile de decizie prezente (54 pe potriviri, 122 pe sub
       cost). Modul raport e în continuare pornit: zero decizii luate, zero scrieri în WooCommerce.

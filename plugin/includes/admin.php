@@ -469,3 +469,28 @@ function ccs_admin_ajax_politica() {
 	);
 }
 add_action( 'wp_ajax_ccs_politica', 'ccs_admin_ajax_politica' );
+
+/**
+ * Pornește sau oprește rularea automată.
+ *
+ * @return void
+ */
+function ccs_admin_ajax_joburi() {
+	ccs_admin_ajax_poarta();
+
+	$pornit = ! empty( $_POST['pornit'] ) && 'false' !== $_POST['pornit'];
+	$setari = (array) get_option( CCS_OPTIUNE_SETARI, array() );
+	$setari['joburi_pornite'] = $pornit;
+	// `update_option` declanșează `ccs_joburi_la_setari()`, care programează sau scoate joburile din coadă.
+	update_option( CCS_OPTIUNE_SETARI, $setari );
+
+	wp_send_json_success(
+		array(
+			'pornit' => $pornit,
+			'efect'  => $pornit
+				? __( 'Rularea automată e pornită.', 'conex-conect-sync' )
+				: __( 'Rularea automată e oprită.', 'conex-conect-sync' ),
+		)
+	);
+}
+add_action( 'wp_ajax_ccs_joburi', 'ccs_admin_ajax_joburi' );

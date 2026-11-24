@@ -220,6 +220,51 @@ Argumentele oricărui proces sunt citibile de toți utilizatorii prin `/proc/<pi
 citibile doar de proprietar și de root. Simptomul că ai greșit: secretul apare în `history`, în `ps` sau în jurnalul
 de comenzi al uneltei de deploy.
 
+**Cele 26 de produse pe cod comun, oprite înainte să stric ceva.** Iulian mi-a cerut să le înlocuiesc cu produsele
+noi. M-am uitat întâi și premisa nu ținea: produsul de la Conex de pe acel cod nu e o versiune nouă a produsului de
+pe site, e cu totul altceva. La codul `10000`, site-ul are o pompă de aer cu manometru, iar Conex un set de 50 de
+clipsuri de plastic. Înlocuirea ar fi însemnat că magazinul nu mai vinde pompa la adresa aia.
+
+Am căutat apoi dacă produsele de pe site există la Conex sub codul lor corect. Căutarea largă a dat 11 potriviri,
+dar niciuna reală: 6 chei contra 21, 2 leviere contra 5, siguranță de 60A contra 40A, aspirator de 20 de litri
+contra 27. Variante apropiate, nu același produs. Cu o măsură strictă, nume aproape identic și același brand, a
+rămas **unul singur din 26**: aspiratorul de geamuri Kärcher, SKU `20465` pe site, `1.633-453.0` la Conex.
+
+Concluzia e că cele 25 nu sunt „de înlocuit”, sunt clasificate greșit: produse pe care Conex nu le are, adică exact
+situația celorlalte 2.743 de orfane. Iulian a oprit lucrul ca să întrebe ownerul, ceea ce e răspunsul corect.
+
+**Etapa 3, joburile programate.** Action Scheduler, nu `wp_cron`: pe un magazin fără trafic noaptea, `wp_cron` pur
+și simplu nu rulează, pentru că depinde de vizitatori. Jobul de catalog preia catalogul, reface potrivirea doar dacă
+furnizorul a adăugat produse, golește cache-ul panoului și aplică în WooCommerce dacă modul raport e oprit. Cu modul
+raport pornit, nu atinge magazinul deloc: doar ține cifrele din panou la zi.
+
+Un lacăt pe tranzient oprește rulările suprapuse, probat: a doua chemare a jobului s-a sărit și s-a înregistrat o
+singură rulare. Intervalul se schimbă din setări și jobul se reprogramează singur, probat de la 30 la 15 minute.
+
+Joburile sunt **oprite implicit**. Un plugin care începe să scrie singur în magazin imediat ce a fost activat e un
+plugin în care nu mai ai încredere a doua oară.
+
+Am probat și regula de produse absente din feed, care era scrisă din 19 noiembrie dar nu fusese verificată
+niciodată: la o rundă lipsă nu se întâmplă nimic, la două produsul trece pe stoc 0 și „epuizat”, și nu se șterge
+niciodată. Pe un produs real, cu `lipsa_runde` dus de la 0 la 3.
+
+Jobul de noapte pentru imagini nu l-am scris: mecanismul de programare și calculul ferestrei există, dar un job
+programat care nu face nimic e cod mort. Vine la etapa 4, odată cu imaginile.
+
+`Lecție:` Când clientul îți cere să înlocuiești niște date cu „cele noi”, verifică întâi că sunt într-adevăr aceleași
+lucruri. La Cez Auto, codul comun era o coincidență între EAN-ul unui produs și codul de producător al altuia, iar
+înlocuirea ar fi pus clipsuri de plastic la adresa unei pompe de aer. Simptomul: o potrivire făcută pe un câmp care
+nu e identificator unic în ambele sisteme.
+
+`Lecție:` Pentru joburi recurente într-un magazin WooCommerce, folosește Action Scheduler, nu `wp_cron`. `wp_cron`
+se declanșează la vizite, deci pe un magazin fără trafic noaptea nu rulează tocmai când ai nevoie. Action Scheduler
+ține coada în baza de date, reia ce a eșuat și are ecran propriu de urmărit. Pune și un lacăt contra rulărilor
+suprapuse: două rulări simultane ale aceluiași job scriu una peste alta.
+
+`Lecție:` Un plugin care sincronizează date nu pornește singur la activare. Lasă joburile oprite implicit și cere o
+apăsare. Prima impresie a clientului despre un plugin care i-a schimbat trei mii de prețuri fără să-l întrebe nu se
+mai repară, oricât de corecte ar fi fost prețurile.
+
 ## 20 noiembrie 2026
 
 **Rapoartele CSV nu sunt pentru client.** Iulian s-a uitat la cele trei fișiere de ieri și a spus direct ce era de

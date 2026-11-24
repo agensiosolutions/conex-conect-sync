@@ -10,6 +10,7 @@
  *   wp ccs aplica             scrie prețul și stocul în WooCommerce
  *   wp ccs revino <rulare>    dă înapoi o rulare de aplicare
  *   wp ccs setare <cheie>     arată sau schimbă o setare
+ *   wp ccs joburi             arată joburile programate; --porneste, --opreste, --acum
  *   wp ccs noapte <endpoint>  sondează un endpoint din fereastra 19:00-05:00
  *   wp ccs pret <cost>        arată ce preț ar ieși pentru un cost dat, cu setările curente
  *
@@ -371,6 +372,66 @@ class CCS_CLI {
 		WP_CLI::success( sprintf( '%d produse readuse la valorile dinainte (%d valori).', $r['produse'], $r['valori'] ) );
 		if ( $r['esuate'] ) {
 			WP_CLI::line( sprintf( '  produse care nu mai există  %d', $r['esuate'] ) );
+		}
+	}
+
+	/**
+	 * Arată joburile programate, sau le pornește, oprește și rulează pe loc.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--porneste]
+	 * : Programează joburile și pornește setarea.
+	 *
+	 * [--opreste]
+	 * : Scoate joburile din coadă și oprește setarea.
+	 *
+	 * [--acum]
+	 * : Rulează jobul de catalog pe loc, fără să aștepte programarea.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs joburi
+	 *     wp ccs joburi --porneste
+	 *     wp ccs joburi --acum
+	 *
+	 * @param array $args       Argumentele.
+	 * @param array $asociative Opțiunile.
+	 * @return void
+	 */
+	public function joburi( $args, $asociative ) {
+		if ( isset( $asociative['porneste'] ) || isset( $asociative['opreste'] ) ) {
+			$pornit = isset( $asociative['porneste'] );
+			$setari = (array) get_option( CCS_OPTIUNE_SETARI, array() );
+			$setari['joburi_pornite'] = $pornit;
+			update_option( CCS_OPTIUNE_SETARI, $setari );
+			WP_CLI::success( $pornit ? 'Joburile sunt pornite.' : 'Joburile sunt oprite.' );
+		}
+
+		if ( isset( $asociative['acum'] ) ) {
+			$inceput = microtime( true );
+			WP_CLI::line( 'Rulez jobul de catalog...' );
+			ccs_job_catalog();
+			WP_CLI::success( sprintf( 'Gata, în %s secunde.', round( microtime( true ) - $inceput, 2 ) ) );
+		}
+
+		$setari = ccs_setari();
+		WP_CLI::line( '' );
+		WP_CLI::line( sprintf( '  %-22s %s', 'setarea', $setari['joburi_pornite'] ? 'pornite' : 'oprite' ) );
+		WP_CLI::line( sprintf( '  %-22s %s', 'modul raport', $setari['mod_raport'] ? 'pornit, nu se scrie în WooCommerce' : 'oprit, se scrie în WooCommerce' ) );
+		WP_CLI::line( '' );
+
+		foreach ( ccs_joburi_stare() as $hook => $j ) {
+			WP_CLI::line( sprintf( '  %s', $j['nume'] ) );
+			WP_CLI::line( sprintf( '    %-20s %s', 'hook', $hook ) );
+			WP_CLI::line( sprintf( '    %-20s la %d minute', 'interval', $j['interval'] / MINUTE_IN_SECONDS ) );
+			WP_CLI::line(
+				sprintf(
+					'    %-20s %s',
+					'următoarea rulare',
+					$j['urmatoarea'] ? wp_date( 'j F Y, H:i', $j['urmatoarea'] ) : 'neprogramat'
+				)
+			);
 		}
 	}
 

@@ -457,6 +457,8 @@ function ccs_admin_tab_panou() {
 		ccs_ui_card_sfarsit();
 	}
 
+	ccs_ui_card_joburi();
+
 	$ultima  = $wpdb->get_row( "SELECT inceput, stare FROM " . ccs_tabel( 'runs' ) . " WHERE tip = 'catalog' ORDER BY id DESC LIMIT 1" ); // phpcs:ignore WordPress.DB.PreparedSQL
 	$produse = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . ccs_tabel( 'products' ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 
@@ -521,6 +523,55 @@ function ccs_admin_tab_panou() {
 		);
 	}
 	echo '</ul>';
+	ccs_ui_card_sfarsit();
+}
+
+/**
+ * Cardul cu rularea automată.
+ *
+ * @return void
+ */
+function ccs_ui_card_joburi() {
+	$setari = ccs_setari();
+	$stare  = ccs_joburi_stare();
+	$job    = reset( $stare );
+	$pornit = ! empty( $setari['joburi_pornite'] ) && $job && $job['pornit'];
+
+	ccs_ui_card(
+		__( 'Rularea automată', 'conex-conect-sync' ),
+		'',
+		$pornit
+			? ccs_ui_pastila( __( 'Pornită', 'conex-conect-sync' ), 'bine' )
+			: ccs_ui_pastila( __( 'Oprită', 'conex-conect-sync' ), 'atentie' )
+	);
+
+	echo '<p class="ccs-explic">';
+	if ( $pornit ) {
+		printf(
+			/* translators: 1: la câte minute, 2: când e următoarea rulare. */
+			esc_html__( 'Catalogul furnizorului se preia la fiecare %1$d minute. Următoarea rulare: %2$s.', 'conex-conect-sync' ),
+			(int) ( $job['interval'] / MINUTE_IN_SECONDS ),
+			esc_html( $job['urmatoarea'] ? wp_date( 'j F, H:i', $job['urmatoarea'] ) : '-' )
+		);
+	} else {
+		esc_html_e( 'Sincronizarea nu rulează singură. Catalogul se preia doar când apeși „Recalculează”, iar cifrele de mai jos rămân cele de la ultima preluare.', 'conex-conect-sync' );
+	}
+	echo '</p>';
+
+	echo '<p class="ccs-explic">';
+	echo $setari['mod_raport'] // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		? esc_html__( 'Cât timp scrierea pe site e oprită, rularea automată doar ține cifrele din panou la zi. Nu atinge niciun produs.', 'conex-conect-sync' )
+		: esc_html__( 'Scrierea pe site e pornită, deci fiecare rulare aplică prețurile și stocurile schimbate la furnizor.', 'conex-conect-sync' );
+	echo '</p>';
+
+	?>
+	<div class="ccs-butoane ccs-butoane--final">
+		<button type="button" class="ccs-btn <?php echo $pornit ? '' : 'ccs-btn--principal'; ?>" id="ccs-joburi" data-pornit="<?php echo $pornit ? 'true' : 'false'; ?>">
+			<?php echo $pornit ? esc_html__( 'Oprește rularea automată', 'conex-conect-sync' ) : esc_html__( 'Pornește rularea automată', 'conex-conect-sync' ); ?>
+		</button>
+		<span class="ccs-stare-text" id="ccs-joburi-stare"></span>
+	</div>
+	<?php
 	ccs_ui_card_sfarsit();
 }
 
