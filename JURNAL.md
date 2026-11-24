@@ -97,6 +97,28 @@ imagine generată, iar skillul o spune el însuși despre dashboarduri. Iar „t
 înălțime” l-am lăsat deoparte acolo unde numele produselor au două rânduri: ca să respect regula ar fi trebuit să
 trunchiez tocmai textul după care patronul decide.
 
+**Patru corecturi, după ce Iulian s-a uitat.** „Nu văd mari schimbări, dar e mai bine” e genul de răspuns care
+spune că ai făcut curățenie, nu design. Cele patru observații ale lui au fost toate exacte: iconițele din navigație
+prea mici și centrate pe verticală, deci căzute între titlu și explicație; butonul de pe tabul Stocul lipit de lista
+de deasupra; formula de preț lipită de controale; și, cea mai importantă, „totul e prea sec și gri”.
+
+Ultima a dus la singura regulă de culoare din panou: **verde înseamnă că pluginul schimbă produsul, chihlimbar că îl
+lasă cum e.** Aceeași regulă în toate cele patru perechi de butoane, la hover și după alegere. Un tabel parcurs pe
+jumătate se citește acum dintr-o privire, fără să recitești etichetele.
+
+Introducând-o, am creat imediat un conflict pe care nu-l căutam: pastila „0% cuvinte la fel” era tot galbenă, dar
+acolo galbenul însemna „uită-te aici”, nu „rămâne cum e”. Două înțelesuri pentru o culoare pe același ecran. Am
+făcut-o neutră, cu text mono: e o măsurătoare, nu o decizie.
+
+`Lecție:` Când introduci o regulă de culoare semantică într-o interfață, caută imediat unde mai folosești culoarea
+aia pentru altceva. La Cez Auto, galbenul însemna „rămâne cum e” pe butoane și „uită-te aici” pe o pastilă, la două
+centimetri distanță. O culoare cu două înțelesuri pe același ecran nu mai înseamnă nimic, iar regula se strică exact
+în momentul în care crezi că ai aplicat-o. Separă: culoarea pentru decizii, neutrul pentru măsurători.
+
+`Lecție:` O iconiță lângă două linii de text se aliniază cu prima linie, nu cu mijlocul blocului. Centrată pe
+verticală pare căzută între titlu și explicație, iar la rânduri de înălțimi diferite coloana de iconițe nu mai e o
+coloană. `align-items: flex-start` plus o iconiță cât înălțimea primei linii.
+
 `Lecție:` Un audit de design găsește lucruri de curățat, dar îmbunătățirea mare vine din a întreba ce trebuie să
 citească omul dintr-o privire. La Cez Auto, patru coloane de cifre corecte cereau din partea patronului o adunare în
 minte, de șaizeci de ori. O singură celulă `acum → nou` cu procentul alături a rezolvat mai mult decât toate

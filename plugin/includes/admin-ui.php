@@ -175,6 +175,27 @@ function ccs_ui_progres( $rezolvate, $total ) {
 }
 
 /**
+ * Tonul unei decizii: ce face pluginul dacă o alegi.
+ *
+ * O singură regulă, aceeași în toate taburile: verde înseamnă că produsul se schimbă, chihlimbar că rămâne cum e.
+ * Fără regula asta, patru perechi de butoane cu etichete diferite cer de la om să citească de fiecare dată.
+ *
+ * @param string $valoare Valoarea deciziei.
+ * @return string 'bine', 'atentie' sau ''.
+ */
+function ccs_ui_ton_decizie( $valoare ) {
+	$tonuri = array(
+		'acelasi'         => 'bine',     // Se leagă, deci prețul și stocul încep să se sincronizeze.
+		'corecteaza'      => 'bine',     // Prețul se corectează.
+		'lasa_sa_coboare' => 'bine',     // Prețul se schimbă, chiar dacă în jos.
+		'aprobat'         => 'bine',
+		'exclus'          => 'atentie',  // Produsul rămâne neatins, pentru totdeauna.
+		'pret_manual'     => 'atentie',  // Prețul rămâne cum e.
+	);
+	return $tonuri[ $valoare ] ?? '';
+}
+
+/**
  * Cele două variante de răspuns, ca un comutator.
  *
  * Varianta aleasă rămâne apăsată, deci rândul își spune singur starea. Înainte erau două butoane separate plus o
@@ -188,8 +209,9 @@ function ccs_ui_alegeri( $opt, $luata ) {
 	echo '<div class="ccs-alegeri">';
 	foreach ( $opt as $valoare => $eticheta ) {
 		printf(
-			'<button type="button" class="ccs-alegere ccs-decizie" data-valoare="%1$s" aria-pressed="%2$s">%3$s</button>',
+			'<button type="button" class="ccs-alegere ccs-decizie" data-valoare="%1$s" data-ton="%2$s" aria-pressed="%3$s">%4$s</button>',
 			esc_attr( $valoare ),
+			esc_attr( ccs_ui_ton_decizie( $valoare ) ),
 			$luata && $luata['valoare'] === $valoare ? 'true' : 'false',
 			esc_html( $eticheta )
 		);
@@ -228,8 +250,9 @@ function ccs_ui_bara_lot( $tip, $opt ) {
 	echo '<span>' . esc_html__( 'La fel pentru toate cele rămase:', 'conex-conect-sync' ) . '</span>';
 	foreach ( $opt as $valoare => $eticheta ) {
 		printf(
-			'<button type="button" class="ccs-btn ccs-btn--mic ccs-lot" data-valoare="%s" data-eticheta="%s">%s</button>',
+			'<button type="button" class="ccs-btn ccs-btn--mic ccs-lot" data-valoare="%1$s" data-ton="%2$s" data-eticheta="%3$s">%4$s</button>',
 			esc_attr( $valoare ),
+			esc_attr( ccs_ui_ton_decizie( $valoare ) ),
 			esc_attr( $eticheta ),
 			esc_html( $eticheta )
 		);
@@ -565,7 +588,7 @@ function ccs_admin_tab_pret() {
 				</select>
 			</label>
 
-			<div class="ccs-butoane">
+			<div class="ccs-butoane ccs-butoane--final">
 				<button type="button" class="ccs-btn ccs-btn--principal" id="ccs-salveaza-politica">
 					<?php esc_html_e( 'Salvează politica de preț', 'conex-conect-sync' ); ?>
 				</button>
@@ -684,10 +707,11 @@ function ccs_admin_tab_potriviri() {
 							<p class="ccs-parte__nume"><?php echo esc_html( $v['nume_conex'] ); ?></p>
 							<p class="ccs-parte__meta">
 								<?php
-								// Procentul de asemănare e faptul care decide, deci iese din textul muted. Galben
-								// înseamnă „uită-te la asta”, nu „e o eroare”.
+								// Procentul iese din textul muted, dar rămâne neutru: e o măsurătoare, nu o decizie.
+								// Verdele și galbenul sunt rezervate pentru ce face pluginul cu produsul, iar o
+								// culoare cu două înțelesuri pe același ecran nu mai înseamnă nimic.
 								printf(
-									'<span class="ccs-pastila ccs-pastila--atentie">%s</span>',
+									'<span class="ccs-pastila ccs-pastila--masura">%s</span>',
 									esc_html(
 										sprintf(
 											/* translators: %d: procentul. */
@@ -935,7 +959,7 @@ function ccs_admin_tab_stoc() {
 	}
 	echo '</ul>';
 	?>
-	<div class="ccs-butoane" data-tip="epuizare" data-referinta="">
+	<div class="ccs-butoane ccs-butoane--final" data-tip="epuizare" data-referinta="">
 		<button type="button" class="ccs-btn ccs-btn--principal ccs-decizie" data-valoare="aprobat">
 			<?php esc_html_e( 'De acord, sincronizează stocul așa', 'conex-conect-sync' ); ?>
 		</button>

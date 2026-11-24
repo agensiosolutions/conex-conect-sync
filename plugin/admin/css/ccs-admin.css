@@ -72,7 +72,9 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-cadru { display: grid; grid-template-columns: 256px minmax(0, 1fr); gap: 32px; align-items: start; }
 .ccs-nav { position: sticky; top: 52px; display: flex; flex-direction: column; gap: 4px; }
 .ccs-nav__link {
-  display: flex; align-items: center; gap: 12px;
+  /* Iconița se aliniază cu prima linie de text, nu cu mijlocul blocului: altfel, la un rând cu titlu și explicație,
+     pare căzută între ele. Aceeași regulă peste tot unde o iconiță stă lângă două linii de text. */
+  display: flex; align-items: flex-start; gap: 12px;
   min-height: 36px; padding: 8px 12px;
   border: 1px solid transparent; border-radius: 8px;
   color: var(--c-text-2); text-decoration: none;
@@ -81,7 +83,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-nav__link > span:nth-child(2) { flex: 1 1 auto; min-width: 0; }
 .ccs-nav__link strong { display: block; font-size: 14px; font-weight: 400; color: var(--c-text); }
 .ccs-nav__link small { display: block; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
-.ccs-nav__link .dashicons { color: var(--c-text-3); flex: none; }
+.ccs-nav__link .dashicons { flex: none; width: 20px; height: 20px; font-size: 20px; line-height: 20px; color: var(--c-text-3); }
 .ccs-nav__link:hover { background: var(--c-ridicat); color: var(--c-text); }
 .ccs-nav__link:focus-visible { box-shadow: var(--c-inel); outline: none; }
 .ccs-nav__link[aria-current="page"] { background: var(--c-card); border-color: var(--c-linie); box-shadow: var(--c-umbra); }
@@ -169,13 +171,14 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 /* ---------------------------------------------------------------- de rezolvat */
 .ccs-de-rezolvat { margin: 0; padding: 0; list-style: none; }
 .ccs-de-rezolvat li {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: flex-start; gap: 12px;
   margin: 0; padding: 16px 0; border-top: 1px solid var(--c-linie);
 }
+.ccs-de-rezolvat .ccs-btn { align-self: center; }
 .ccs-de-rezolvat li:first-child { border-top: 0; padding-top: 0; }
 .ccs-de-rezolvat li:last-child { padding-bottom: 0; }
 .ccs-de-rezolvat > li > div { flex: 1 1 auto; min-width: 0; }
-.ccs-de-rezolvat .dashicons { flex: none; color: var(--c-galben); }
+.ccs-de-rezolvat .dashicons { flex: none; width: 20px; height: 20px; font-size: 20px; line-height: 20px; color: var(--c-galben); }
 .ccs-de-rezolvat strong { display: block; font-size: 14px; font-weight: 500; color: var(--c-text); }
 .ccs-de-rezolvat p { margin: 4px 0 0; font-size: 13px; color: var(--c-text-3); }
 
@@ -202,6 +205,9 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-btn[data-confirma="da"] { border-color: var(--c-rosu); background: var(--c-rosu-fundal); color: var(--c-rosu); }
 
 .ccs-butoane { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* Un bloc de butoane care încheie un card are nevoie de aer și de o linie, altfel stă lipit de ultimul rând de
+   deasupra și pare că aparține lui. */
+.ccs-butoane--final { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--c-linie); }
 
 /* Alegerea dintre două variante, ca un comutator, nu ca două butoane separate. După ce s-a ales, varianta aleasă
    rămâne apăsată: rândul își spune singur starea, fără o propoziție care mută layoutul. */
@@ -219,6 +225,26 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   background: var(--c-card); color: var(--c-text); font-weight: 500;
   box-shadow: var(--c-umbra), 0 0 0 1px var(--c-linie);
 }
+
+/* O singură regulă de culoare, aceeași peste tot: verde înseamnă că pluginul schimbă produsul, chihlimbar că îl
+   lasă cum e. Culoarea apare la hover și rămâne după alegere, deci un tabel parcurs pe jumătate se citește dintr-o
+   privire: ce e verde se aplică, ce e galben rămâne pe loc. */
+.ccs-alegere[data-ton="bine"]:hover { color: var(--c-verde); }
+.ccs-alegere[data-ton="atentie"]:hover { color: var(--c-galben); }
+.ccs-alegere[aria-pressed="true"][data-ton="bine"] {
+  background: var(--c-verde-fundal); color: var(--c-verde);
+  box-shadow: var(--c-umbra), 0 0 0 1px rgba(22, 163, 74, .3);
+}
+.ccs-alegere[aria-pressed="true"][data-ton="atentie"] {
+  background: var(--c-galben-fundal); color: var(--c-galben);
+  box-shadow: var(--c-umbra), 0 0 0 1px rgba(161, 98, 7, .3);
+}
+
+/* Butoanele din bara „la fel pentru toate” poartă aceleași tonuri, ca să însemne același lucru. */
+.ccs-btn[data-ton="bine"] { border-color: rgba(22, 163, 74, .32); color: var(--c-verde); }
+.ccs-btn[data-ton="bine"]:hover { background: var(--c-verde-fundal); color: var(--c-verde); }
+.ccs-btn[data-ton="atentie"] { border-color: rgba(161, 98, 7, .32); color: var(--c-galben); }
+.ccs-btn[data-ton="atentie"]:hover { background: var(--c-galben-fundal); color: var(--c-galben); }
 .ccs-alegere:disabled { opacity: .5; cursor: default; }
 
 /* ---------------------------------------------------------------- pastile și mesaje */
@@ -232,6 +258,8 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-pastila--atentie { background: var(--c-galben-fundal); color: var(--c-galben); }
 .ccs-pastila--problema { background: var(--c-rosu-fundal); color: var(--c-rosu); }
 .ccs-pastila--info { background: var(--c-accent-fundal); color: var(--c-accent-inchis); }
+/* O cifră măsurată, nu o decizie: rămâne neutră, dar cu greutate de mono, ca să se citească. */
+.ccs-pastila--masura { font-family: var(--c-mono); color: var(--c-text-2); }
 
 .ccs-mesaj { margin-bottom: 16px; padding: 12px 16px; border: 1px solid; border-radius: 8px; font-size: 14px; }
 .ccs-mesaj--bine { background: var(--c-verde-fundal); border-color: var(--c-verde); color: var(--c-verde); }
@@ -274,7 +302,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   font-variant-numeric: tabular-nums;
 }
 
-.ccs-formula { margin: 0; padding: 12px 16px; border-radius: 8px; background: var(--c-fundal); border: 1px solid var(--c-linie); font-size: 13px; }
+.ccs-formula { margin: 0 0 24px; padding: 12px 16px; border-radius: 8px; background: var(--c-fundal); border: 1px solid var(--c-linie); font-size: 13px; }
 .ccs-formula b { font-weight: 500; color: var(--c-text); }
 
 /* Controalele n-au nevoie de jumătate de ecran, iar efectul are. Altfel rămâne o bandă goală sub butonul de
@@ -315,6 +343,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-potrivire:last-of-type { margin-bottom: 0; }
 .ccs-fata { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 16px; align-items: start; }
 .ccs-parte__cap { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
+.ccs-parte__cap .dashicons { width: 16px; height: 16px; font-size: 16px; }
 .ccs-parte__corp { display: flex; gap: 12px; }
 .ccs-parte img { flex: none; width: 48px; height: 48px; object-fit: contain; border: 1px solid var(--c-linie); border-radius: 4px; background: var(--c-fundal); }
 .ccs-parte__nume { margin: 0; font-size: 14px; font-weight: 400; color: var(--c-text); }
@@ -324,7 +353,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-potrivire .ccs-butoane { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--c-linie); }
 
 /* Ce a primit răspuns se stinge, ca ochiul să cadă pe ce a rămas. */
-.ccs-rezolvat { opacity: .5; transition: opacity 140ms var(--c-curba); }
+.ccs-rezolvat { opacity: .62; transition: opacity 140ms var(--c-curba); }
 .ccs-rezolvat:hover { opacity: 1; }
 
 /* ---------------------------------------------------------------- bara „la fel pentru toate” */
