@@ -41,7 +41,7 @@ function ccs_retragere_grupuri() {
 		}
 	}
 
-	// Produsele scoase din potrivire de client nu apar la orfane, dar sunt în aceeași situație.
+	// Produsele excluse de client din potrivire nu apar la orfane, dar sunt în aceeași situație.
 	foreach ( ccs_excluse() as $wc_id ) {
 		$sku = (string) get_post_meta( $wc_id, '_sku', true );
 		if ( '' !== $sku ) {

@@ -42,7 +42,7 @@ function ccs_decizii_tipuri() {
 			'valori'    => array( 'aprobat' ),
 		),
 		'categorie'     => array(
-			'intrebare' => __( 'În ce raion de pe site merge o cale de la furnizor', 'conex-conect-sync' ),
+			'intrebare' => __( 'Categoria din magazin în care se încadrează o categorie a furnizorului', 'conex-conect-sync' ),
 			'valori'    => array( 'mapat' ),
 		),
 		'prima_aplicare' => array(

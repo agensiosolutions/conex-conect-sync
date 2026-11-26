@@ -23,13 +23,13 @@ const CCS_CAPACITATE = 'manage_woocommerce';
  */
 function ccs_admin_taburi() {
 	return array(
-		'panou'     => array( __( 'Panou', 'conex-conect-sync' ), 'dashboard', __( 'Cum stă sincronizarea', 'conex-conect-sync' ), '' ),
+		'panou'     => array( __( 'Panou', 'conex-conect-sync' ), 'dashboard', __( 'Starea sincronizării', 'conex-conect-sync' ), '' ),
 		'pret'      => array( __( 'Politica de preț', 'conex-conect-sync' ), 'tag', __( 'Adaos, TVA, marjă minimă', 'conex-conect-sync' ), '' ),
-		'potriviri' => array( __( 'Produse de confirmat', 'conex-conect-sync' ), 'randomize', __( 'Cod la fel, produs diferit', 'conex-conect-sync' ), 'potrivire' ),
+		'potriviri' => array( __( 'Produse de confirmat', 'conex-conect-sync' ), 'randomize', __( 'Cod identic, produs diferit', 'conex-conect-sync' ), 'potrivire' ),
 		'scaderi'   => array( __( 'Prețuri care coboară', 'conex-conect-sync' ), 'arrow-down-alt', __( 'Scăderi mai mari de jumătate', 'conex-conect-sync' ), 'scadere' ),
 		'subcost'   => array( __( 'Vândute sub cost', 'conex-conect-sync' ), 'warning', __( 'Preț mai mic decât achiziția', 'conex-conect-sync' ), 'sub_cost' ),
 		'stoc'      => array( __( 'Stocul', 'conex-conect-sync' ), 'archive', __( 'Cantități și produse epuizate', 'conex-conect-sync' ), '' ),
-		'catalog'   => array( __( 'Catalogul', 'conex-conect-sync' ), 'list-view', __( 'Ce dispare și ce vine nou', 'conex-conect-sync' ), '' ),
+		'catalog'   => array( __( 'Catalogul', 'conex-conect-sync' ), 'list-view', __( 'Starea celor două cataloage', 'conex-conect-sync' ), '' ),
 	);
 }
 
@@ -439,7 +439,7 @@ function ccs_admin_ajax_decizie_lot() {
 	$referinte = array_filter( array_map( 'absint', explode( ',', sanitize_text_field( wp_unslash( $_POST['referinte'] ?? '' ) ) ) ) );
 
 	if ( ! $referinte ) {
-		wp_send_json_error( array( 'mesaj' => __( 'Nu e nimic de hotărât aici.', 'conex-conect-sync' ) ) );
+		wp_send_json_error( array( 'mesaj' => __( 'Nu există produse în această situație.', 'conex-conect-sync' ) ) );
 	}
 
 	$facute = 0;
@@ -606,7 +606,7 @@ function ccs_admin_ajax_mapeaza() {
 		array(
 			'efect' => sprintf(
 				/* translators: %s: numele categoriei. */
-				__( 'Merg în „%s”. Produsele de pe calea asta intră în lista de adus.', 'conex-conect-sync' ),
+				__( 'Asociate cu „%s”. Produsele din această categorie trec în lista de import.', 'conex-conect-sync' ),
 				$termen->name
 			),
 		)

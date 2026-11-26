@@ -87,6 +87,28 @@ colț și cifra în culoarea stării, ceea ce păstrează citirea dintr-o privir
 de produse retrase au primit și ele iconiță, cifră mare și o bară care arată cât s-a făcut deja: fără bară,
 „2.435” și „1.826 încă de vânzare” sunt două numere care cer o scădere în minte.
 
+**Textele din panou, trecute prin regulile de redactare.** Iulian a dat două exemple: „Aceleași cifre pe care
+le-ai vedea într-un tabel, dar pe lungime” și „alege raionul”. Amândouă greșesc în feluri diferite, și amândouă
+sunt greșeli pe care le-am făcut eu, nu moșteniri.
+
+Prima descrie forma, nu conținutul: un subtitlu trebuie să spună ce arată secțiunea, nu cum arată. A doua e mai
+gravă: „raion” e un termen pe care l-am inventat. Ownerul citește „categorie” peste tot în WordPress și în
+WooCommerce, deci fiecare „raion” îl punea să traducă în minte.
+
+Am luat regulile din `agensio-creare-oferte/REGULI-REDACTARE.md` și am trecut tot panoul prin ele: 74 de texte
+schimbate în trei fișiere, plus încă zece în celelalte. Verbele colocviale au dispărut: un produs **se importă**,
+nu „urcă pe site”; rămâne **neschimbat**, nu „nu se atinge”; valorile **se modifică**, nu „se trage de ele”. Regula
+e acum în `CLAUDE.md`, cu cele două greșeli scrise explicit.
+
+`Lecție:` Nu inventa termeni pentru lucruri care au deja un nume pe ecranul clientului. Am scris „raion” pentru
+categoria de produs, într-un panou care stă în WordPress, unde scrie „categorie” în meniu, în lista de produse și
+în ecranul de editare. Un sinonim mai prietenos nu ajută: obligă omul să traducă. Folosește cuvintele pe care
+platforma i le-a băgat deja în cap.
+
+`Lecție:` Un subtitlu explică ce conține secțiunea, nu cum arată ea. „Aceleași cifre, dar pe lungime” vorbește
+despre forma graficului; „Cum se împart cele două cataloage, după starea fiecărui produs” spune ce poți afla din
+el. Simptomul: subtitlul ar rămâne adevărat dacă ai schimba datele cu totul.
+
 **Maparea manuală, pornită de o întrebare.** Iulian a întrebat ce înseamnă „5.522 așteaptă o categorie”, iar
 răspunsul a scos la iveală trei lucruri.
 

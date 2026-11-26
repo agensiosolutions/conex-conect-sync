@@ -23,6 +23,23 @@ construit ca produs, nu ca lucrare pentru un singur magazin: Piese Total și al�
   `php teste/ruleaza.php`. Fără dependențe, fără WordPress, sub o secundă.
 - Lecțiile (rândurile `Lecție:` din `JURNAL.md`) trec în MasterMind doar după aprobarea lui Iulian.
 
+## Textele din panou
+
+Toate textele pe care le vede clientul respectă `D:\Work\Reposgensio-creare-oferte\REGULI-REDACTARE.md`. Pe scurt,
+pentru panou: ton profesionist și direct, propoziții complete, fără exprimare colocvială sau didactică, fără să
+explici evidentul. Nu simplifica terminologia până își pierde precizia.
+
+Două greșeli făcute deja, ca să nu se repete:
+
+- **Nu inventa termeni.** Am scris „raion” pentru categoria de produs. Ownerul citește „categorie” peste tot în
+  WordPress și în WooCommerce; un cuvânt nou îl pune să traducă în minte. Folosește termenii pe care îi vede deja
+  pe ecran: categorie, stoc epuizat, import, cost de achiziție, furnizor.
+- **Nu descrie forma, descrie conținutul.** „Aceleași cifre pe care le-ai vedea într-un tabel, dar pe lungime” nu
+  spune nimic despre ce conțin barele. Un subtitlu explică ce arată secțiunea, nu cum arată.
+
+Verbele colocviale n-au ce căuta: un produs **se importă**, nu „urcă pe site”; un produs **rămâne neschimbat**, nu
+„nu se atinge”; valorile **se modifică**, nu „se trage de ele”.
+
 ## Ce știm despre API, din măsurători
 
 Toate regulile de mai jos vin din teste pe API-ul real (Cez Auto, 13-14 oct. 2026). **Niciuna nu e în documentație.**

@@ -295,7 +295,7 @@
 			} );
 	} );
 
-	/* Alegerea raionului pentru o cale de la furnizor. Se salveaza la schimbarea selectorului, fara buton: e o
+	/* Alegerea categoriei din magazin pentru o categorie a furnizorului. Se salveaza la schimbarea selectorului, fara buton: e o
 	   alegere dintr-o lista, nu o operatie in masa. */
 	document.addEventListener( 'change', function ( ev ) {
 		var select = ev.target.closest( '.ccs-de-mapat__select' );

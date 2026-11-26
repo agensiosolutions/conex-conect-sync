@@ -79,16 +79,16 @@ function ccs_import_pregateste( $p ) {
 
 	$piedici = array();
 	if ( ! $poze ) {
-		$piedici['fara_poza'] = __( 'Furnizorul n-are nicio poză. Un produs fără poză nu urcă pe site.', 'conex-conect-sync' );
+		$piedici['fara_poza'] = __( 'Furnizorul nu transmite nicio imagine. Produsele fără imagine nu se importă.', 'conex-conect-sync' );
 	}
 	if ( $cost <= 0 ) {
-		$piedici['fara_cost'] = __( 'Fără cost de achiziție nu se poate calcula prețul.', 'conex-conect-sync' );
+		$piedici['fara_cost'] = __( 'Fără cost de achiziție nu se poate calcula prețul de vânzare.', 'conex-conect-sync' );
 	}
 	if ( $stoc <= 0 ) {
-		$piedici['fara_stoc'] = __( 'Nu e pe stoc la furnizor în ziua importului.', 'conex-conect-sync' );
+		$piedici['fara_stoc'] = __( 'Nu figurează pe stoc la furnizor.', 'conex-conect-sync' );
 	}
 	if ( ! $term ) {
-		$piedici['fara_categorie'] = __( 'Nu știm în ce categorie de pe site merge.', 'conex-conect-sync' );
+		$piedici['fara_categorie'] = __( 'Nu are o categorie din magazin asociată.', 'conex-conect-sync' );
 	}
 	if ( '' === $nume ) {
 		$piedici['fara_nume'] = __( 'Produsul n-are nume.', 'conex-conect-sync' );
@@ -99,7 +99,7 @@ function ccs_import_pregateste( $p ) {
 	if ( $existent ) {
 		$piedici['exista_deja'] = sprintf(
 			/* translators: %d: id-ul produsului de pe site. */
-			__( 'Codul e deja pe site, la produsul %d.', 'conex-conect-sync' ),
+			__( 'Codul există deja pe site, la produsul %d.', 'conex-conect-sync' ),
 			$existent
 		);
 	}

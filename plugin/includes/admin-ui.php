@@ -247,7 +247,7 @@ function ccs_ui_cate_rezolvate( $randuri, $decizii ) {
  */
 function ccs_ui_bara_lot( $tip, $opt ) {
 	echo '<div class="ccs-lot-bara" data-tip-lot="' . esc_attr( $tip ) . '">';
-	echo '<span>' . esc_html__( 'La fel pentru toate cele rămase:', 'conex-conect-sync' ) . '</span>';
+	echo '<span>' . esc_html__( 'Aplică aceeași alegere pentru restul:', 'conex-conect-sync' ) . '</span>';
 	foreach ( $opt as $valoare => $eticheta ) {
 		printf(
 			'<button type="button" class="ccs-btn ccs-btn--mic ccs-lot" data-valoare="%1$s" data-ton="%2$s" data-eticheta="%3$s">%4$s</button>',
@@ -295,7 +295,7 @@ function ccs_ui_text_decizie( $luata ) {
  */
 function ccs_admin_pagina() {
 	if ( ! current_user_can( CCS_CAPACITATE ) ) {
-		wp_die( esc_html__( 'Nu ai acces la pagina asta.', 'conex-conect-sync' ) );
+		wp_die( esc_html__( 'Nu ai acces la această pagină.', 'conex-conect-sync' ) );
 	}
 
 	if ( isset( $_GET['recalculeaza'] ) && check_admin_referer( 'ccs-recalculeaza' ) ) {
@@ -321,7 +321,7 @@ function ccs_admin_pagina() {
 					'eroare'   => __( 'Nu s-a putut salva. Încearcă din nou.', 'conex-conect-sync' ),
 					'lucrez'   => __( 'Salvez...', 'conex-conect-sync' ),
 					'confirma' => __( 'Apasă din nou ca să confirmi', 'conex-conect-sync' ),
-					'nimic'    => __( 'Nu a mai rămas nimic de hotărât aici.', 'conex-conect-sync' ),
+					'nimic'    => __( 'Nu mai sunt produse de hotărât.', 'conex-conect-sync' ),
 				),
 			)
 		);
@@ -339,7 +339,7 @@ function ccs_admin_pagina() {
 			<div class="ccs-antet__dreapta">
 				<?php
 				echo $setari['mod_raport'] // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					? ccs_ui_pastila( __( 'Nu se scrie nimic pe site', 'conex-conect-sync' ), 'info' )
+					? ccs_ui_pastila( __( 'Scrierea pe site e oprită', 'conex-conect-sync' ), 'info' )
 					: ccs_ui_pastila( __( 'Sincronizare pornită', 'conex-conect-sync' ), 'bine' );
 				?>
 				<a class="ccs-btn ccs-btn--fantoma" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=ccs-decizii&tab=' . $tab . '&recalculeaza=1' ), 'ccs-recalculeaza' ) ); ?>">
@@ -395,7 +395,7 @@ function ccs_admin_tab_panou() {
 
 	ccs_ui_antet_tab(
 		__( 'Panou', 'conex-conect-sync' ),
-		__( 'Ce ar face sincronizarea chiar acum, dacă ar fi pornită.', 'conex-conect-sync' )
+		__( 'Modificările pe care le-ar aplica sincronizarea în acest moment.', 'conex-conect-sync' )
 	);
 	?>
 	<div class="ccs-cifre">
@@ -415,24 +415,24 @@ function ccs_admin_tab_panou() {
 	if ( $total ) {
 		ccs_ui_card(
 			__( 'De hotărât', 'conex-conect-sync' ),
-			__( 'Până primesc răspuns, produsele astea nu se ating.', 'conex-conect-sync' )
+			__( 'Până la primirea unui răspuns, produsele respective rămân neschimbate.', 'conex-conect-sync' )
 		);
 		echo '<ul class="ccs-de-rezolvat">';
 		$intrebari = array(
 			'potriviri' => array(
 				'potrivire',
 				__( 'Produse de confirmat', 'conex-conect-sync' ),
-				__( 'Codul se potrivește cu un produs de la Conex, dar numele arată altceva.', 'conex-conect-sync' ),
+				__( 'Codul corespunde unui produs de la Conex, dar denumirile indică produse diferite.', 'conex-conect-sync' ),
 			),
 			'scaderi'   => array(
 				'scadere',
 				__( 'Prețuri care ar coborî mult', 'conex-conect-sync' ),
-				__( 'Regula de preț le-ar tăia la mai puțin de jumătate din cât sunt acum.', 'conex-conect-sync' ),
+				__( 'Regula de preț le-ar reduce la mai puțin de jumătate din valoarea actuală.', 'conex-conect-sync' ),
 			),
 			'subcost'   => array(
 				'sub_cost',
 				__( 'Produse vândute sub cost', 'conex-conect-sync' ),
-				__( 'Prețul de pe site e mai mic decât costul la care le cumperi.', 'conex-conect-sync' ),
+				__( 'Prețul de vânzare este sub costul de achiziție.', 'conex-conect-sync' ),
 			),
 		);
 		foreach ( $intrebari as $slug => $i ) {
@@ -491,7 +491,7 @@ function ccs_admin_tab_panou() {
 			__( 'Produse ieșite din catalog', 'conex-conect-sync' ),
 			sprintf(
 				/* translators: %s: câte produse. */
-				__( '%s produse de pe site nu mai sunt la Conex. Nu se șterg niciodată.', 'conex-conect-sync' ),
+				__( '%s produse de pe site nu mai există în catalogul Conex. Nu se șterg.', 'conex-conect-sync' ),
 				ccs_nr( $potrivire['orfane'] )
 			),
 		),
@@ -499,8 +499,8 @@ function ccs_admin_tab_panou() {
 			$setari['mod_raport'] ? 'atentie' : 'bine',
 			__( 'Scrierea pe site', 'conex-conect-sync' ),
 			$setari['mod_raport']
-				? __( 'Oprită. Pagina arată ce s-ar schimba, dar nu schimbă nimic.', 'conex-conect-sync' )
-				: __( 'Pornită. Prețul și stocul se aplică pe produse.', 'conex-conect-sync' ),
+				? __( 'Oprită. Panoul arată modificările propuse, fără să le aplice.', 'conex-conect-sync' )
+				: __( 'Pornită. Prețul și stocul se actualizează pe produse.', 'conex-conect-sync' ),
 		),
 	);
 
@@ -554,14 +554,14 @@ function ccs_ui_card_joburi() {
 			esc_html( $job['urmatoarea'] ? wp_date( 'j F, H:i', $job['urmatoarea'] ) : '-' )
 		);
 	} else {
-		esc_html_e( 'Sincronizarea nu rulează singură. Catalogul se preia doar când apeși „Recalculează”, iar cifrele de mai jos rămân cele de la ultima preluare.', 'conex-conect-sync' );
+		esc_html_e( 'Sincronizarea nu rulează automat. Catalogul se preia doar la apăsarea butonului „Recalculează”, iar datele de mai jos rămân cele de la ultima preluare.', 'conex-conect-sync' );
 	}
 	echo '</p>';
 
 	echo '<p class="ccs-explic">';
 	echo $setari['mod_raport'] // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		? esc_html__( 'Cât timp scrierea pe site e oprită, rularea automată doar ține cifrele din panou la zi. Nu atinge niciun produs.', 'conex-conect-sync' )
-		: esc_html__( 'Scrierea pe site e pornită, deci fiecare rulare aplică prețurile și stocurile schimbate la furnizor.', 'conex-conect-sync' );
+		? esc_html__( 'Cât timp scrierea este oprită, sincronizarea doar actualizează datele din panou, fără să modifice vreun produs.', 'conex-conect-sync' )
+		: esc_html__( 'Scrierea este pornită, deci fiecare rulare aplică prețurile și stocurile modificate la furnizor.', 'conex-conect-sync' );
 	echo '</p>';
 
 	?>
@@ -584,7 +584,7 @@ function ccs_admin_tab_pret() {
 	$p = ccs_admin_politica();
 	ccs_ui_antet_tab(
 		__( 'Politica de preț', 'conex-conect-sync' ),
-		__( 'Trage de valori și vezi imediat ce se întâmplă cu tot magazinul. Nimic nu se schimbă pe site până nu apeși „Salvează”.', 'conex-conect-sync' )
+		__( 'Modifică valorile pentru a vedea efectul asupra întregului catalog. Nimic nu se aplică pe site până la salvare.', 'conex-conect-sync' )
 	);
 
 	ccs_ui_card( __( 'Cum se calculează prețul', 'conex-conect-sync' ) );
@@ -605,7 +605,7 @@ function ccs_admin_tab_pret() {
 		<div>
 			<label class="ccs-camp" for="ccs-adaos">
 				<span><?php esc_html_e( 'Adaos comercial', 'conex-conect-sync' ); ?></span>
-				<small><?php esc_html_e( 'Cât se adaugă peste costul cu TVA inclus.', 'conex-conect-sync' ); ?></small>
+				<small><?php esc_html_e( 'Procentul aplicat peste costul cu TVA inclus.', 'conex-conect-sync' ); ?></small>
 				<span class="ccs-glisor">
 					<input type="range" id="ccs-adaos" min="1" max="2.5" step="0.01" value="<?php echo esc_attr( $p['adaos'] ); ?>">
 					<output id="ccs-adaos-val"></output>
@@ -614,7 +614,7 @@ function ccs_admin_tab_pret() {
 
 			<label class="ccs-camp" for="ccs-marja">
 				<span><?php esc_html_e( 'Marjă minimă în lei, pe produs', 'conex-conect-sync' ); ?></span>
-				<small><?php esc_html_e( 'Apără produsele ieftine: la un cost de 1,36 lei, adaosul de 35% ar da 2 lei preț, adică 64 de bani câștig, mai puțin decât costă ambalarea comenzii.', 'conex-conect-sync' ); ?></small>
+				<small><?php esc_html_e( 'Protejează produsele ieftine. La un cost de 1,36 lei, un adaos de 35% ar rezulta într-un preț de 2 lei, adică 64 de bani marjă, sub costul de procesare a unei comenzi.', 'conex-conect-sync' ); ?></small>
 				<span class="ccs-glisor">
 					<input type="range" id="ccs-marja" min="0" max="15" step="0.5" value="<?php echo esc_attr( $p['marja_minima_lei'] ); ?>">
 					<output id="ccs-marja-val"></output>
@@ -623,7 +623,7 @@ function ccs_admin_tab_pret() {
 
 			<label class="ccs-camp" for="ccs-cota">
 				<span><?php esc_html_e( 'Cota de TVA inclusă în preț', 'conex-conect-sync' ); ?></span>
-				<small><?php esc_html_e( 'Prețurile de pe site sunt finale, cu TVA-ul înăuntru. Furnizorul trimite costul fără TVA.', 'conex-conect-sync' ); ?></small>
+				<small><?php esc_html_e( 'Prețurile de pe site sunt finale, cu TVA inclus. Furnizorul transmite costul fără TVA.', 'conex-conect-sync' ); ?></small>
 				<select class="ccs-intrare" id="ccs-cota">
 					<option value="1.21" <?php selected( $p['cota_tva'], 1.21 ); ?>><?php esc_html_e( '21%, cota în vigoare din august 2025', 'conex-conect-sync' ); ?></option>
 					<option value="1.19" <?php selected( $p['cota_tva'], 1.19 ); ?>><?php esc_html_e( '19%, cota veche, cea folosită la prețurile de acum', 'conex-conect-sync' ); ?></option>
@@ -655,7 +655,7 @@ function ccs_admin_tab_pret() {
 					<tr><th><?php esc_html_e( 'Prețuri care coboară', 'conex-conect-sync' ); ?></th><td id="ccs-e-jos"></td></tr>
 					<tr><th><?php esc_html_e( 'Prețuri neschimbate', 'conex-conect-sync' ); ?></th><td id="ccs-e-egal"></td></tr>
 					<tr><th><?php esc_html_e( 'Rămân sub cost', 'conex-conect-sync' ); ?></th><td id="ccs-e-subcost"></td></tr>
-					<tr class="ccs-total"><th><?php esc_html_e( 'Câștig brut, la o bucată din fiecare', 'conex-conect-sync' ); ?></th><td id="ccs-e-marja"></td></tr>
+					<tr class="ccs-total"><th><?php esc_html_e( 'Marjă brută, la o bucată din fiecare', 'conex-conect-sync' ); ?></th><td id="ccs-e-marja"></td></tr>
 				</tbody>
 			</table>
 
@@ -672,7 +672,7 @@ function ccs_admin_tab_pret() {
 					<tbody id="ccs-exemple"></tbody>
 				</table>
 			</div>
-			<p class="ccs-mic"><?php esc_html_e( 'Șase produse din magazin, de la cel mai ieftin la cel mai scump.', 'conex-conect-sync' ); ?></p>
+			<p class="ccs-mic"><?php esc_html_e( 'Șase produse din catalog, ordonate după cost.', 'conex-conect-sync' ); ?></p>
 		</div>
 	</div>
 	<?php
@@ -691,13 +691,13 @@ function ccs_admin_tab_potriviri() {
 
 	ccs_ui_antet_tab(
 		__( 'Produse de confirmat', 'conex-conect-sync' ),
-		__( 'La produsele de mai jos, codul de pe site se potrivește cu un cod de la Conex, dar numele arată cu totul alt produs. Până ne spui care e situația, nu li se schimbă nici prețul, nici stocul.', 'conex-conect-sync' )
+		__( 'La produsele de mai jos, codul de pe site corespunde unui cod de la Conex, dar denumirile indică produse diferite. Până la clarificare, prețul și stocul lor rămân neschimbate.', 'conex-conect-sync' )
 	);
 	ccs_ui_progres( count( array_intersect_key( $decizii, $lista ) ), count( $lista ) );
 
 	if ( ! $lista ) {
 		ccs_ui_card( __( 'Nimic de confirmat', 'conex-conect-sync' ) );
-		ccs_ui_gol( __( 'Toate produsele se potrivesc și pe nume.', 'conex-conect-sync' ) );
+		ccs_ui_gol( __( 'Toate produsele corespund și după denumire.', 'conex-conect-sync' ) );
 		ccs_ui_card_sfarsit();
 		return;
 	}
@@ -708,7 +708,7 @@ function ccs_admin_tab_potriviri() {
 			_n( '%d produs de lămurit', '%d produse de lămurit', count( $lista ), 'conex-conect-sync' ),
 			count( $lista )
 		),
-		__( 'Ori codul de pe site e greșit, ori produsul e de la alt furnizor și nu trebuie legat niciodată.', 'conex-conect-sync' )
+		__( 'Fie codul de pe site este greșit, fie produsul provine de la alt furnizor și nu trebuie asociat.', 'conex-conect-sync' )
 	);
 
 	ccs_ui_bara_lot(
@@ -766,7 +766,7 @@ function ccs_admin_tab_potriviri() {
 									esc_html(
 										sprintf(
 											/* translators: %d: procentul. */
-											__( '%d%% cuvinte la fel', 'conex-conect-sync' ),
+											__( '%d%% cuvinte comune', 'conex-conect-sync' ),
 											(int) $v['scor']
 										)
 									)
@@ -807,13 +807,13 @@ function ccs_admin_tab_scaderi() {
 
 	ccs_ui_antet_tab(
 		__( 'Prețuri care ar coborî mult', 'conex-conect-sync' ),
-		__( 'Produsele astea au acum un adaos foarte mare, iar regula de preț le-ar cobori prețul la mai puțin de jumătate. Nu e o greșeală de calcul: așa iese din formulă. Dar e o scădere pe care n-o facem fără să ne spui.', 'conex-conect-sync' )
+		__( 'Produsele de mai jos au în prezent un adaos foarte mare, iar regula de preț le-ar reduce prețul la mai puțin de jumătate. Rezultatul este corect din punct de vedere al formulei, dar o scădere de această amploare nu se aplică fără confirmare.', 'conex-conect-sync' )
 	);
 	ccs_ui_progres( ccs_ui_cate_rezolvate( $randuri, $decizii ), count( $randuri ) );
 
 	if ( ! $randuri ) {
-		ccs_ui_card( __( 'Niciun preț nu coboară atât de mult', 'conex-conect-sync' ) );
-		ccs_ui_gol( __( 'Nimic de hotărât aici.', 'conex-conect-sync' ) );
+		ccs_ui_card( __( 'Niciun preț nu scade sub jumătate', 'conex-conect-sync' ) );
+		ccs_ui_gol( __( 'Nu există produse în această situație.', 'conex-conect-sync' ) );
 		ccs_ui_card_sfarsit();
 		return;
 	}
@@ -853,7 +853,7 @@ function ccs_admin_tab_subcost() {
 		$randuri
 			? sprintf(
 				/* translators: 1: câte produse, 2: pierderea. */
-				__( '%1$d produse au prețul mai mic decât costul la care le cumperi de la Conex. La o bucată din fiecare, pierderea ar fi de %2$s lei. Regula de preț le corectează pe toate, dar merită să te uiți: unele pot avea prețul greșit de mult timp.', 'conex-conect-sync' ),
+				__( '%1$d produse au prețul de vânzare sub costul de achiziție de la Conex. La o bucată din fiecare, pierderea totală ar fi de %2$s lei. Regula de preț le corectează pe toate, dar merită verificate: unele pot avea prețul greșit de mult timp.', 'conex-conect-sync' ),
 				count( $randuri ),
 				ccs_lei( $pierdere )
 			)
@@ -863,7 +863,7 @@ function ccs_admin_tab_subcost() {
 
 	if ( ! $randuri ) {
 		ccs_ui_card( __( 'Totul e în regulă', 'conex-conect-sync' ) );
-		ccs_ui_gol( __( 'Niciun produs nu se vinde în pierdere.', 'conex-conect-sync' ) );
+		ccs_ui_gol( __( 'Niciun produs nu are prețul sub costul de achiziție.', 'conex-conect-sync' ) );
 		ccs_ui_card_sfarsit();
 		return;
 	}
@@ -879,7 +879,7 @@ function ccs_admin_tab_subcost() {
 			_n( '%d produs', '%d produse', count( $randuri ), 'conex-conect-sync' ),
 			count( $randuri )
 		),
-		__( 'Cele cu pierderea cea mai mare, primele.', 'conex-conect-sync' )
+		__( 'Ordonate după pierderea pe bucată.', 'conex-conect-sync' )
 	);
 	ccs_ui_bara_lot( 'sub_cost', $optiuni );
 	ccs_ui_tabel_decizii( $randuri, $decizii, 'sub_cost', $optiuni );
@@ -904,7 +904,7 @@ function ccs_ui_tabel_decizii( $randuri, $decizii, $tip, $opt ) {
 					<th><?php esc_html_e( 'Produs', 'conex-conect-sync' ); ?></th>
 					<th class="num"><?php esc_html_e( 'Cost cu TVA', 'conex-conect-sync' ); ?></th>
 					<th class="num"><?php esc_html_e( 'Preț, acum și propus', 'conex-conect-sync' ); ?></th>
-					<th class="num"><?php esc_html_e( 'Câștig nou', 'conex-conect-sync' ); ?></th>
+					<th class="num"><?php esc_html_e( 'Marjă nouă', 'conex-conect-sync' ); ?></th>
 					<th><?php esc_html_e( 'Ce facem', 'conex-conect-sync' ); ?></th>
 				</tr>
 			</thead>
@@ -957,7 +957,7 @@ function ccs_admin_tab_catalog() {
 
 	ccs_ui_antet_tab(
 		__( 'Catalogul', 'conex-conect-sync' ),
-		__( 'Ce are furnizorul, ce ai tu, și ce e de făcut ca să fie la fel.', 'conex-conect-sync' )
+		__( 'Starea celor două cataloage și operațiunile rămase de făcut.', 'conex-conect-sync' )
 	);
 
 	ccs_ui_catalog_actiuni( $c, $grupuri, $m );
@@ -985,8 +985,8 @@ function ccs_ui_catalog_actiuni( $c, $grupuri, $m ) {
 	printf(
 		'<div class="ccs-actiune ccs-actiune--verde"><span class="ccs-actiune__icon dashicons dashicons-download" aria-hidden="true"></span><span class="ccs-actiune__cifra">%s</span><span class="ccs-actiune__titlu">%s</span><span class="ccs-actiune__desc">%s</span></div>',
 		esc_html( ccs_nr( $c['gata'] ) ),
-		esc_html__( 'produse gata de adus pe site', 'conex-conect-sync' ),
-		esc_html__( 'Au poză, cost, stoc și o categorie știută. Importul se pornește de aici când e gata.', 'conex-conect-sync' )
+		esc_html__( 'produse pot fi importate', 'conex-conect-sync' ),
+		esc_html__( 'Au imagine, cost de achiziție, stoc și o categorie asociată. Importul va porni din acest panou.', 'conex-conect-sync' )
 	);
 
 	if ( $de_retras ) {
@@ -994,8 +994,8 @@ function ccs_ui_catalog_actiuni( $c, $grupuri, $m ) {
 		<div class="ccs-actiune ccs-actiune--galben" data-grup="din_feed">
 			<span class="ccs-actiune__icon dashicons dashicons-archive" aria-hidden="true"></span>
 			<span class="ccs-actiune__cifra"><?php echo esc_html( ccs_nr( $de_retras ) ); ?></span>
-			<span class="ccs-actiune__titlu"><?php esc_html_e( 'produse pe care nu le mai poți aduce', 'conex-conect-sync' ); ?></span>
-			<span class="ccs-actiune__desc"><?php esc_html_e( 'Se vând pe site, dar furnizorul nu le mai are. Trec pe stoc epuizat, nu se șterg.', 'conex-conect-sync' ); ?></span>
+			<span class="ccs-actiune__titlu"><?php esc_html_e( 'produse indisponibile la furnizor', 'conex-conect-sync' ); ?></span>
+			<span class="ccs-actiune__desc"><?php esc_html_e( 'Sunt disponibile pe site, dar nu mai pot fi comandate de la furnizor. Trec pe stoc epuizat, fără să fie șterse.', 'conex-conect-sync' ); ?></span>
 			<button type="button" class="ccs-btn ccs-btn--mic ccs-retrage" data-grup="din_feed"
 				data-eticheta="<?php esc_attr_e( 'Retrage de la vânzare', 'conex-conect-sync' ); ?>">
 				<?php esc_html_e( 'Retrage de la vânzare', 'conex-conect-sync' ); ?>
@@ -1009,8 +1009,8 @@ function ccs_ui_catalog_actiuni( $c, $grupuri, $m ) {
 		printf(
 			'<div class="ccs-actiune ccs-actiune--albastru"><span class="ccs-actiune__icon dashicons dashicons-category" aria-hidden="true"></span><span class="ccs-actiune__cifra">%s</span><span class="ccs-actiune__titlu">%s</span><span class="ccs-actiune__desc">%s</span></div>',
 			esc_html( ccs_nr( $c['fara_categorie'] ) ),
-			esc_html__( 'produse așteaptă doar o categorie', 'conex-conect-sync' ),
-			esc_html__( 'Au poză, cost și stoc. Singurul lucru care le oprește e că nu știm în ce raion de pe site merg.', 'conex-conect-sync' )
+			esc_html__( 'produse așteaptă încadrarea pe categorie', 'conex-conect-sync' ),
+			esc_html__( 'Au imagine, cost și stoc. Singurul element care lipsește este categoria din magazin.', 'conex-conect-sync' )
 		);
 	}
 
@@ -1027,7 +1027,7 @@ function ccs_ui_catalog_actiuni( $c, $grupuri, $m ) {
  * @return void
  */
 function ccs_ui_catalog_bare( $c, $grupuri, $pot, $m ) {
-	ccs_ui_card( __( 'Unde stau produsele', 'conex-conect-sync' ), __( 'Aceleași cifre pe care le-ai vedea într-un tabel, dar pe lungime.', 'conex-conect-sync' ) );
+	ccs_ui_card( __( 'Distribuția produselor', 'conex-conect-sync' ), __( 'Cum se împart cele două cataloage, după starea fiecărui produs.', 'conex-conect-sync' ) );
 
 	$legate   = (int) $pot['legate'];
 	$din_feed = isset( $grupuri['din_feed'] ) ? count( $grupuri['din_feed'] ) : 0;
@@ -1048,8 +1048,8 @@ function ccs_ui_catalog_bare( $c, $grupuri, $pot, $m ) {
 		__( 'În catalogul Conex', 'conex-conect-sync' ),
 		array(
 			array( 'verde', __( 'deja pe site', 'conex-conect-sync' ), $legate ),
-			array( 'verde-moale', __( 'gata de adus', 'conex-conect-sync' ), $c['gata'] ),
-			array( 'galben', __( 'le lipsește doar categoria', 'conex-conect-sync' ), $c['fara_categorie'] ),
+			array( 'verde-moale', __( 'pot fi importate', 'conex-conect-sync' ), $c['gata'] ),
+			array( 'galben', __( 'fără categorie asociată', 'conex-conect-sync' ), $c['fara_categorie'] ),
 			array( 'gri', __( 'fără poză la furnizor', 'conex-conect-sync' ), $c['fara_poza'] ),
 			array( 'gri-moale', __( 'fără stoc', 'conex-conect-sync' ), $c['fara_stoc'] ),
 		)
@@ -1154,7 +1154,7 @@ function ccs_ui_catalog_miscare( $m ) {
 	<?php
 
 	if ( empty( $setari['joburi_pornite'] ) ) {
-		echo '<p class="ccs-mic">' . esc_html__( 'Rularea automată e oprită, deci cifrele se schimbă doar când cere cineva o preluare. Pornită, ar arăta mișcarea zilnică reală.', 'conex-conect-sync' ) . '</p>';
+		echo '<p class="ccs-mic">' . esc_html__( 'Rularea automată este oprită, deci datele se actualizează doar la o preluare cerută manual.', 'conex-conect-sync' ) . '</p>';
 	}
 
 	$noi = ccs_miscare_lista( 'noi', $m['zile'], 5 );
@@ -1199,11 +1199,11 @@ function ccs_ui_catalog_mapare() {
 
 	ccs_ui_card(
 		__( 'Cum se asociază categoriile', 'conex-conect-sync' ),
-		__( 'Conex împarte catalogul pe sisteme ale mașinii, magazinul tău pe raioane. Regulile de mai jos sunt scoase din cele peste trei mii de produse pe care le ai deja categorisite: nimeni n-a completat nimic de mână.', 'conex-conect-sync' ),
+		__( 'Conex organizează catalogul pe sisteme ale automobilului, iar magazinul pe categorii comerciale. Regulile de mai jos rezultă din cele peste trei mii de produse deja încadrate în magazin, fără completare manuală.', 'conex-conect-sync' ),
 		ccs_ui_pastila(
 			sprintf(
 				/* translators: 1: reguli folosite, 2: total. */
-				__( '%1$d din %2$d reguli se folosesc', 'conex-conect-sync' ),
+				__( '%1$d din %2$d reguli active', 'conex-conect-sync' ),
 				$folosite,
 				count( $reguli )
 			),
@@ -1241,17 +1241,17 @@ function ccs_ui_catalog_mapare() {
 	echo '</div>';
 
 	echo '<p class="ccs-mic">';
-	esc_html_e( 'Rândurile cu un cuvânt în albastru se împart după numele produsului: aceeași cale de la furnizor, două raioane pe site. Cele galbene sunt învățate din prea puține produse ca să fie folosite.', 'conex-conect-sync' );
+	esc_html_e( 'Rândurile cu un cuvânt marcat albastru se împart după denumirea produsului: aceeași categorie la furnizor, două categorii în magazin. Cele marcate galben provin din prea puține produse pentru a fi folosite.', 'conex-conect-sync' );
 	echo '</p>';
 
 	ccs_ui_card_sfarsit();
 }
 
 /**
- * Căile de la furnizor pentru care nu știm raionul, cu un selector pentru fiecare.
+ * Categoriile furnizorului care n-au o categorie din magazin asociată, cu un selector pentru fiecare.
  *
  * Învățarea se uită doar la produsele legate de Conex, deci o cale pe care omul o știe din prima n-are cum să intre
- * singură. Exemplul care a scos nevoia asta la iveală: magazinul are raionul „Ulei motor”, cu cincizeci de uleiuri
+ * singură. Exemplul care a scos nevoia asta la iveală: magazinul are categoria „Ulei motor”, cu cincizeci de uleiuri
  * puse de echipă, dar alea au cod propriu și nu sunt legate, deci regula n-a fost învățată niciodată. Conex are 644
  * de uleiuri de motor care stăteau degeaba.
  *
@@ -1269,17 +1269,17 @@ function ccs_ui_catalog_de_mapat( $c ) {
 	$total = array_sum( $cai );
 
 	ccs_ui_card(
-		__( 'Căi de la furnizor fără raion', 'conex-conect-sync' ),
+		__( 'Categorii ale furnizorului neasociate', 'conex-conect-sync' ),
 		sprintf(
 			/* translators: 1: câte produse, 2: câte căi. */
-			__( '%1$s produse au poză, cost și stoc, dar nu știm unde să le punem. Sunt pe %2$d căi: alege raionul o dată, și intră toate produsele de pe calea aia.', 'conex-conect-sync' ),
+			__( '%1$s produse au poză, cost și stoc, dar nu știm unde să le punem. Sunt pe %2$d căi: alege categoria o dată, și intră toate produsele de pe calea aia.', 'conex-conect-sync' ),
 			ccs_nr( $total ),
 			count( $cai )
 		),
 		ccs_ui_pastila(
 			sprintf(
 				/* translators: %d: câte căi. */
-				_n( '%d cale de hotărât', '%d căi de hotărât', count( $cai ), 'conex-conect-sync' ),
+				_n( '%d categorie de asociat', '%d categorii de asociat', count( $cai ), 'conex-conect-sync' ),
 				count( $cai )
 			),
 			'atentie'
@@ -1297,7 +1297,7 @@ function ccs_ui_catalog_de_mapat( $c ) {
 					<?php
 					printf(
 						/* translators: %s: câte produse. */
-						esc_html( _n( '%s produs ar intra', '%s produse ar intra', $n, 'conex-conect-sync' ) ),
+						esc_html( _n( '%s produs s-ar importa', '%s produse s-ar importa', $n, 'conex-conect-sync' ) ),
 						esc_html( ccs_nr( $n ) )
 					);
 					?>
@@ -1310,7 +1310,7 @@ function ccs_ui_catalog_de_mapat( $c ) {
 					'name'              => $id,
 					'id'                => $id,
 					'class'             => 'ccs-intrare ccs-de-mapat__select',
-					'show_option_none'  => __( 'alege raionul', 'conex-conect-sync' ),
+					'show_option_none'  => __( 'alege categoria', 'conex-conect-sync' ),
 					'option_none_value' => '0',
 					'hierarchical'      => true,
 					'hide_empty'        => false,
@@ -1330,7 +1330,7 @@ function ccs_ui_catalog_de_mapat( $c ) {
 			esc_html(
 				sprintf(
 					/* translators: %d: câte căi mai sunt. */
-					__( 'Încă %d căi, cu mai puține produse fiecare. Apar aici pe măsură ce le rezolvi pe cele mari.', 'conex-conect-sync' ),
+					__( 'Încă %d categorii, cu un număr mai mic de produse fiecare. Apar pe măsură ce sunt rezolvate cele de mai sus.', 'conex-conect-sync' ),
 					count( $cai ) - 12
 				)
 			)
@@ -1348,12 +1348,12 @@ function ccs_ui_catalog_de_mapat( $c ) {
  */
 function ccs_ui_catalog_produse_noi( $c ) {
 	ccs_ui_card(
-		__( 'Cum arată un produs adus de la Conex', 'conex-conect-sync' ),
-		__( 'Exact ce s-ar crea pe site: poza furnizorului, numele lui, prețul calculat după regula ta și raionul ales de reguli. Descrierea lipsește pentru că furnizorul nu trimite una.', 'conex-conect-sync' )
+		__( 'Cum arată un produs importat', 'conex-conect-sync' ),
+		__( 'Datele cu care s-ar crea produsul: imaginea și denumirea de la furnizor, prețul rezultat din regula de calcul și categoria stabilită automat. Descrierea lipsește pentru că furnizorul nu o transmite.', 'conex-conect-sync' )
 	);
 
 	if ( ! $c['lista'] ) {
-		ccs_ui_gol( __( 'Niciun produs gata de adus.', 'conex-conect-sync' ), __( 'Verifică dacă s-au preluat imaginile.', 'conex-conect-sync' ) );
+		ccs_ui_gol( __( 'Niciun produs pot fi importate.', 'conex-conect-sync' ), __( 'Verifică dacă imaginile au fost preluate de la furnizor.', 'conex-conect-sync' ) );
 		ccs_ui_card_sfarsit();
 		return;
 	}
@@ -1398,28 +1398,28 @@ function ccs_ui_catalog_dispare( $grupuri ) {
 	$etichete = array(
 		'din_feed' => array(
 			'titlu'   => __( 'Rămase din feed-ul vechi', 'conex-conect-sync' ),
-			'desc'    => __( 'Au intrat pe site din importul Mega Drive, înghețat din noiembrie 2025. Conex nu le mai are.', 'conex-conect-sync' ),
+			'desc'    => __( 'Provin din importul Mega Drive, oprit în noiembrie 2025. Nu mai există în catalogul Conex.', 'conex-conect-sync' ),
 			'icon'    => 'archive',
 			'culoare' => 'galben',
 			'retrage' => true,
 		),
 		'excluse'  => array(
 			'titlu'   => __( 'Scoase din potrivire', 'conex-conect-sync' ),
-			'desc'    => __( 'Produse marcate ca fiind altceva decât ce are Conex pe acel cod.', 'conex-conect-sync' ),
+			'desc'    => __( 'Produse marcate ca fiind diferite de cele pe care Conex le are pe același cod.', 'conex-conect-sync' ),
 			'icon'    => 'hidden',
 			'culoare' => 'gri',
 			'retrage' => true,
 		),
 		'altele'   => array(
 			'titlu'   => __( 'Alt tipar de cod', 'conex-conect-sync' ),
-			'desc'    => __( 'Nu se potrivesc cu niciun tipar cunoscut. Merită o privire înainte de orice.', 'conex-conect-sync' ),
+			'desc'    => __( 'Codul nu corespunde niciunui tipar cunoscut. Necesită o verificare înainte de orice operațiune.', 'conex-conect-sync' ),
 			'icon'    => 'editor-help',
 			'culoare' => 'gri',
 			'retrage' => true,
 		),
 		'manuale'  => array(
 			'titlu'   => __( 'Introduse manual de echipă', 'conex-conect-sync' ),
-			'desc'    => __( 'Codurile încep cu două litere. Sunt ale magazinului, nu ale furnizorului, și nu se ating.', 'conex-conect-sync' ),
+			'desc'    => __( 'Codurile încep cu două litere. Aparțin magazinului, nu furnizorului, și nu sunt modificate de sincronizare.', 'conex-conect-sync' ),
 			'icon'    => 'admin-users',
 			'culoare' => 'albastru',
 			'retrage' => false,
@@ -1428,7 +1428,7 @@ function ccs_ui_catalog_dispare( $grupuri ) {
 
 	ccs_ui_card(
 		__( 'Produse pe care furnizorul nu le mai are', 'conex-conect-sync' ),
-		__( 'Niciunul nu se șterge. Trec pe stoc epuizat, rămân pe site și în Google.', 'conex-conect-sync' )
+		__( 'Produsele nu se șterg. Trec pe stoc epuizat și rămân pe site, cu pagina și poziția lor în Google.', 'conex-conect-sync' )
 	);
 
 	foreach ( $etichete as $grup => $e ) {
@@ -1501,7 +1501,7 @@ function ccs_admin_tab_stoc() {
 
 	ccs_ui_antet_tab(
 		__( 'Stocul', 'conex-conect-sync' ),
-		__( 'Cantitățile se iau de la Conex așa cum sunt, la fiecare rulare.', 'conex-conect-sync' )
+		__( 'Cantitățile se preiau de la Conex la fiecare rulare, fără ajustări.', 'conex-conect-sync' )
 	);
 	?>
 	<div class="ccs-cifre">
@@ -1522,7 +1522,7 @@ function ccs_admin_tab_stoc() {
 			__( 'Produsele revenite în stoc', 'conex-conect-sync' ),
 			sprintf(
 				/* translators: %s: câte produse. */
-				__( '%s produse sunt acum ascunse ca „epuizat”, dar furnizorul le are. Se reactivează.', 'conex-conect-sync' ),
+				__( '%s produse figurează ca epuizate, deși furnizorul le are în stoc. Vor fi reactivate.', 'conex-conect-sync' ),
 				ccs_nr( $r['de_reactivat'] )
 			),
 		),
@@ -1540,7 +1540,7 @@ function ccs_admin_tab_stoc() {
 			__( 'Produsele ieșite din catalog', 'conex-conect-sync' ),
 			sprintf(
 				/* translators: %d: câte rulări. */
-				__( 'Nu se șterg niciodată. Trec pe stoc epuizat după %d rulări în care lipsesc, și rămân pe site.', 'conex-conect-sync' ),
+				__( 'Nu se șterg. Trec pe stoc epuizat după %d rulări consecutive în care lipsesc din catalog și rămân pe site.', 'conex-conect-sync' ),
 				(int) $setari['stoc_absent_runde']
 			),
 		),
