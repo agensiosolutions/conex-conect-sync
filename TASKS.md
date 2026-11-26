@@ -73,6 +73,13 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Așteaptă
 
+- [ ] Cele 26: corectarea NU trebuie făcută, de relămurit cu ownerul @iulian
+  Previzualizarea arată că nu e o schimbare de cod, ci o ciocnire de numerotări. ROMIX folosește coduri de
+  producător de 5 cifre (109 din cele 344 de produse ale lor), care nimeresc peste SKU-urile rămase din feed-ul
+  Mega Drive. Codul propriu al produsului Conex e cu totul altul: SKU `10000` de pe site duce la produsul Conex
+  `61497`, care doar are `10000` ca **cod de producător**.
+  Dacă s-ar aplica: 10 din 26 ar deveni clipsuri de tapițerie, valoarea ar scădea de la 4.113 la 1.465 lei, iar
+  aspiratorul Kärcher ar deveni ulei Liqui Moly. Întrebarea bună pentru owner: **mai vinde produsele astea 26?**
 - [ ] Ce facem cu cele 26 de produse pe cod comun @client
   Produsul Conex de pe acel cod e alt produs, nu o versiune nouă: la `10000`, site-ul are o pompă de aer, Conex un
   set de clipsuri. Toate 26 vin din potrivirea pe cod de producător, care la Cez Auto n-a nimerit nimic. Unul
@@ -90,6 +97,11 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Un bug la citirea titlurilor, găsit de protecția corecțiilor (26.11.2026)
+      `get_the_title()` trece prin `wptexturize` și transformă liniuța în `&#8211;`, care se rupea în cuvântul
+      „8211”. Potrivirea principală citea titlul direct din bază, corecțiile prin filtru: două căi, două rezultate.
+      Pe aspiratorul Kärcher, asemănarea scădea de la 0,86 la 0,75 și cădea sub prag. Decodat acum peste tot, cu
+      două teste în plus.
 - [x] Preluarea reală a unui produs, cu previzualizare completă (24.11.2026)
       `wp ccs produs <cod>` ia produsul de la furnizor în ~2 secunde și arată ce s-ar crea: preț cu formula
       desfăcută, categorie cu regula care a decis-o, poze, atribute, plus piedicile. Nu scrie nimic.

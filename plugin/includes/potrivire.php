@@ -62,7 +62,11 @@ function ccs_potrivire_strategii() {
  * @return array Cuvintele, unice.
  */
 function ccs_nume_cuvinte( $nume ) {
-	$nume = mb_strtoupper( (string) $nume );
+	// Titlurile de pe site vin cu entități HTML, pentru că WordPress le pune la salvare. Fără decodare, `&#8211;`
+	// se rupe în cuvântul „8211”, care nu există în numele de la furnizor: măsurat pe aspiratorul Kärcher,
+	// asemănarea scade de la 0,86 la 0,75 și potrivirea bună cade sub prag.
+	$nume = html_entity_decode( (string) $nume, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+	$nume = mb_strtoupper( $nume );
 	$nume = preg_replace( '/[^A-Z0-9ĂÂÎȘȚ]+/u', ' ', $nume );
 	$cuvinte = array_filter(
 		explode( ' ', $nume ),

@@ -1,5 +1,51 @@
 # Jurnal conex-conect-sync
 
+## 26 noiembrie 2026
+
+**Corectarea celor 26 nu trebuie făcută, iar previzualizarea a dovedit-o.** Ownerul răspunsese pe WhatsApp că
+produsele nu sunt introduse manual de echipa lui, iar Iulian a concluzionat că atunci se corectează cu datele de la
+Conex. Concluzia părea logică și am scris corectarea. Previzualizarea, rulată înainte de orice scriere, a arătat
+altceva.
+
+Zece din cele 26 ar fi devenit clipsuri de tapițerie: pompa de aer, sprayul de deblocare, adezivul de oglinzi,
+vopseaua spray, odorizantul. Toate, clipsuri. Un asemenea tipar nu e o coincidență, e un mecanism.
+
+Mecanismul: **ROMIX folosește coduri de producător de cinci cifre**, 109 din cele 344 de produse ale lor, iar alea
+nimeresc peste SKU-urile rămase pe site din feed-ul Mega Drive. Codul propriu al produsului Conex e cu totul altul:
+SKU `10000` de pe site duce la produsul Conex `61497`, care doar are `10000` în câmpul de cod de producător. Nu e
+„codul înseamnă acum alt produs”, sunt două sisteme de numerotare care se ciocnesc pe un câmp care nu e
+identificator unic.
+
+Cifrele, dacă s-ar fi aplicat: valoarea celor 26 de anunțuri ar fi scăzut de la 4.113 la 1.465 lei, 20 de prețuri ar
+fi coborât, două produse ar fi ajuns cu stoc zero, iar aspiratorul de geamuri Kärcher ar fi devenit ulei Liqui Moly.
+
+Ce e adevărat din ce a spus ownerul: produsele chiar nu sunt introduse manual. Au venit din feed-ul Mega Drive, sub
+codurile lor. Dar de aici nu rezultă că produsul Conex care poartă acel număr în alt câmp e înlocuitorul lor.
+
+**Un bug găsit pe drum, de protecția pe care o pusesem.** Protecția care caută produsul de pe site sub alt cod la
+furnizor n-a sărit pentru aspiratorul Kärcher, deși cazul era exact ăla. Cauza: `get_the_title()` trece prin
+`wptexturize`, care transformă liniuța în `&#8211;`, iar tokenizarea o rupea în cuvântul „8211”. Asemănarea scădea
+de la 0,86 la 0,75, sub pragul de 0,80. Potrivirea principală citea titlul direct din baza de date, deci curat, iar
+corecțiile prin filtru: două căi de cod, două rezultate, pe aceleași date. Decodarea entităților e acum în
+`ccs_nume_cuvinte()`, deci peste tot, cu două teste în plus. Suita a ajuns la 42.
+
+`Lecție:` Când un client confirmă o premisă, verifică dacă din ea chiar rezultă concluzia. Ownerul a spus adevărul,
+că produsele nu sunt introduse manual, dar concluzia trasă din asta, că se pot înlocui cu produsul Conex de pe acel
+cod, nu rezulta. Între premisă și concluzie era o presupunere nescrisă: că numărul comun înseamnă același articol.
+
+`Lecție:` Scrie previzualizarea înainte de operație, chiar când operația pare hotărâtă și simplă. Aici a costat
+treizeci de minute și a oprit o schimbare care ar fi transformat zece anunțuri reale în clipsuri de tapițerie.
+Simptomul că îți trebuie: urmează să scrii în masă peste conținut existent, pe baza unei potriviri.
+
+`Lecție:` Nu te potrivi niciodată pe un câmp care nu e identificator unic în ambele sisteme. Codul de producător e
+unic la nivelul unui producător, nu al catalogului: ROMIX și Mega Drive folosesc amândouă numere scurte secvențiale,
+deci se ciocnesc. Simptomul: potrivirile greșite au un tipar, toate duc la produse de același fel sau de același
+brand.
+
+`Lecție:` Două căi de cod care citesc același lucru trebuie să-l citească la fel. Titlul unui produs WordPress e
+curat în baza de date și cu entități după `get_the_title()`, pentru că trece prin `wptexturize`. O funcție care
+compară nume trebuie să decodeze, altfel dă rezultate diferite după cum a fost chemată.
+
 ## 24 noiembrie 2026
 
 **Pluginul e pe live.** Iulian a decis să facem verificările direct pe magazinul real: traficul e mic, iar comenzile

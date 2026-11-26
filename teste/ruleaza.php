@@ -292,6 +292,18 @@ verifica( 'nume gol la furnizor', 1.0, ccs_nume_asemanare( 'ORICE PRODUS', '' ) 
 // Numai cuvinte de cel mult două litere: tot gol, după filtrare.
 verifica( 'nume din cuvinte prea scurte', 1.0, ccs_nume_asemanare( 'SE DE LA', 'ALT PRODUS' ) );
 
+// Entitățile HTML din titlurile WordPress nu trebuie să rupă cuvinte. `&#8211;` e o liniuță, nu cuvântul „8211”.
+verifica(
+	'entitate HTML în titlu, ignorată',
+	1.0,
+	ccs_nume_asemanare( 'ASPIRATOR DE GEAMURI 105 M2 &#8211; KARCHER', 'ASPIRATOR DE GEAMURI 105 M2 KARCHER' )
+);
+verifica_ca(
+	'entitatea nu adaugă un cuvânt',
+	! in_array( '8211', ccs_nume_cuvinte( 'FILTRU &#8211; ULEI' ), true ),
+	implode( ' ', ccs_nume_cuvinte( 'FILTRU &#8211; ULEI' ) )
+);
+
 // Majusculele și punctuația nu contează.
 verifica( 'litere mici și punctuație în plus', 1.0, ccs_nume_asemanare( 'filtru ulei, motor', 'FILTRU ULEI - MOTOR' ) );
 
