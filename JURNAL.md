@@ -42,6 +42,9 @@ continuare vizitatori, iar „stoc epuizat” îi ține pe site, unde pot cumpă
 Probat pe local, pe cele 26: 19 trecute pe epuizat, 7 erau deja, metadatele și `wc_product_meta_lookup` de acord,
 iar `wp ccs revino` a readus 38 de valori exact cum erau.
 
+Pus pe live ca 0.5.0, cu backup înainte. Cele 26 sunt retrase: 19 trecute pe epuizat, 7 erau deja, 38 de valori
+păstrate pentru revenire. Pagina produsului arată „Stoc epuizat” și rămâne în Google, cum trebuie.
+
 `Lecție:` Un tipar de cod spune de unde vine un produs, iar asta e adesea tot ce-ți trebuie ca să împarți un catalog
 moștenit. La Cez Auto, `CZ1135` e pus de mână de echipă și `10000` a venit din feed-ul vechi; aceeași întrebare
 pusă clientului produs cu produs ar fi însemnat 2.743 de răspunsuri, iar pe tipare a însemnat două.
