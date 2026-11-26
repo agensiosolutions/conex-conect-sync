@@ -53,6 +53,35 @@ function apply_filters( $hook, $valoare ) {
 }
 
 /**
+ * Înregistrarea hook-urilor, fără efect.
+ *
+ * Fișierele testate își înregistrează joburile și filtrele la încărcare. Aici nu rulează niciun hook, dar
+ * funcțiile trebuie să existe, altfel `require` cade cu eroare fatală înainte să înceapă vreun test.
+ *
+ * @param string   $hook     Numele.
+ * @param callable $functie  Funcția.
+ * @param int      $ordine   Prioritatea.
+ * @param int      $cate     Câte argumente.
+ * @return bool Mereu adevărat, ca în WordPress.
+ */
+function add_action( $hook, $functie, $ordine = 10, $cate = 1 ) {
+	return true;
+}
+
+/**
+ * La fel ca `add_action()`, pentru filtre.
+ *
+ * @param string   $hook    Numele.
+ * @param callable $functie Funcția.
+ * @param int      $ordine  Prioritatea.
+ * @param int      $cate    Câte argumente.
+ * @return bool Mereu adevărat.
+ */
+function add_filter( $hook, $functie, $ordine = 10, $cate = 1 ) {
+	return true;
+}
+
+/**
  * Argumentele peste valorile implicite.
  *
  * @param array $argumente Argumentele.

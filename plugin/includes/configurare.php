@@ -37,6 +37,13 @@ function ccs_setari_implicite() {
 		// Când devine un atribut tehnic filtru în magazin. Vezi `atribute.php` pentru de ce raportul și nu un prag
 		// fix pe numărul de valori: un prag fix respingea „Partea de montare”, care are 125 de valori dar pe 2.874
 		// de produse, adică 4%, și e exact genul de filtru pe care îl caută cumpărătorul.
+		// Produsele care își primesc fotografia mai târziu urcă singure, dacă e pornit. Implicit e oprit: un plugin
+		// care începe să creeze produse fără ca cineva să fi apăsat ceva e un plugin în care nu ai încredere a doua
+		// oară. Plafonul e pe rulare, ca o zi în care furnizorul adaugă cinci mii de poze să nu umple magazinul
+		// într-o noapte.
+		'import_automat'        => false,
+		'import_automat_limita' => 50,
+
 		'atribut_min_produse'   => 200,
 		'atribut_max_raport'    => 0.15,
 		'atribut_plafon_valori' => 150,

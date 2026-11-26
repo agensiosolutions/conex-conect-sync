@@ -806,3 +806,87 @@ function ccs_import_poze( $wc_id, $urluri, $nume = '', $sku = '' ) {
 
 	return count( $ids ) + 1;
 }
+
+/**
+ * Importul automat al produselor care tocmai și-au primit fotografia.
+ *
+ * Oferta promite, pentru cele aproximativ 1.500 de produse bune dar fără poză, că „pluginul le verifică periodic
+ * și le urcă singur în momentul în care fotografia apare”. Jobul ăsta e partea aia. Rulează după preluarea
+ * pozelor, fiindcă abia atunci se știe cine tocmai a devenit importabil.
+ *
+ * Trei lucruri îl țin în frâu, și toate trei sunt intenționate:
+ *
+ *   - e **oprit implicit**, deci nu creează nimic până nu cere cineva;
+ *   - produsele intră tot ca **ciornă**, deci nimic nu ajunge în magazin fără ca un om să publice;
+ *   - are un **plafon pe rulare**, ca o zi în care furnizorul adaugă cinci mii de poze să nu umple magazinul
+ *     într-o noapte.
+ *
+ * Așa stau împreună cele două promisiuni ale ofertei care par să se bată cap în cap: „le urcă singur” și „nimic
+ * nu urcă pe site fără acordul tău”. Pluginul le pregătește singur, omul le publică.
+ *
+ * @return void
+ */
+function ccs_job_import_automat() {
+	$setari = ccs_setari();
+
+	if ( ! $setari['import_automat'] ) {
+		return;
+	}
+	if ( $setari['mod_raport'] ) {
+		ccs_jurnal( 'info', 'Import automat: modul raport e pornit, deci nu creez nimic.' );
+		return;
+	}
+
+	$rezumat = ccs_import_executa(
+		array(
+			'limita'  => max( 1, (int) $setari['import_automat_limita'] ),
+			'publica' => false,
+		)
+	);
+
+	if ( is_wp_error( $rezumat ) ) {
+		ccs_jurnal( 'avertisment', 'Import automat oprit: ' . $rezumat->get_error_message() );
+		return;
+	}
+
+	if ( ! $rezumat['create'] ) {
+		return;
+	}
+
+	ccs_jurnal(
+		'info',
+		sprintf(
+			'Import automat: %d produse noi, ca ciorne, din rularea %d.',
+			$rezumat['create'],
+			$rezumat['rulare']
+		)
+	);
+
+	/**
+	 * Se declanșează după un import automat care chiar a creat produse.
+	 *
+	 * @param array $rezumat Rezumatul rulării.
+	 */
+	do_action( 'ccs_import_automat_gata', $rezumat );
+}
+add_action( 'ccs_job_import_automat', 'ccs_job_import_automat' );
+
+/**
+ * Înregistrează jobul de import automat.
+ *
+ * La 19:40, după imagini (19:10) și date tehnice (19:25): produsul se importă cu poze și cu atribute, deci
+ * amândouă trebuie să fie deja luate.
+ *
+ * @param array $joburi Joburile.
+ * @return array Joburile, cu al nostru.
+ */
+function ccs_import_job( $joburi ) {
+	$joburi['ccs_job_import_automat'] = array(
+		'nume'         => __( 'Importul produselor care și-au primit poza', 'conex-conect-sync' ),
+		'interval'     => DAY_IN_SECONDS,
+		'doar_noaptea' => true,
+		'minut'        => 40,
+	);
+	return $joburi;
+}
+add_filter( 'ccs_joburi', 'ccs_import_job' );
