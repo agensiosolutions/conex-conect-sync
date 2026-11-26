@@ -788,6 +788,73 @@ function ccs_admin_coloana( $coloane ) {
 add_filter( 'manage_edit-product_columns', 'ccs_admin_coloana' );
 
 /**
+ * Datele furnizorului pentru produsele de pe pagina curentă, dintr-o singură interogare.
+ *
+ * Prima variantă făcea un `get_row()` cu JOIN pentru fiecare rând. La 20 de produse pe pagină erau 20 de
+ * interogări, iar cu Screen Options pe 200 erau două sute, pe un ecran pe care ownerul îl deschide zilnic.
+ * Acum lista de id-uri se adună la `the_posts` și se citește o dată.
+ *
+ * @param int $post_id Produsul.
+ * @return object|null Rândul, sau null dacă produsul nu e legat de furnizor.
+ */
+function ccs_admin_coloana_date( $post_id ) {
+	global $wpdb;
+	static $date = null;
+
+	if ( null === $date ) {
+		$ids = ccs_admin_coloana_ids();
+		if ( ! $ids ) {
+			$date = array();
+		} else {
+			$links   = ccs_tabel( 'links' );
+			$produse = ccs_tabel( 'products' );
+			$locuri  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+			$date    = $wpdb->get_results(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL
+					"SELECT l.wc_product_id, c.cod, c.cost, c.stoc, l.incredere
+					 FROM $links l INNER JOIN $produse c ON c.product_id = l.product_id
+					 WHERE l.wc_product_id IN ($locuri)",
+					$ids
+				),
+				OBJECT_K
+			);
+		}
+	}
+
+	return $date[ $post_id ] ?? null;
+}
+
+/**
+ * Id-urile produselor pe care le afișează pagina curentă.
+ *
+ * @param array|null $pune Lista, când o pune `the_posts`.
+ * @return array Id-urile.
+ */
+function ccs_admin_coloana_ids( $pune = null ) {
+	static $ids = array();
+	if ( null !== $pune ) {
+		$ids = $pune;
+	}
+	return $ids;
+}
+
+/**
+ * Strânge id-urile paginii curente, înainte să se deseneze coloanele.
+ *
+ * @param array $posts Produsele.
+ * @return array Produsele, neatinse.
+ */
+function ccs_admin_coloana_aduna( $posts ) {
+	global $typenow;
+	if ( is_admin() && 'product' === $typenow && is_array( $posts ) ) {
+		ccs_admin_coloana_ids( wp_list_pluck( $posts, 'ID' ) );
+	}
+	return $posts;
+}
+add_filter( 'the_posts', 'ccs_admin_coloana_aduna' );
+
+/**
  * Conținutul coloanei: ce știe furnizorul despre produsul ăsta, acum.
  *
  * Costul și stocul sunt cele din ultima citire a catalogului, nu din WooCommerce. Asta e și ideea: coloana
@@ -798,22 +865,11 @@ add_filter( 'manage_edit-product_columns', 'ccs_admin_coloana' );
  * @return void
  */
 function ccs_admin_coloana_continut( $coloana, $post_id ) {
-	global $wpdb;
 	if ( 'ccs' !== $coloana ) {
 		return;
 	}
 
-	$links    = ccs_tabel( 'links' );
-	$produse  = ccs_tabel( 'products' );
-	$furnizor = $wpdb->get_row(
-		$wpdb->prepare(
-			// phpcs:ignore WordPress.DB.PreparedSQL
-			"SELECT c.cod, c.cost, c.stoc, l.incredere
-			 FROM $links l INNER JOIN $produse c ON c.product_id = l.product_id
-			 WHERE l.wc_product_id = %d",
-			(int) $post_id
-		)
-	);
+	$furnizor = ccs_admin_coloana_date( (int) $post_id );
 
 	if ( ! $furnizor ) {
 		$sku = (string) get_post_meta( $post_id, '_sku', true );

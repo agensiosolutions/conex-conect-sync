@@ -88,7 +88,13 @@ function ccs_ui_cifra( $eticheta, $valoare, $ton = '' ) {
  * @return void
  */
 function ccs_ui_gol( $titlu, $desc = '' ) {
-	echo '<div class="ccs-gol"><strong>' . esc_html( $titlu ) . '</strong>' . esc_html( $desc ) . '</div>';
+	// Descrierea într-un element al ei, nu lipită după `</strong>` ca text liber: altfel nu poate fi stilată
+	// separat de titlu și moștenește tot ce are titlul.
+	echo '<div class="ccs-gol"><strong>' . esc_html( $titlu ) . '</strong>';
+	if ( '' !== $desc ) {
+		echo '<span>' . esc_html( $desc ) . '</span>';
+	}
+	echo '</div>';
 }
 
 /**

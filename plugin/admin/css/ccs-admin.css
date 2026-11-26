@@ -131,7 +131,13 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   padding: 20px 16px; border: 1px dashed var(--c-linie-tare); border-radius: 8px;
   background: var(--c-fundal); color: var(--c-text-3); text-align: center;
 }
+/* Cele două paragrafe lungi din cardul „Rularea automată”. Fără lățime maximă, un text de trei rânduri se
+   întinde pe toată pagina și devine greu de urmărit cu ochiul de la un rând la altul. */
+.ccs-explic { max-width: 62ch; margin: 0 0 8px; font-size: 13px; line-height: 1.6; color: var(--c-text-2); }
+.ccs-explic:last-child { margin-bottom: 0; }
+
 .ccs-gol strong { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 500; color: var(--c-verde); }
+.ccs-gol span { display: block; font-size: 13px; line-height: 1.5; }
 
 /* ---------------------------------------------------------------- cifre */
 .ccs-cifre { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
@@ -433,6 +439,8 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   --c-verde-moale: #86efac;
   --c-albastru-plin: #2563eb;
   --c-albastru-moale: #93c5fd;
+  --c-albastru-fundal: #eff6ff;
+  --c-albastru-inchis: #1d4ed8;
   --c-galben-plin: #d97706;
   --c-galben-moale: #fcd34d;
   --c-gri-plin: #9ca3af;
