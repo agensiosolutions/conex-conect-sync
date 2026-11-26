@@ -33,6 +33,12 @@ function ccs_setari_implicite() {
 		'include_taxa_eco'   => true,
 		'stoc_absent_runde'  => 2,       // De câte ori la rând lipsește un produs din feed înainte să treacă pe stoc 0.
 		'poze_per_produs'    => 4,
+
+		// Pozele de la furnizor vin JPEG de 1000x1000. Se convertesc în WebP la import, fiindcă după import nu
+		// se mai convertește nimeni. 90 e peste implicita WordPress, care e 82: la poze de produs, unde omul
+		// mărește ca să vadă cusătura husei sau filetul șurubului, artefactele costă mai mult decât kilobaiții
+		// economisiți. Zero oprește conversia.
+		'webp_calitate'      => 90,
 		'mod_raport'         => true,    // Pornit: nu scrie nimic în WooCommerce, doar raportează.
 
 		// Două frâne pentru scriere, fiecare pentru alt fel de accident.

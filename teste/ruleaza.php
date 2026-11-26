@@ -417,6 +417,20 @@ verifica(
 );
 
 // Fără plasa asta, un produs cu denumire goală ar încerca să salveze un fișier numit „.jpg”.
+// După conversia în WebP, numele trebuie să poarte extensia nouă, nu pe cea din URL-ul furnizorului. Fără asta,
+// WordPress ar primi un fișier WebP numit `.jpg` și l-ar servi cu tipul greșit.
+verifica(
+	'extensia forțată bate extensia din URL',
+	'spray-cu-silicon-22362.webp',
+	ccs_import_nume_fisier( 'SPRAY CU SILICON', '22362', 0, 'https://x.ro/poza.jpg', 0, 'webp' )
+);
+
+verifica(
+	'extensia forțată se aplică și pozelor numerotate',
+	'spray-cu-silicon-22362-3.webp',
+	ccs_import_nume_fisier( 'SPRAY CU SILICON', '22362', 2, 'https://x.ro/poza.jpg', 0, 'WEBP' )
+);
+
 verifica(
 	'fără denumire și fără cod, rămâne id-ul produsului',
 	'produs-4312.jpg',

@@ -519,9 +519,10 @@ function ccs_import_creeaza( $pregatit, $publica = false ) {
  * @param int    $pozitia  Poziția pozei, de la 0.
  * @param string $url      URL-ul de la furnizor, pentru extensie.
  * @param int    $rezerva  Id-ul produsului, folosit dacă denumirea și codul dau un nume gol.
+ * @param string $fortata  Extensia de folosit în locul celei din URL, după o conversie.
  * @return string Numele fișierului, cu extensie.
  */
-function ccs_import_nume_fisier( $nume, $sku, $pozitia, $url, $rezerva = 0 ) {
+function ccs_import_nume_fisier( $nume, $sku, $pozitia, $url, $rezerva = 0, $fortata = '' ) {
 	// 60 de caractere: destul cât să se citească despre ce produs e vorba, fără nume absurd de lungi.
 	$baza = substr( sanitize_title( (string) $nume ), 0, 60 );
 	if ( '' !== (string) $sku ) {
@@ -531,12 +532,65 @@ function ccs_import_nume_fisier( $nume, $sku, $pozitia, $url, $rezerva = 0 ) {
 		$baza = 'produs-' . (int) $rezerva;
 	}
 
-	$extensie = strtolower( (string) pathinfo( (string) wp_parse_url( $url, PHP_URL_PATH ), PATHINFO_EXTENSION ) );
+	$extensie = '' !== (string) $fortata
+		? strtolower( (string) $fortata )
+		: strtolower( (string) pathinfo( (string) wp_parse_url( $url, PHP_URL_PATH ), PATHINFO_EXTENSION ) );
 	if ( ! in_array( $extensie, array( 'jpg', 'jpeg', 'png', 'gif', 'webp' ), true ) ) {
 		$extensie = 'jpg';
 	}
 
 	return $baza . ( $pozitia ? '-' . ( (int) $pozitia + 1 ) : '' ) . '.' . $extensie;
+}
+
+/**
+ * Convertește o poză descărcată în WebP.
+ *
+ * Se face la import fiindcă după import nu se mai face niciodată: o poză intrată JPEG rămâne JPEG în toate
+ * dimensiunile generate de WordPress, iar magazinul plătește diferența la fiecare vizitator, nu o dată.
+ *
+ * Calitatea e mai mare decât implicita WordPress, care e 82. La poze de produs, unde omul mărește ca să vadă
+ * cusătura husei sau filetul șurubului, artefactele costă mai mult decât kilobaiții economisiți.
+ *
+ * Dacă pe server nu se poate scrie WebP, întoarce eroare și poza rămâne cum a venit. O poză în formatul vechi e
+ * mai bună decât niciuna.
+ *
+ * @param string $cale     Fișierul descărcat.
+ * @param int    $calitate 1-100. Zero sau mai puțin oprește conversia.
+ * @return string|WP_Error Calea fișierului WebP, sau eroare.
+ */
+function ccs_import_webp( $cale, $calitate ) {
+	if ( (int) $calitate <= 0 ) {
+		return new WP_Error( 'ccs_webp_oprit', __( 'Conversia în WebP e oprită din setări.', 'conex-conect-sync' ) );
+	}
+
+	if ( ! function_exists( 'wp_get_image_editor' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+	}
+
+	// O poză care vine deja WebP nu se recodează: a doua trecere printr-un format cu pierderi strică fără să
+	// câștige nimic.
+	$tip = wp_check_filetype( $cale );
+	if ( 'image/webp' === ( $tip['type'] ?? '' ) ) {
+		return $cale;
+	}
+
+	if ( ! wp_image_editor_supports( array( 'mime_type' => 'image/webp' ) ) ) {
+		return new WP_Error( 'ccs_fara_webp', __( 'Serverul nu poate scrie WebP.', 'conex-conect-sync' ) );
+	}
+
+	$editor = wp_get_image_editor( $cale );
+	if ( is_wp_error( $editor ) ) {
+		return $editor;
+	}
+	$editor->set_quality( min( 100, max( 1, (int) $calitate ) ) );
+
+	$tinta  = preg_replace( '/\.[^.\/\\]*$/', '', $cale ) . '.webp';
+	$salvat = $editor->save( $tinta, 'image/webp' );
+	if ( is_wp_error( $salvat ) ) {
+		return $salvat;
+	}
+
+	return (string) $salvat['path'];
 }
 
 /**
@@ -561,8 +615,9 @@ function ccs_import_poze( $wc_id, $urluri, $nume = '', $sku = '' ) {
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 	}
 
-	$nume = '' !== $nume ? $nume : get_the_title( $wc_id );
-	$ids  = array();
+	$nume     = '' !== $nume ? $nume : get_the_title( $wc_id );
+	$calitate = (int) ccs_setari()['webp_calitate'];
+	$ids      = array();
 	foreach ( array_values( $urluri ) as $i => $url ) {
 		$temporar = download_url( $url );
 		if ( is_wp_error( $temporar ) ) {
@@ -570,18 +625,33 @@ function ccs_import_poze( $wc_id, $urluri, $nume = '', $sku = '' ) {
 			continue;
 		}
 
+		$incarcat = $temporar;
+		$fortata  = '';
+		$webp     = ccs_import_webp( $temporar, $calitate );
+		if ( is_wp_error( $webp ) ) {
+			// Poza rămâne cum a venit. Merită știut, fiindcă dacă pică pentru toate, serverul e de vină.
+			ccs_jurnal( 'avertisment', sprintf( 'Poza %s a rămas în formatul original: %s', $url, $webp->get_error_message() ) );
+		} elseif ( $webp !== $temporar ) {
+			$incarcat = $webp;
+			$fortata  = 'webp';
+			// Originalul nu mai e de folos. `wp_handle_sideload()` mută numai fișierul pe care i-l dăm.
+			if ( file_exists( $temporar ) ) {
+				wp_delete_file( $temporar );
+			}
+		}
+
 		// `wp_handle_sideload()` primește primul argument prin referință, deci nu se poate da un array literal:
 		// în PHP 8 e eroare fatală, nu avertisment. Trebuie să fie o variabilă.
 		$fisier = array(
-			'name'     => ccs_import_nume_fisier( $nume, $sku, $i, $url, $wc_id ),
-			'tmp_name' => $temporar,
+			'name'     => ccs_import_nume_fisier( $nume, $sku, $i, $url, $wc_id, $fortata ),
+			'tmp_name' => $incarcat,
 		);
 		$asezat = wp_handle_sideload( $fisier, array( 'test_form' => false ) );
 
 		if ( ! empty( $asezat['error'] ) ) {
 			// `wp_handle_sideload` mută fișierul când reușește; când cade, rămâne al nostru de șters.
-			if ( file_exists( $temporar ) ) {
-				wp_delete_file( $temporar );
+			if ( file_exists( $incarcat ) ) {
+				wp_delete_file( $incarcat );
 			}
 			ccs_jurnal( 'avertisment', sprintf( 'Poza %s nu s-a putut salva: %s', $url, $asezat['error'] ) );
 			continue;
