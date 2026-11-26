@@ -53,9 +53,13 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
   poate face doar în fereastra furnizorului.
 
 ### Etapa 4: import de produse noi
-- [ ] Importul produselor complete @claude
-  **1.059 produse** gata de import, pe datele din octombrie. Pregătirea e scrisă și probată (`wp ccs produs <cod>`
-  arată exact ce s-ar crea); ce lipsește e scrierea propriu-zisă în WooCommerce, cu `--limita` pentru prima rulare.
+- [x] Importul produselor complete, scris și probat pe local (26.11.2026)
+      `wp ccs import --creeaza` creează produsul ca ciornă, cu preț, stoc, categorie, atribute și poze, și îl leagă
+      pe loc de furnizor. Poze redenumite din denumirea produsului, cu text alternativ. Reversibil cu
+      `wp ccs revino`. Probat pe produse reale: creare, verificare, revenire, de două ori.
+- [ ] Prima rulare de import pe live @iulian
+      Așteaptă preluarea pozelor de pe live, care se face în fereastra de noapte. Pe local sunt 1.059 produse gata;
+      pe live vor fi mai puține până se adună pozele. Prima rulare cu `--limita=20`, produsele rămân ciorne.
 - [ ] Cele 19 reguli de categorie prea slabe, de confirmat cu ownerul @client
   Învățate din unul sau două produse, deci nefolosite. Intră în aceeași discuție cu cele 96 de căi nemapate.
 - [ ] Mecanismul care urcă un produs când furnizorul îi adaugă poza @claude
