@@ -29,6 +29,23 @@ de la 0,86 la 0,75, sub pragul de 0,80. Potrivirea principală citea titlul dire
 corecțiile prin filtru: două căi de cod, două rezultate, pe aceleași date. Decodarea entităților e acum în
 `ccs_nume_cuvinte()`, deci peste tot, cu două teste în plus. Suita a ajuns la 42.
 
+**Hotărârea, după ce a văzut cifrele:** cele 26 nu se mai vând deocamdată, iar focusul rămâne pe produsele Conex
+plus cele câteva introduse manual de echipă. Am măsurat ce înseamnă fraza asta pentru tot magazinul, nu doar pentru
+cele 26, pentru că tiparul codului spune de unde vine fiecare produs: 292 au SKU `CZ*` și sunt puse de mână de
+echipă, 2.435 au cod numeric scurt și au venit din feed-ul Mega Drive, înghețat din noiembrie 2025. Dintre toate
+orfanele, **2.127 sunt încă afișate ca disponibile**, deși magazinul nu le mai poate aduce.
+
+Am scris retragerea ca operație separată, cu grupuri și cu probă implicită. Nu șterge niciodată nimic: produsul
+rămâne pe site, cu pagina și adresa lui, și trece pe stoc epuizat. O pagină care a stat ani în Google aduce în
+continuare vizitatori, iar „stoc epuizat” îi ține pe site, unde pot cumpăra altceva; o ștergere îi trimite în 404.
+
+Probat pe local, pe cele 26: 19 trecute pe epuizat, 7 erau deja, metadatele și `wc_product_meta_lookup` de acord,
+iar `wp ccs revino` a readus 38 de valori exact cum erau.
+
+`Lecție:` Un tipar de cod spune de unde vine un produs, iar asta e adesea tot ce-ți trebuie ca să împarți un catalog
+moștenit. La Cez Auto, `CZ1135` e pus de mână de echipă și `10000` a venit din feed-ul vechi; aceeași întrebare
+pusă clientului produs cu produs ar fi însemnat 2.743 de răspunsuri, iar pe tipare a însemnat două.
+
 `Lecție:` Când un client confirmă o premisă, verifică dacă din ea chiar rezultă concluzia. Ownerul a spus adevărul,
 că produsele nu sunt introduse manual, dar concluzia trasă din asta, că se pot înlocui cu produsul Conex de pe acel
 cod, nu rezulta. Între premisă și concluzie era o presupunere nescrisă: că numărul comun înseamnă același articol.

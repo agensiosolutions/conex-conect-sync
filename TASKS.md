@@ -73,6 +73,12 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Așteaptă
 
+- [ ] Retragerea pe live, după „push pe live” @iulian
+  Grupul `excluse`, cele 26, hotărât de owner pe 26 nov.: nu se mai vând momentan. Comanda e
+  `wp ccs retrage excluse --aplica`. Nu se șterge nimic, trec pe stoc epuizat și rămân pe site.
+- [ ] Cele 2.435 rămase din feed-ul Mega Drive, de hotărât @iulian
+  1.826 sunt încă afișate ca disponibile, deși feed-ul e înghețat din noiembrie 2025 și Conex nu le mai are.
+  Aceeași comandă, grupul `din_feed`. Cele 292 cu SKU `CZ*`, introduse manual de echipă, rămân neatinse.
 - [ ] Cele 26: corectarea NU trebuie făcută, de relămurit cu ownerul @iulian
   Previzualizarea arată că nu e o schimbare de cod, ci o ciocnire de numerotări. ROMIX folosește coduri de
   producător de 5 cifre (109 din cele 344 de produse ale lor), care nimeresc peste SKU-urile rămase din feed-ul
@@ -97,6 +103,10 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Retragerea de la vânzare, scrisă și probată pe local (26.11.2026)
+      Produsele trec pe stoc epuizat, nu se șterg niciodată: pagina și adresa rămân, iar vizitatorul din Google
+      ajunge pe site, nu în 404. Grupuri după tiparul codului: `excluse` 26, `din_feed` 2.435, `manuale` 292,
+      `altele` 16. Probat pe cele 26, inclusiv revenirea: 38 de valori readuse exact.
 - [x] Un bug la citirea titlurilor, găsit de protecția corecțiilor (26.11.2026)
       `get_the_title()` trece prin `wptexturize` și transformă liniuța în `&#8211;`, care se rupea în cuvântul
       „8211”. Potrivirea principală citea titlul direct din bază, corecțiile prin filtru: două căi, două rezultate.

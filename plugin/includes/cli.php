@@ -16,6 +16,7 @@
  *   wp ccs import             arată ce produse s-ar putea importa și de ce nu se pot celelalte
  *   wp ccs produs <cod>       ia un produs de la furnizor și arată ce s-ar crea, fără să scrie nimic
  *   wp ccs corectii           produsele cu același cod dar alt conținut: ce s-ar schimba, și `--aplica`
+ *   wp ccs retrage            trece pe stoc epuizat produsele care nu se mai pot aduce
  *   wp ccs noapte <endpoint>  sondează un endpoint din fereastra 19:00-05:00
  *   wp ccs pret <cost>        arată ce preț ar ieși pentru un cost dat, cu setările curente
  *
@@ -422,6 +423,105 @@ class CCS_CLI {
 			)
 		);
 		WP_CLI::line( sprintf( '  ultima preluare      %s', $s['ultima_preluare'] ? $s['ultima_preluare'] : 'niciodată' ) );
+	}
+
+	/**
+	 * Trece pe stoc epuizat produsele care nu se mai pot aduce.
+	 *
+	 * Nu șterge nimic: produsele rămân pe site, cu pagina și adresa lor. Fără `--aplica` nu scrie nimic.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [<grup>]
+	 * : Ce grup: excluse, din_feed, manuale sau altele. Fără el, doar arată grupurile.
+	 *
+	 * [--aplica]
+	 * : Scrie în WooCommerce.
+	 *
+	 * [--limita=<n>]
+	 * : Oprește-te după n produse.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs retrage
+	 *     wp ccs retrage excluse --aplica
+	 *     wp ccs retrage din_feed --aplica --limita=50
+	 *
+	 * @param array $args       Argumentele.
+	 * @param array $asociative Opțiunile.
+	 * @return void
+	 */
+	public function retrage( $args, $asociative ) {
+		$grupuri = ccs_retragere_grupuri();
+		$etichete = array(
+			'excluse'  => 'scoase din potrivire de client',
+			'din_feed' => 'rămase din feed-ul Mega Drive',
+			'manuale'  => 'introduse manual de echipă',
+			'altele'   => 'alt tipar de cod',
+		);
+
+		$grup = (string) ( $args[0] ?? '' );
+		if ( '' === $grup ) {
+			WP_CLI::line( '' );
+			WP_CLI::line( 'Produse care nu sunt în catalogul Conex:' );
+			foreach ( $grupuri as $nume => $ids ) {
+				WP_CLI::line(
+					sprintf(
+						'  %-10s %5d produse, %4d încă de vânzare   %s',
+						$nume,
+						count( $ids ),
+						ccs_retragere_de_atins( array_keys( $ids ) ),
+						$etichete[ $nume ] ?? ''
+					)
+				);
+			}
+			WP_CLI::line( '' );
+			WP_CLI::line( 'Alege un grup: wp ccs retrage <grup> --aplica' );
+			return;
+		}
+
+		if ( ! isset( $grupuri[ $grup ] ) ) {
+			WP_CLI::error( sprintf( 'Grup necunoscut. Alege dintre: %s', implode( ', ', array_keys( $grupuri ) ) ) );
+		}
+
+		$ids      = array_keys( $grupuri[ $grup ] );
+		$de_atins = ccs_retragere_de_atins( $ids );
+
+		WP_CLI::line( '' );
+		WP_CLI::line( sprintf( 'Grupul „%s”: %d produse, %d încă de vânzare.', $grup, count( $ids ), $de_atins ) );
+		$n = 0;
+		foreach ( $ids as $wc_id ) {
+			if ( 'outofstock' === get_post_meta( $wc_id, '_stock_status', true ) ) {
+				continue;
+			}
+			WP_CLI::line( sprintf( '  %-10s %s', $grupuri[ $grup ][ $wc_id ], mb_substr( html_entity_decode( get_the_title( $wc_id ) ), 0, 58 ) ) );
+			if ( ++$n >= 8 ) {
+				WP_CLI::line( sprintf( '  ... și încă %d', $de_atins - $n ) );
+				break;
+			}
+		}
+
+		if ( ! isset( $asociative['aplica'] ) ) {
+			WP_CLI::line( '' );
+			WP_CLI::success( 'Probă. N-am scris nimic. Adaugă --aplica când e bine.' );
+			return;
+		}
+
+		$r = ccs_retrage(
+			$ids,
+			array(
+				'limita' => (int) ( $asociative['limita'] ?? 0 ),
+				'motiv'  => sprintf( 'grupul %s', $grup ),
+			)
+		);
+		WP_CLI::line( '' );
+		WP_CLI::success( sprintf( '%d produse trecute pe stoc epuizat (rularea #%d).', $r['atinse'], $r['rulare'] ) );
+		WP_CLI::line( sprintf( '  erau deja epuizate  %d', $r['sarite'] ) );
+		if ( $r['esuate'] ) {
+			WP_CLI::line( sprintf( '  eșuate              %d', $r['esuate'] ) );
+		}
+		WP_CLI::line( '' );
+		WP_CLI::line( sprintf( 'Dacă e ceva greșit: wp ccs revino %d', $r['rulare'] ) );
 	}
 
 	/**
