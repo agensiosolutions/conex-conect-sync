@@ -58,8 +58,9 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
       pe loc de furnizor. Poze redenumite din denumirea produsului, cu text alternativ. Reversibil cu
       `wp ccs revino`. Probat pe produse reale: creare, verificare, revenire, de două ori.
 - [ ] Prima rulare de import pe live @iulian
-      Așteaptă preluarea pozelor de pe live, care se face în fereastra de noapte. Pe local sunt 1.059 produse gata;
-      pe live vor fi mai puține până se adună pozele. Prima rulare cu `--limita=20`, produsele rămân ciorne.
+      Așteaptă preluarea pozelor de pe live, care se face în fereastra de noapte. Pe live toate cele 16.778 produse
+      nelegate sunt oprite de lipsa pozelor, deci până atunci nu e nimic de importat. Prima rulare cu `--limita=20`,
+      produsele rămân ciorne.
 - [ ] Cele 19 reguli de categorie prea slabe, de confirmat cu ownerul @client
   Învățate din unul sau două produse, deci nefolosite. Intră în aceeași discuție cu cele 96 de căi nemapate.
 - [ ] Mecanismul care urcă un produs când furnizorul îi adaugă poza @claude

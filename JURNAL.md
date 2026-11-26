@@ -87,6 +87,37 @@ colț și cifra în culoarea stării, ceea ce păstrează citirea dintr-o privir
 de produse retrase au primit și ele iconiță, cifră mare și o bară care arată cât s-a făcut deja: fără bară,
 „2.435” și „1.826 încă de vânzare” sunt două numere care cer o scădere în minte.
 
+**Pozele se convertesc în WebP, la calitate 90, și 0.8.0 e pe live.** Conversia se face la import fiindcă după
+import nu se mai face niciodată: o poză intrată JPEG rămâne JPEG în toate dimensiunile pe care le generează
+WordPress, iar magazinul plătește diferența la fiecare vizitator, nu o dată. Calitatea e peste implicita
+WordPress, care e 82, pentru că la poze de produs omul mărește ca să vadă cusătura husei sau filetul șurubului.
+Măsurat pe produse reale, la 1000x1000: 30 KB coboară la 14, 31 la 11, 61 la 48.
+
+Dacă serverul nu poate scrie WebP, poza rămâne cum a venit și se scrie în jurnal: o poză în formatul vechi e mai
+bună decât niciuna. O poză care vine deja WebP nu se recodează. Local conversia merge prin GD, pe live prin
+Imagick, și am probat-o pe amândouă.
+
+Produsele noi rămân ciorne, cum a cerut Iulian. Publicarea cere `--publica`, pe care nu o dau.
+
+**Un bug prins de probă, nu de teste.** Regexul care tăia extensia ca să pună `.webp` avea clasa de caractere
+neînchisă. `preg_replace` întorcea null, deci ținta ieșea `.webp`, o cale relativă, iar fișierul se scria în
+directorul curent al procesului, nu lângă sursă. Nimic nu se plângea: imaginea ajungea până la urmă în bibliotecă,
+fiindcă `wp_handle_sideload` o muta de oriunde ar fi fost. S-a văzut doar fiindcă am pus proba să tipărească
+numele rezultatului, care a ieșit `.webp.webp`. Acum ținta se face din `dirname` plus `PATHINFO_FILENAME`, fără
+regex.
+
+`Lecție:` Un regex cu clasă de caractere neînchisă nu dă eroare în PHP, dă null. Lipit de un șir cu punct, null
+devine un nume de fișier relativ, iar fișierul aterizează în directorul curent al procesului. Simptomul: un
+fișier cu nume ciudat apare în rădăcina site-ului sau în directorul din care s-a dat comanda. Verifică
+`preg_last_error_msg()` când un `preg_replace` pare să nu facă nimic.
+
+`Lecție:` Când construiești o cale schimbând extensia, lucrează pe bucăți, cu `dirname()` și `PATHINFO_FILENAME`,
+nu cu un regex peste tot drumul. O cale ca `/tmp/dosar.vechi/poza` are punctul în dosar, nu în fișier, iar o
+tăiere pe ultimul punct scrie în alt loc decât crezi.
+
+`Lecție:` Pune proba să tipărească rezultatul, nu doar să spună că a reușit. Conversia „mergea”: întorcea un
+fișier WebP valid, de dimensiunea potrivită. Numai numele tipărit a arătat că fișierul se scria unde nu trebuie.
+
 **Importul scrie, în sfârșit.** Până acum `ccs_import_pregateste()` doar spunea ce s-ar crea. Acum există și
 partea care creează: produs prin CRUD-ul WooCommerce, ca ciornă, cu preț, stoc, categorie, atribute și poze, legat
 pe loc de furnizor. Trei porți, în ordinea tăriei: `mod_raport`, o limită explicită sau `--forteaza`, și lipsa
