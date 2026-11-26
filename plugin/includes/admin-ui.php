@@ -982,7 +982,7 @@ function ccs_ui_catalog_actiuni( $c, $grupuri, $m ) {
 	echo '<div class="ccs-actiuni-mari">';
 
 	printf(
-		'<div class="ccs-actiune ccs-actiune--verde"><span class="ccs-actiune__cifra">%s</span><span class="ccs-actiune__titlu">%s</span><span class="ccs-actiune__desc">%s</span></div>',
+		'<div class="ccs-actiune ccs-actiune--verde"><span class="ccs-actiune__icon dashicons dashicons-download" aria-hidden="true"></span><span class="ccs-actiune__cifra">%s</span><span class="ccs-actiune__titlu">%s</span><span class="ccs-actiune__desc">%s</span></div>',
 		esc_html( ccs_nr( $c['gata'] ) ),
 		esc_html__( 'produse gata de adus pe site', 'conex-conect-sync' ),
 		esc_html__( 'Au poză, cost, stoc și o categorie știută. Importul se pornește de aici când e gata.', 'conex-conect-sync' )
@@ -991,6 +991,7 @@ function ccs_ui_catalog_actiuni( $c, $grupuri, $m ) {
 	if ( $de_retras ) {
 		?>
 		<div class="ccs-actiune ccs-actiune--galben" data-grup="din_feed">
+			<span class="ccs-actiune__icon dashicons dashicons-archive" aria-hidden="true"></span>
 			<span class="ccs-actiune__cifra"><?php echo esc_html( ccs_nr( $de_retras ) ); ?></span>
 			<span class="ccs-actiune__titlu"><?php esc_html_e( 'produse pe care nu le mai poți aduce', 'conex-conect-sync' ); ?></span>
 			<span class="ccs-actiune__desc"><?php esc_html_e( 'Se vând pe site, dar furnizorul nu le mai are. Trec pe stoc epuizat, nu se șterg.', 'conex-conect-sync' ); ?></span>
@@ -1005,7 +1006,7 @@ function ccs_ui_catalog_actiuni( $c, $grupuri, $m ) {
 
 	if ( $c['fara_categorie'] ) {
 		printf(
-			'<div class="ccs-actiune ccs-actiune--albastru"><span class="ccs-actiune__cifra">%s</span><span class="ccs-actiune__titlu">%s</span><span class="ccs-actiune__desc">%s</span></div>',
+			'<div class="ccs-actiune ccs-actiune--albastru"><span class="ccs-actiune__icon dashicons dashicons-category" aria-hidden="true"></span><span class="ccs-actiune__cifra">%s</span><span class="ccs-actiune__titlu">%s</span><span class="ccs-actiune__desc">%s</span></div>',
 			esc_html( ccs_nr( $c['fara_categorie'] ) ),
 			esc_html__( 'produse așteaptă o categorie', 'conex-conect-sync' ),
 			esc_html__( 'Aproape toate sunt piese OE. Dacă hotărăști că intri pe ele, intră și produsele.', 'conex-conect-sync' )
@@ -1299,26 +1300,35 @@ function ccs_ui_catalog_produse_noi( $c ) {
  * @return void
  */
 function ccs_ui_catalog_dispare( $grupuri ) {
+	// Fiecare grup: iconiță, culoare, explicația de unde vine, și dacă se poate retrage.
 	$etichete = array(
 		'din_feed' => array(
-			__( 'Rămase din feed-ul vechi', 'conex-conect-sync' ),
-			__( 'Au intrat pe site din importul Mega Drive, înghețat din noiembrie 2025. Conex nu le mai are.', 'conex-conect-sync' ),
-			true,
+			'titlu'   => __( 'Rămase din feed-ul vechi', 'conex-conect-sync' ),
+			'desc'    => __( 'Au intrat pe site din importul Mega Drive, înghețat din noiembrie 2025. Conex nu le mai are.', 'conex-conect-sync' ),
+			'icon'    => 'archive',
+			'culoare' => 'galben',
+			'retrage' => true,
 		),
 		'excluse'  => array(
-			__( 'Scoase din potrivire', 'conex-conect-sync' ),
-			__( 'Produse marcate ca fiind altceva decât ce are Conex pe acel cod.', 'conex-conect-sync' ),
-			true,
+			'titlu'   => __( 'Scoase din potrivire', 'conex-conect-sync' ),
+			'desc'    => __( 'Produse marcate ca fiind altceva decât ce are Conex pe acel cod.', 'conex-conect-sync' ),
+			'icon'    => 'hidden',
+			'culoare' => 'gri',
+			'retrage' => true,
 		),
 		'altele'   => array(
-			__( 'Alt tipar de cod', 'conex-conect-sync' ),
-			__( 'Nu se potrivesc cu niciun tipar cunoscut. Merită o privire înainte de orice.', 'conex-conect-sync' ),
-			true,
+			'titlu'   => __( 'Alt tipar de cod', 'conex-conect-sync' ),
+			'desc'    => __( 'Nu se potrivesc cu niciun tipar cunoscut. Merită o privire înainte de orice.', 'conex-conect-sync' ),
+			'icon'    => 'editor-help',
+			'culoare' => 'gri',
+			'retrage' => true,
 		),
 		'manuale'  => array(
-			__( 'Introduse manual de echipă', 'conex-conect-sync' ),
-			__( 'Codurile încep cu două litere. Sunt ale magazinului, nu ale furnizorului, și nu se ating.', 'conex-conect-sync' ),
-			false,
+			'titlu'   => __( 'Introduse manual de echipă', 'conex-conect-sync' ),
+			'desc'    => __( 'Codurile încep cu două litere. Sunt ale magazinului, nu ale furnizorului, și nu se ating.', 'conex-conect-sync' ),
+			'icon'    => 'admin-users',
+			'culoare' => 'albastru',
+			'retrage' => false,
 		),
 	);
 
@@ -1332,29 +1342,50 @@ function ccs_ui_catalog_dispare( $grupuri ) {
 		if ( ! $ids ) {
 			continue;
 		}
+		$total    = count( $ids );
 		$de_atins = ccs_retragere_de_atins( $ids );
+		$retrase  = $total - $de_atins;
 		$eticheta = sprintf( /* translators: %s: câte produse. */ __( 'Retrage %s de la vânzare', 'conex-conect-sync' ), ccs_nr( $de_atins ) );
 		?>
-		<div class="ccs-grup" data-grup="<?php echo esc_attr( $grup ); ?>">
-			<p class="ccs-grup__cap">
-				<strong><?php echo esc_html( $e[0] ); ?></strong>
-				<span class="ccs-pastila"><?php echo esc_html( ccs_nr( count( $ids ) ) ); ?></span>
-				<?php if ( $e[2] && ! $de_atins ) : ?>
-					<?php echo ccs_ui_pastila( __( 'toate retrase', 'conex-conect-sync' ), 'bine' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+		<div class="ccs-grup ccs-grup--<?php echo esc_attr( $e['culoare'] ); ?>" data-grup="<?php echo esc_attr( $grup ); ?>">
+			<span class="ccs-grup__icon dashicons dashicons-<?php echo esc_attr( $e['icon'] ); ?>" aria-hidden="true"></span>
+			<div>
+				<p class="ccs-grup__cap">
+					<strong><?php echo esc_html( $e['titlu'] ); ?></strong>
+					<span class="ccs-grup__n"><?php echo esc_html( ccs_nr( $total ) ); ?></span>
+				</p>
+				<p class="ccs-mic"><?php echo esc_html( $e['desc'] ); ?></p>
+
+				<?php if ( $e['retrage'] ) : ?>
+					<p class="ccs-grup__progres">
+						<span class="ccs-grup__pista"><span style="width:<?php echo esc_attr( $total ? (int) round( 100 * $retrase / $total ) : 100 ); ?>%"></span></span>
+						<span class="ccs-grup__stare">
+							<?php
+							printf(
+								/* translators: 1: câte sunt retrase, 2: câte se mai vând. */
+								esc_html__( '%1$s retrase, %2$s încă de vânzare', 'conex-conect-sync' ),
+								esc_html( ccs_nr( $retrase ) ),
+								esc_html( ccs_nr( $de_atins ) )
+							);
+							?>
+						</span>
+					</p>
 				<?php endif; ?>
-			</p>
-			<p class="ccs-mic"><?php echo esc_html( $e[1] ); ?></p>
-			<div class="ccs-butoane">
-				<?php if ( $e[2] && $de_atins ) : ?>
-					<button type="button" class="ccs-btn ccs-btn--mic ccs-retrage" data-ton="atentie"
-						data-grup="<?php echo esc_attr( $grup ); ?>" data-eticheta="<?php echo esc_attr( $eticheta ); ?>">
-						<?php echo esc_html( $eticheta ); ?>
-					</button>
-				<?php endif; ?>
-				<a class="ccs-btn ccs-btn--mic ccs-btn--fantoma" href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&ccs_grup=' . $grup ) ); ?>">
-					<?php esc_html_e( 'Vezi lista', 'conex-conect-sync' ); ?>
-				</a>
-				<span class="ccs-stare-text"></span>
+
+				<div class="ccs-butoane">
+					<?php if ( $e['retrage'] && $de_atins ) : ?>
+						<button type="button" class="ccs-btn ccs-btn--mic ccs-retrage" data-ton="atentie"
+							data-grup="<?php echo esc_attr( $grup ); ?>" data-eticheta="<?php echo esc_attr( $eticheta ); ?>">
+							<?php echo esc_html( $eticheta ); ?>
+						</button>
+					<?php elseif ( $e['retrage'] ) : ?>
+						<?php echo ccs_ui_pastila( __( 'toate retrase', 'conex-conect-sync' ), 'bine' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					<?php endif; ?>
+					<a class="ccs-btn ccs-btn--mic ccs-btn--fantoma" href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&ccs_grup=' . $grup ) ); ?>">
+						<?php esc_html_e( 'Vezi lista', 'conex-conect-sync' ); ?>
+					</a>
+					<span class="ccs-stare-text"></span>
+				</div>
 			</div>
 		</div>
 		<?php

@@ -81,6 +81,20 @@ un produs adus**, cinci carduri cu poza reală de la furnizor, numele, prețul c
 Al doilea a fost cel mai ieftin de făcut și probabil cel mai valoros: adresele pozelor erau deja în tabel, iar un
 `<img>` în admin arată mai bine decât orice descriere a ce s-ar importa.
 
+Două corecturi după ce Iulian s-a uitat: cardurile de acțiune erau prea tari. Trei dreptunghiuri în culoare plină
+unul lângă altul strigă mai tare decât conținutul lor. Acum sunt albe ca restul panoului, cu iconița colorată în
+colț și cifra în culoarea stării, ceea ce păstrează citirea dintr-o privire fără să domine pagina. Iar grupurile
+de produse retrase au primit și ele iconiță, cifră mare și o bară care arată cât s-a făcut deja: fără bară,
+„2.435” și „1.826 încă de vânzare” sunt două numere care cer o scădere în minte.
+
+`Lecție:` Culoarea plină merge pe suprafețe mari, ca o bară care împarte un catalog, nu pe carduri mici puse în
+rând. Trei carduri colorate unul lângă altul se concurează între ele și acoperă conținutul paginii; aceeași
+informație cu fundal alb, iconiță colorată în colț și cifra în culoarea stării se citește la fel de repede și
+lasă restul paginii să respire.
+
+`Lecție:` Când arăți „câte au fost făcute” și „câte au rămas”, pune o bară, nu două numere. Două numere cer o
+scădere în minte de fiecare dată când omul se uită la ecran.
+
 `Lecție:` Regula de design se alege după ce face ecranul, nu pentru tot produsul. Un ecran care pune o întrebare se
 descurcă cu gri și o singură culoare de accent. Un ecran care arată un catalog de zeci de mii de rânduri are nevoie
 de culoare plină și de bare, altfel omul trebuie să citească și să adune singur. Aceeași paletă, altă cantitate.

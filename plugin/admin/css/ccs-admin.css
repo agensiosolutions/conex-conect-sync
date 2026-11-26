@@ -317,14 +317,34 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-efect .ccs-total th, .ccs-efect .ccs-total td { padding-top: 12px; border-top: 1px solid var(--c-linie-tare); border-bottom: 0; font-size: 14px; }
 .ccs-efect .ccs-total th { font-weight: 500; color: var(--c-text); }
 
-/* Grupurile din cardul „Ce dispare”: fiecare cu numele, explicatia si actiunea lui. */
-.ccs-grup { padding: 16px 0; border-top: 1px solid var(--c-linie); }
-.ccs-grup:first-of-type { padding-top: 0; border-top: 0; }
-.ccs-grup:last-of-type { padding-bottom: 0; }
-.ccs-grup__cap { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; }
+/* Grupurile de produse retrase: iconita colorata la stanga, cifra mare, si o bara care arata cat s-a facut deja.
+   Fara bara, „2.435” si „1.826 inca de vanzare” sunt doua numere care cer o scadere in minte. */
+.ccs-grup {
+  display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 16px;
+  padding: 16px; margin-bottom: 8px;
+  border: 1px solid var(--c-linie); border-radius: 10px; background: var(--c-card);
+}
+.ccs-grup:last-of-type { margin-bottom: 0; }
+.ccs-grup__icon {
+  display: grid !important; place-items: center;
+  width: 40px !important; height: 40px !important;
+  border-radius: 10px; font-size: 20px !important; color: #fff;
+}
+.ccs-grup--galben .ccs-grup__icon { background: var(--c-galben-plin); }
+.ccs-grup--albastru .ccs-grup__icon { background: var(--c-albastru-plin); }
+.ccs-grup--gri .ccs-grup__icon { background: var(--c-gri-plin); }
+.ccs-grup--verde .ccs-grup__icon { background: var(--c-verde-plin); }
+.ccs-grup__cap { display: flex; align-items: baseline; gap: 10px; margin: 0 0 2px; }
 .ccs-grup__cap strong { font-size: 14px; font-weight: 500; color: var(--c-text); }
-.ccs-grup .ccs-mic { margin: 0 0 12px; max-width: 56ch; }
-.ccs-grup .ccs-butoane { margin: 0; }
+.ccs-grup__n { font-size: 18px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; margin-left: auto; }
+.ccs-grup .ccs-mic { margin: 0; max-width: 60ch; }
+
+/* Cat din grup e deja retras. */
+.ccs-grup__progres { display: flex; align-items: center; gap: 10px; margin: 12px 0 0; }
+.ccs-grup__pista { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--c-galben-moale); overflow: hidden; }
+.ccs-grup__pista span { display: block; height: 100%; background: var(--c-verde-plin); }
+.ccs-grup__stare { font-size: 12px; color: var(--c-text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ccs-grup .ccs-butoane { margin: 12px 0 0; }
 
 /* Cele doua carduri din josul tabului Catalogul stau pe coloane egale. */
 .ccs-doua--egale { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -441,24 +461,31 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-legenda__cifra { font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
 
 /* ---------------------------------------------------------------- carduri de acțiune */
+/* Cardurile de acțiune: fundal alb ca tot panoul, iar culoarea stă în iconița din colț și în cifră. Pline de
+   culoare erau citibile, dar trei dreptunghiuri tari unul lângă altul strigă mai tare decât conținutul lor. */
 .ccs-actiuni-mari { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px; }
 .ccs-actiune {
-  display: flex; flex-direction: column; gap: 8px;
-  padding: 20px; border-radius: 12px; color: #fff;
+  position: relative;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 20px; padding-right: 64px;
+  background: var(--c-card); border: 1px solid var(--c-linie); border-radius: 12px; box-shadow: var(--c-umbra);
 }
-.ccs-actiune--verde { background: var(--c-verde-plin); }
-.ccs-actiune--galben { background: var(--c-galben-plin); }
-.ccs-actiune--albastru { background: var(--c-albastru-plin); }
-.ccs-actiune--gri { background: var(--c-text); }
+.ccs-actiune__icon {
+  position: absolute; top: 16px; right: 16px;
+  display: grid !important; place-items: center;
+  width: 36px !important; height: 36px !important;
+  border-radius: 10px; font-size: 20px !important; color: #fff;
+}
+.ccs-actiune--verde .ccs-actiune__icon { background: var(--c-verde-plin); }
+.ccs-actiune--galben .ccs-actiune__icon { background: var(--c-galben-plin); }
+.ccs-actiune--albastru .ccs-actiune__icon { background: var(--c-albastru-plin); }
 .ccs-actiune__cifra { font-size: 32px; line-height: 36px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.ccs-actiune__titlu { font-size: 15px; font-weight: 500; }
-.ccs-actiune__desc { font-size: 13px; line-height: 18px; opacity: .88; }
-.ccs-actiune .ccs-btn {
-  align-self: flex-start; margin-top: 4px;
-  background: rgba(255, 255, 255, .18); border-color: rgba(255, 255, 255, .4); color: #fff;
-}
-.ccs-actiune .ccs-btn:hover { background: rgba(255, 255, 255, .3); color: #fff; }
-.ccs-actiune .ccs-stare-text { color: #fff; }
+.ccs-actiune--verde .ccs-actiune__cifra { color: var(--c-verde-plin); }
+.ccs-actiune--galben .ccs-actiune__cifra { color: var(--c-galben-plin); }
+.ccs-actiune--albastru .ccs-actiune__cifra { color: var(--c-albastru-plin); }
+.ccs-actiune__titlu { font-size: 15px; font-weight: 500; color: var(--c-text); }
+.ccs-actiune__desc { font-size: 13px; line-height: 18px; color: var(--c-text-3); }
+.ccs-actiune .ccs-btn { align-self: flex-start; margin-top: 8px; }
 
 /* ---------------------------------------------------------------- mișcarea */
 .ccs-miscare { display: flex; flex-wrap: wrap; gap: 24px; }
