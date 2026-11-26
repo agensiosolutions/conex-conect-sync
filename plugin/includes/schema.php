@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const CCS_SCHEMA_VERSIUNE = 6;
+const CCS_SCHEMA_VERSIUNE = 7;
 
 /**
  * Numele unui tabel al pluginului, cu prefixul bazei.
@@ -136,13 +136,13 @@ function ccs_schema_instaleaza() {
 		"CREATE TABLE $decizii (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			tip VARCHAR(32) NOT NULL DEFAULT '',
-			referinta VARCHAR(64) NOT NULL DEFAULT '',
+			referinta VARCHAR(255) NOT NULL DEFAULT '',
 			valoare VARCHAR(64) NOT NULL DEFAULT '',
 			nota TEXT NULL,
 			utilizator BIGINT UNSIGNED NOT NULL DEFAULT 0,
 			creat_la DATETIME NULL,
 			PRIMARY KEY  (id),
-			KEY tip_referinta (tip, referinta),
+			KEY tip_referinta (tip, referinta(100)),
 			KEY creat_la (creat_la)
 		) $colatie;"
 	);

@@ -41,6 +41,10 @@ function ccs_decizii_tipuri() {
 			'intrebare' => __( 'Produsele fără stoc la furnizor trec pe „stoc epuizat”', 'conex-conect-sync' ),
 			'valori'    => array( 'aprobat' ),
 		),
+		'categorie'     => array(
+			'intrebare' => __( 'În ce raion de pe site merge o cale de la furnizor', 'conex-conect-sync' ),
+			'valori'    => array( 'mapat' ),
+		),
 		'prima_aplicare' => array(
 			'intrebare' => __( 'Pornirea sincronizării pe magazinul real', 'conex-conect-sync' ),
 			'valori'    => array( 'aprobat' ),
@@ -71,7 +75,7 @@ function ccs_decizie_scrie( $tip, $referinta, $valoare, $nota = '' ) {
 		return new WP_Error( 'ccs_valoare_necunoscuta', __( 'Valoare nepermisă pentru decizia asta.', 'conex-conect-sync' ) );
 	}
 
-	$wpdb->insert(
+	$scris = $wpdb->insert(
 		ccs_tabel( 'decizii' ),
 		array(
 			'tip'        => $tip,
@@ -82,6 +86,15 @@ function ccs_decizie_scrie( $tip, $referinta, $valoare, $nota = '' ) {
 			'creat_la'   => current_time( 'mysql' ),
 		)
 	);
+
+	// Fără verificarea asta, o scriere căzută trecea drept reușită și interfața spunea „Salvat”. Găsit pe 26
+	// noiembrie: coloana `referinta` era prea scurtă pentru o cale de categorie, iar decizia se pierdea în tăcere.
+	if ( false === $scris ) {
+		return new WP_Error(
+			'ccs_decizie_nescrisa',
+			__( 'Decizia nu s-a putut scrie în baza de date.', 'conex-conect-sync' )
+		);
+	}
 
 	$efect = ccs_decizie_aplica_efectul( $tip, $referinta, $valoare );
 

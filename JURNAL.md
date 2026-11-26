@@ -87,6 +87,44 @@ colț și cifra în culoarea stării, ceea ce păstrează citirea dintr-o privir
 de produse retrase au primit și ele iconiță, cifră mare și o bară care arată cât s-a făcut deja: fără bară,
 „2.435” și „1.826 încă de vânzare” sunt două numere care cer o scădere în minte.
 
+**Maparea manuală, pornită de o întrebare.** Iulian a întrebat ce înseamnă „5.522 așteaptă o categorie”, iar
+răspunsul a scos la iveală trei lucruri.
+
+Întâi, eticheta era înșelătoare: 5.522 sunt produsele oprite **numai** de categorie, pentru că pâlnia numără fiecare
+produs o singură dată, la primul lucru care îl oprește. În total 13.332 n-au categorie, dar restul sunt oprite
+oricum de lipsa pozei sau a stocului.
+
+Apoi, printre căile nemapate nu erau numai piese OE. „Uleiuri, lichide si chimice / Lubrifianti auto / Uleiuri
+pentru motor” are 644 de produse, 528 cu stoc, iar magazinul **are deja raionul potrivit**: „Ulei motor”, cu
+cincizeci de uleiuri Castrol puse de echipă. Regula n-a fost învățată dintr-un motiv de proiectare: învățarea se
+uită doar la produsele legate de Conex, iar uleiurile echipei au cod propriu, deci sunt orfane. Omul vede
+corespondența din prima; mașinăria n-avea de unde.
+
+De aici a treia: lipsea un loc din care omul să mapeze o cale. Acum cele 98 de căi apar sortate după câte produse
+ar debloca fiecare, cu un selector de raion alături. Probat pe uleiuri: o alegere a mutat **307 produse** din
+„așteaptă” în „gata de adus”, iar regula a supraviețuit reînvățării.
+
+**Două bug-uri găsite de testul ăla.** `ccs_decizii.referinta` era `VARCHAR(64)`, dar o cale de categorie ajunge la
+105 caractere, deci decizia nu se scria. Mai rău: `ccs_decizie_scrie()` nu verifica rezultatul lui `$wpdb->insert()`
+și raporta „ok” oricum, iar interfața ar fi spus „Salvat” peste o scriere căzută. Amândouă reparate.
+
+`Lecție:` Verifică întotdeauna valoarea întoarsă de `$wpdb->insert()`. Fără asta, o coloană prea scurtă, o
+constrângere sau un mod strict fac scrierea să cadă în tăcere, iar interfața spune „Salvat”. Simptomul: clientul
+jură că a apăsat, iar în baza de date nu e nimic.
+
+`Lecție:` Când dimensionezi o coloană pentru o cheie compusă din text, măsoară cel mai lung caz real, nu cel pe care
+îl ai în față. Căile de categorie ale furnizorului ajungeau la 105 caractere, iar coloana avea 64, pentru că
+primele valori puse acolo erau id-uri de produs de cinci cifre.
+
+`Lecție:` O învățare din date nu vede decât datele legate. La Cez Auto, regula „uleiurile de motor merg în raionul
+Ulei motor” era evidentă pentru orice om, dar invizibilă pentru mașinărie, pentru că uleiurile magazinului nu erau
+legate de furnizor. Lasă întotdeauna un loc din care omul să adauge o regulă pe care învățarea n-are cum s-o
+găsească, și fă ca regula lui să bată pe cele învățate.
+
+`Lecție:` Când clientul întreabă ce înseamnă o cifră de pe ecran, eticheta e greșită. Nu explica cifra, schimbă
+eticheta. Și verifică dacă întrebarea nu cumva ascunde o lipsă mai mare: aici, „ce înseamnă 5.522” a dus la o
+funcționalitate care lipsea cu totul.
+
 `Lecție:` Culoarea plină merge pe suprafețe mari, ca o bară care împarte un catalog, nu pe carduri mici puse în
 rând. Trei carduri colorate unul lângă altul se concurează între ele și acoperă conținutul paginii; aceeași
 informație cu fundal alb, iconiță colorată în colț și cifra în culoarea stării se citește la fel de repede și

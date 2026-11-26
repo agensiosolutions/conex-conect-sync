@@ -295,6 +295,35 @@
 			} );
 	} );
 
+	/* Alegerea raionului pentru o cale de la furnizor. Se salveaza la schimbarea selectorului, fara buton: e o
+	   alegere dintr-o lista, nu o operatie in masa. */
+	document.addEventListener( 'change', function ( ev ) {
+		var select = ev.target.closest( '.ccs-de-mapat__select' );
+		if ( ! select ) {
+			return;
+		}
+		var rand = select.closest( '[data-cale]' );
+		var stare = rand.querySelector( '.ccs-stare-text' );
+
+		select.disabled = true;
+		arataStare( stare, texte.lucrez, false );
+
+		trimite( 'ccs_mapeaza', { cale: rand.getAttribute( 'data-cale' ), term_id: select.value } )
+			.then( function ( raspuns ) {
+				select.disabled = false;
+				if ( ! raspuns || ! raspuns.success ) {
+					arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || texte.eroare, true );
+					return;
+				}
+				arataStare( stare, raspuns.data.efect, false );
+				rand.classList.toggle( 'ccs-de-mapat__rand--gata', '0' !== select.value );
+			} )
+			.catch( function () {
+				select.disabled = false;
+				arataStare( stare, texte.eroare, true );
+			} );
+	} );
+
 	/* ---------------------------------------------------------------- simulatorul de preț */
 
 	if ( ! document.getElementById( 'ccs-adaos' ) || ! sim.cost || ! sim.cost.length ) {

@@ -213,7 +213,8 @@ function ccs_admin_candidati( $proaspat = false ) {
 		}
 	}
 	$r = ccs_import_candidati();
-	// Lista întreagă n-are ce căuta în cache; păstrăm doar primele, pentru exemple.
+	// Lista întreagă n-are ce căuta în cache; păstrăm doar primele, pentru exemple. Căile rămân toate: sunt sub
+	// o sută și sunt tocmai lucrul pe care omul îl are de rezolvat.
 	$r['lista'] = array_slice( $r['lista'], 0, 10 );
 	set_transient( 'ccs_candidati_cache', $r, 10 * MINUTE_IN_SECONDS );
 	$memorie = $r;
@@ -554,6 +555,64 @@ function ccs_admin_ajax_retrage() {
 	);
 }
 add_action( 'wp_ajax_ccs_retrage', 'ccs_admin_ajax_retrage' );
+
+/**
+ * Scrie o asociere de categorie pusă de om.
+ *
+ * Regulile puse de om bat regulile învățate și nu se pierd la reînvățare. Un `term_id` zero șterge asocierea.
+ *
+ * @return void
+ */
+function ccs_admin_ajax_mapeaza() {
+	ccs_admin_ajax_poarta();
+	global $wpdb;
+
+	$cale    = sanitize_text_field( wp_unslash( $_POST['cale'] ?? '' ) );
+	$term_id = (int) ( $_POST['term_id'] ?? 0 );
+	if ( '' === $cale ) {
+		wp_send_json_error( array( 'mesaj' => __( 'Lipsește calea.', 'conex-conect-sync' ) ) );
+	}
+
+	$tabel = ccs_tabel( 'categorii' );
+	$wpdb->delete( $tabel, array( 'cale' => $cale, 'contine' => '' ) );
+
+	if ( ! $term_id ) {
+		ccs_admin_uita();
+		wp_send_json_success( array( 'efect' => __( 'Asocierea a fost ștearsă.', 'conex-conect-sync' ) ) );
+	}
+
+	$termen = get_term( $term_id, 'product_cat' );
+	if ( ! $termen || is_wp_error( $termen ) ) {
+		wp_send_json_error( array( 'mesaj' => __( 'Categoria nu există.', 'conex-conect-sync' ) ) );
+	}
+
+	$wpdb->insert(
+		$tabel,
+		array(
+			'cale'      => $cale,
+			'contine'   => '',
+			'term_id'   => $term_id,
+			'incredere' => 100,
+			'produse'   => 0,
+			'sursa'     => 'om',
+			'creat_la'  => current_time( 'mysql' ),
+		)
+	);
+
+	ccs_decizie_scrie( 'categorie', $cale, 'mapat', $termen->name );
+	ccs_admin_uita();
+
+	wp_send_json_success(
+		array(
+			'efect' => sprintf(
+				/* translators: %s: numele categoriei. */
+				__( 'Merg în „%s”. Produsele de pe calea asta intră în lista de adus.', 'conex-conect-sync' ),
+				$termen->name
+			),
+		)
+	);
+}
+add_action( 'wp_ajax_ccs_mapeaza', 'ccs_admin_ajax_mapeaza' );
 
 /**
  * Filtrează lista de produse din WordPress pe un grup al nostru.

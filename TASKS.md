@@ -100,6 +100,14 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Maparea manuală a căilor, din panou (26.11.2026)
+      Cele 98 de căi fără raion, sortate după câte produse ar debloca, fiecare cu un selector de categorie.
+      Probat pe uleiuri: o singură alegere a mutat 307 produse din „așteaptă” în „gata de adus”, iar regula
+      supraviețuiește reînvățării. Motivul pentru care lipsea: învățarea se uită doar la produsele legate, iar
+      uleiurile magazinului au cod propriu, deci regula n-avea de unde să fie învățată.
+- [x] Două bug-uri găsite de testul maparii (26.11.2026)
+      `ccs_decizii.referinta` era VARCHAR(64), iar căile de categorie ajung la 105 caractere. Mai rău,
+      `ccs_decizie_scrie()` nu verifica dacă scrierea a reușit, deci o decizie pierdută raporta „Salvat”.
 - [x] Tabul „Catalogul”, refăcut ca să se citească dintr-o privire (26.11.2026)
       Trei carduri de acțiune în culoare plină, două bare segmentate pentru cele două cataloage, mișcarea cu plus
       și minus, asocierea categoriilor cu bară de încredere, și cinci produse desenate exact cum ar arăta pe site,

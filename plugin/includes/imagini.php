@@ -180,6 +180,9 @@ function ccs_import_candidati() {
 		'fara_stoc'    => 0,
 		'fara_categorie' => 0,
 		'lista'        => array(),
+		// Pe fiecare cale a furnizorului, câte produse sunt oprite numai de lipsa categoriei. Asta e cifra care
+		// spune cât se deblochează dacă omul mapează calea aia, și se calculează în aceeași trecere.
+		'cai'          => array(),
 	);
 
 	foreach ( $produse as $p ) {
@@ -197,11 +200,15 @@ function ccs_import_candidati() {
 		}
 		if ( ! ccs_categorie_pentru( $p ) ) {
 			$rezumat['fara_categorie']++;
+			$cale = ccs_categorie_cale( $p );
+			$rezumat['cai'][ $cale ] = ( $rezumat['cai'][ $cale ] ?? 0 ) + 1;
 			continue;
 		}
 		$rezumat['gata']++;
 		$rezumat['lista'][] = $p;
 	}
+
+	arsort( $rezumat['cai'] );
 
 	return $rezumat;
 }

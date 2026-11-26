@@ -964,6 +964,7 @@ function ccs_admin_tab_catalog() {
 	ccs_ui_catalog_bare( $c, $grupuri, $pot, $m );
 	ccs_ui_catalog_miscare( $m );
 	ccs_ui_catalog_mapare();
+	ccs_ui_catalog_de_mapat( $c );
 	ccs_ui_catalog_produse_noi( $c );
 	ccs_ui_catalog_dispare( $grupuri );
 }
@@ -1242,6 +1243,99 @@ function ccs_ui_catalog_mapare() {
 	echo '<p class="ccs-mic">';
 	esc_html_e( 'Rândurile cu un cuvânt în albastru se împart după numele produsului: aceeași cale de la furnizor, două raioane pe site. Cele galbene sunt învățate din prea puține produse ca să fie folosite.', 'conex-conect-sync' );
 	echo '</p>';
+
+	ccs_ui_card_sfarsit();
+}
+
+/**
+ * Căile de la furnizor pentru care nu știm raionul, cu un selector pentru fiecare.
+ *
+ * Învățarea se uită doar la produsele legate de Conex, deci o cale pe care omul o știe din prima n-are cum să intre
+ * singură. Exemplul care a scos nevoia asta la iveală: magazinul are raionul „Ulei motor”, cu cincizeci de uleiuri
+ * puse de echipă, dar alea au cod propriu și nu sunt legate, deci regula n-a fost învățată niciodată. Conex are 644
+ * de uleiuri de motor care stăteau degeaba.
+ *
+ * O asociere pusă de om bate orice regulă învățată și nu se pierde la reînvățare.
+ *
+ * @param array $c Candidații la import.
+ * @return void
+ */
+function ccs_ui_catalog_de_mapat( $c ) {
+	$cai = isset( $c['cai'] ) ? $c['cai'] : array();
+	if ( ! $cai ) {
+		return;
+	}
+
+	$total = array_sum( $cai );
+
+	ccs_ui_card(
+		__( 'Căi de la furnizor fără raion', 'conex-conect-sync' ),
+		sprintf(
+			/* translators: 1: câte produse, 2: câte căi. */
+			__( '%1$s produse au poză, cost și stoc, dar nu știm unde să le punem. Sunt pe %2$d căi: alege raionul o dată, și intră toate produsele de pe calea aia.', 'conex-conect-sync' ),
+			ccs_nr( $total ),
+			count( $cai )
+		),
+		ccs_ui_pastila(
+			sprintf(
+				/* translators: %d: câte căi. */
+				_n( '%d cale de hotărât', '%d căi de hotărât', count( $cai ), 'conex-conect-sync' ),
+				count( $cai )
+			),
+			'atentie'
+		)
+	);
+
+	echo '<div class="ccs-de-mapat">';
+	foreach ( array_slice( $cai, 0, 12, true ) as $cale => $n ) {
+		$id = 'ccs-map-' . md5( $cale );
+		?>
+		<div class="ccs-de-mapat__rand" data-cale="<?php echo esc_attr( $cale ); ?>">
+			<div class="ccs-de-mapat__stanga">
+				<span class="ccs-de-mapat__cale"><?php echo esc_html( $cale ); ?></span>
+				<span class="ccs-de-mapat__n">
+					<?php
+					printf(
+						/* translators: %s: câte produse. */
+						esc_html( _n( '%s produs ar intra', '%s produse ar intra', $n, 'conex-conect-sync' ) ),
+						esc_html( ccs_nr( $n ) )
+					);
+					?>
+				</span>
+			</div>
+			<?php
+			wp_dropdown_categories(
+				array(
+					'taxonomy'          => 'product_cat',
+					'name'              => $id,
+					'id'                => $id,
+					'class'             => 'ccs-intrare ccs-de-mapat__select',
+					'show_option_none'  => __( 'alege raionul', 'conex-conect-sync' ),
+					'option_none_value' => '0',
+					'hierarchical'      => true,
+					'hide_empty'        => false,
+					'orderby'           => 'name',
+				)
+			);
+			?>
+			<span class="ccs-stare-text"></span>
+		</div>
+		<?php
+	}
+	echo '</div>';
+
+	if ( count( $cai ) > 12 ) {
+		printf(
+			'<p class="ccs-mic">%s</p>',
+			esc_html(
+				sprintf(
+					/* translators: %d: câte căi mai sunt. */
+					__( 'Încă %d căi, cu mai puține produse fiecare. Apar aici pe măsură ce le rezolvi pe cele mari.', 'conex-conect-sync' ),
+					count( $cai ) - 12
+				)
+			)
+		);
+	}
 
 	ccs_ui_card_sfarsit();
 }
