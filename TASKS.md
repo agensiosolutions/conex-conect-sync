@@ -52,6 +52,14 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
   Comanda: `wp ccs imagini --preia` pe live. Lanțul e probat pe datele sondate în octombrie; preluarea adevărată se
   poate face doar în fereastra furnizorului.
 
+- [ ] Curățarea celor 2.439 produse rămase din feed-ul vechi @iulian
+  Lista e făcută din 16 luni de Search Console: `cez-auto/rapoarte/curatenie-2026-11-26.json`, 1.827 de șters
+  (zero afișări, zero comenzi, zero recenzii) și 612 de ascuns din catalog. Se dă cu
+  `wp ccs curata --fisier=... --executa`, probat pe local, reversibil cu `wp ccs revino`. Cere push pe live.
+- [ ] Filtru și coloană în wp-admin > Produse @claude
+  Scrise și probate pe local, nu sunt încă pe live. Roli lucrează în lista de produse, nu în panou, și acolo nu
+  găsea nimic. De verificat vizual pe live după urcare.
+
 ### Etapa 4: import de produse noi
 - [x] Importul produselor complete, scris și probat pe local (26.11.2026)
       `wp ccs import --creeaza` creează produsul ca ciornă, cu preț, stoc, categorie, atribute și poze, și îl leagă

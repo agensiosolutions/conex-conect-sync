@@ -87,6 +87,46 @@ colț și cifra în culoarea stării, ceea ce păstrează citirea dintr-o privir
 de produse retrase au primit și ele iconiță, cifră mare și o bară care arată cât s-a făcut deja: fără bară,
 „2.435” și „1.826 încă de vânzare” sunt două numere care cer o scădere în minte.
 
+**Ce ștergem de pe site, hotărât cu date.** Roli a scris că multe produse i se par degeaba pe site și greu de
+găsit, și a propus o regulă: stoc 0 două săptămâni, apoi la coșul de gunoi. Regula are semnalul greșit. Stocul 0
+la Conex e temporar, produsul revine. Am verificat și două lucruri pe serverul lor, în loc să le presupun:
+`EMPTY_TRASH_DAYS` e 30, deci „trash” e o ștergere cu o lună întârziere; și am probat că după trash importul nostru
+vede codul ca liber, deci ar recrea produsul cu alt id. Un produs care revine pe stoc ar fi intrat într-o buclă.
+
+Am măsurat în loc să opinez. Am încrucișat cele 2.773 de produse fără furnizor cu 16 luni de Search Console, prin
+MCP-ul Google. Tot site-ul face 795 de clicuri în 16 luni. Din cele 2.439 rămase din feed-ul Mega Drive oprit,
+**1.827 n-au avut nicio afișare** în tot acest timp, iar celelalte 612 au adus împreună 105 clicuri, adică 6,6 pe
+lună. Deci toată discuția „ștergem 2.439 de produse” se reducea la: merită 6,6 clicuri pe lună ca să ținem 612
+pagini? Celelalte 1.827 nu costă nimic la ștergere. Cele 292 introduse manual de echipă sunt grupul cu cele mai
+multe clicuri de pe site, 162, și nu se ating.
+
+Hotărârea: 1.827 la coșul de gunoi, 612 ascunse din catalog și pe stoc epuizat, cu adresa vie. `wp ccs curata`
+face asta dintr-o listă de id-uri, nu dintr-o regulă, iar `wp ccs revino` dă totul înapoi, inclusiv starea și
+vizibilitatea. Lista se face cu `tools/curatenie-lista.py` și nu se poate face din plugin, fiindcă Search Console
+cere alt cont. Ăsta e și motivul pentru care curățarea rămâne o apăsare de buton, nu un cron.
+
+**A doua jumătate a mesajului era altă problemă.** „Greu de găsit” nu era despre clienți, ci despre el: lucrează
+în `Produse` din wp-admin și cu șase mii de produse în listă nu mai găsește nimic. Asta e o reparație mult mai
+ieftină decât restructurarea categoriilor la care mă gândeam. Lista are acum un filtru după sursă și o coloană
+care spune, pentru fiecare produs, dacă mai e la furnizor, cu ce stoc și ce cost.
+
+`Lecție:` Când clientul propune o regulă automată de ștergere, întreabă ce semnal măsoară de fapt. „Stoc 0 de N
+zile” pare să însemne „nu se mai vinde”, dar într-un magazin care se aprovizionează de la un furnizor înseamnă
+„furnizorul n-are acum”. Semnalul corect era „furnizorul nu-l mai are deloc”, pe care îl aveam deja calculat.
+
+`Lecție:` Înainte să ștergi pagini de pe un magazin, întreabă Search Console cât aduc. Aici 75% din paginile
+candidate n-au avut nicio afișare în 16 luni, iar restul valorau 6,6 clicuri pe lună: două cifre care transformă
+o ceartă de principiu într-o hotărâre de cinci minute. Search Console listează doar paginile cu cel puțin o
+afișare, deci „zero afișări” chiar înseamnă zero, nu lipsă de date.
+
+`Lecție:` „Nu găsesc produsele” poate însemna „clienții nu le găsesc pe site” sau „eu nu le găsesc în wp-admin”.
+Sunt două lucrări complet diferite, una de luni și una de ore. Întreabă care, înainte să propui restructurarea
+categoriilor.
+
+`Lecție:` Când un filtru de admin se apasă des, nu-l pune peste o funcție care face toată munca grea. Grupurile
+din panou vin din potrivirea întreagă, care ia minute pe douăzeci de mii de produse; pentru lista de produse
+aceleași grupuri se calculează cu o interogare pe `_sku` și un `LEFT JOIN`, prin indecși.
+
 **Pozele se convertesc în WebP, la calitate 90, și 0.8.0 e pe live.** Conversia se face la import fiindcă după
 import nu se mai face niciodată: o poză intrată JPEG rămâne JPEG în toate dimensiunile pe care le generează
 WordPress, iar magazinul plătește diferența la fiecare vizitator, nu o dată. Calitatea e peste implicita
