@@ -15,6 +15,7 @@
  *   wp ccs imagini            preia adresele pozelor din fereastra de noapte; fără opțiuni, doar arată starea
  *   wp ccs import             arată ce produse s-ar putea importa și de ce nu se pot celelalte
  *   wp ccs produs <cod>       ia un produs de la furnizor și arată ce s-ar crea, fără să scrie nimic
+ *   wp ccs corectii           produsele cu același cod dar alt conținut: ce s-ar schimba, și `--aplica`
  *   wp ccs noapte <endpoint>  sondează un endpoint din fereastra 19:00-05:00
  *   wp ccs pret <cost>        arată ce preț ar ieși pentru un cost dat, cu setările curente
  *
@@ -421,6 +422,72 @@ class CCS_CLI {
 			)
 		);
 		WP_CLI::line( sprintf( '  ultima preluare      %s', $s['ultima_preluare'] ? $s['ultima_preluare'] : 'niciodată' ) );
+	}
+
+	/**
+	 * Produsele care au același cod dar alt conținut: ce s-ar schimba pe fiecare.
+	 *
+	 * Fără `--aplica` nu scrie nimic. Nu e o sincronizare obișnuită: anunțul de pe site își schimbă identitatea,
+	 * nu doar prețul.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--aplica]
+	 * : Scrie corecturile în WooCommerce.
+	 *
+	 * [--limita=<n>]
+	 * : Oprește-te după n produse.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs corectii
+	 *     wp ccs corectii --aplica --limita=3
+	 *
+	 * @param array $args       Argumentele.
+	 * @param array $asociative Opțiunile.
+	 * @return void
+	 */
+	public function corectii( $args, $asociative ) {
+		$lista = ccs_corectii_lista();
+		if ( ! $lista ) {
+			WP_CLI::success( 'Nu e niciun produs de corectat.' );
+			return;
+		}
+
+		$fara_categorie = 0;
+		WP_CLI::line( '' );
+		foreach ( $lista as $r ) {
+			$t = $r['categ_nou'] ? get_term( $r['categ_nou'], 'product_cat' ) : null;
+			$v = $r['categ_vechi'] ? get_term( $r['categ_vechi'], 'product_cat' ) : null;
+			if ( ! $r['categ_nou'] ) {
+				$fara_categorie++;
+			}
+			WP_CLI::line( sprintf( '  %-10s #%d', $r['sku'], $r['wc_id'] ) );
+			WP_CLI::line( sprintf( '    acum  %-52s %8s lei  stoc %-4s  %s', mb_substr( html_entity_decode( $r['nume_vechi'] ), 0, 50 ), $r['pret_vechi'], $r['stoc_vechi'], $v && ! is_wp_error( $v ) ? $v->name : '-' ) );
+			WP_CLI::line( sprintf( '    nou   %-52s %8s lei  stoc %-4d  %s', mb_substr( $r['nume_nou'], 0, 50 ), ccs_lei( $r['pret_nou'] ), $r['stoc_nou'], $t && ! is_wp_error( $t ) ? $t->name : 'NU ȘTIM' ) );
+			WP_CLI::line( sprintf( '    %d poze la furnizor, nume asemănătoare %d%%', $r['poze'], (int) round( $r['asemanare'] * 100 ) ) );
+			if ( ! empty( $r['altundeva'] ) ) {
+				WP_CLI::line( sprintf( '    ATENȚIE: produsul de pe site există la Conex sub codul %s (%s). Ăsta se releagă, nu se înlocuiește.', $r['altundeva']['cod'], mb_substr( $r['altundeva']['nume'], 0, 44 ) ) );
+			}
+			WP_CLI::line( '' );
+		}
+
+		WP_CLI::line( sprintf( '%d produse de corectat, %d fără categorie știută.', count( $lista ), $fara_categorie ) );
+
+		if ( ! isset( $asociative['aplica'] ) ) {
+			WP_CLI::success( 'Probă. N-am scris nimic. Adaugă --aplica când e bine.' );
+			return;
+		}
+
+		$r = ccs_corectii_aplica( array( 'limita' => (int) ( $asociative['limita'] ?? 0 ) ) );
+		WP_CLI::line( '' );
+		WP_CLI::success( sprintf( '%d din %d produse corectate (rularea #%d).', $r['atinse'], $r['de_atins'], $r['rulare'] ) );
+		foreach ( $r['erori'] as $e ) {
+			WP_CLI::warning( $e );
+		}
+		if ( $r['atinse'] ) {
+			WP_CLI::line( sprintf( 'Dacă e ceva greșit: wp ccs revino %d', $r['rulare'] ) );
+		}
 	}
 
 	/**
