@@ -249,6 +249,7 @@ function ccs_imagini_job( $joburi ) {
 		'nume'         => __( 'Imaginile produselor', 'conex-conect-sync' ),
 		'interval'     => DAY_IN_SECONDS,
 		'doar_noaptea' => true,
+		'minut'        => 10,
 	);
 	return $joburi;
 }

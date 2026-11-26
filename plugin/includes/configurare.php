@@ -34,6 +34,13 @@ function ccs_setari_implicite() {
 		'stoc_absent_runde'  => 2,       // De câte ori la rând lipsește un produs din feed înainte să treacă pe stoc 0.
 		'poze_per_produs'    => 4,
 
+		// Când devine un atribut tehnic filtru în magazin. Vezi `atribute.php` pentru de ce raportul și nu un prag
+		// fix pe numărul de valori: un prag fix respingea „Partea de montare”, care are 125 de valori dar pe 2.874
+		// de produse, adică 4%, și e exact genul de filtru pe care îl caută cumpărătorul.
+		'atribut_min_produse'   => 200,
+		'atribut_max_raport'    => 0.15,
+		'atribut_plafon_valori' => 150,
+
 		// Pozele de la furnizor vin JPEG de 1000x1000. Se convertesc în WebP la import, fiindcă după import nu
 		// se mai convertește nimeni. 90 e peste implicita WordPress, care e 82: la poze de produs, unde omul
 		// mărește ca să vadă cusătura husei sau filetul șurubului, artefactele costă mai mult decât kilobaiții

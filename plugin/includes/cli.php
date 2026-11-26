@@ -817,6 +817,83 @@ class CCS_CLI {
 	}
 
 	/**
+	 * Datele tehnice ale produselor: ce știm, și preluarea lor de la furnizor.
+	 *
+	 * Fără `--preia` doar arată ce e în tabel. Preluarea merge numai în fereastra de noapte a furnizorului,
+	 * 19:00-05:00, fiindcă endpoint-ul `criteria` răspunde doar atunci.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--preia]
+	 * : Ia datele tehnice de la furnizor și rescrie tabelul.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs atribute
+	 *     wp ccs atribute --preia
+	 *
+	 * @param array $args       Argumentele.
+	 * @param array $asociative Opțiunile.
+	 * @return void
+	 */
+	public function atribute( $args, $asociative ) {
+		if ( isset( $asociative['preia'] ) ) {
+			if ( ! ccs_api_fereastra_deschisa() ) {
+				WP_CLI::error(
+					sprintf(
+						'Fereastra furnizorului e închisă. Endpoint-ul răspunde între %d:00 și %d:00, iar la furnizor e acum %s.',
+						CCS_NOAPTE_DE_LA,
+						CCS_NOAPTE_PANA_LA,
+						ccs_api_ora_furnizor() ? ccs_api_ora_furnizor()->format( 'H:i' ) : '?'
+					)
+				);
+			}
+			$r = ccs_atribute_preia();
+			if ( is_wp_error( $r ) ) {
+				WP_CLI::error( $r->get_error_message() );
+			}
+			WP_CLI::success( sprintf( '%d perechi pentru %d produse.', $r['perechi'], $r['produse'] ) );
+		}
+
+		$stare = ccs_atribute_stare();
+		WP_CLI::line( '' );
+		WP_CLI::line( sprintf( '  produse cu date tehnice  %s', number_format( $stare['produse'], 0, ',', '.' ) ) );
+		WP_CLI::line( sprintf( '  perechi                  %s', number_format( $stare['perechi'], 0, ',', '.' ) ) );
+		WP_CLI::line( sprintf( '  nume distincte           %s', number_format( $stare['nume'], 0, ',', '.' ) ) );
+		WP_CLI::line( sprintf( '  ultima preluare          %s', $stare['ultima'] ? $stare['ultima'] : 'niciodată' ) );
+
+		if ( ! $stare['perechi'] ) {
+			return;
+		}
+
+		$filtrabile = ccs_atribute_filtrabile();
+		WP_CLI::line( '' );
+		WP_CLI::line(
+			sprintf(
+				'%d atribute din %d devin filtre în magazin. Restul rămân doar pe pagina produsului.',
+				count( $filtrabile ),
+				$stare['nume']
+			)
+		);
+		uasort(
+			$filtrabile,
+			static function ( $a, $b ) {
+				return $b['produse'] <=> $a['produse'];
+			}
+		);
+		foreach ( array_slice( $filtrabile, 0, 15, true ) as $nume => $d ) {
+			WP_CLI::line(
+				sprintf(
+					'  %-38s %5d produse, %4d valori',
+					mb_substr( $nume, 0, 36 ),
+					$d['produse'],
+					$d['valori']
+				)
+			);
+		}
+	}
+
+	/**
 	 * Șterge și ascunde produsele pe care furnizorul nu le mai are deloc.
 	 *
 	 * Hotărârile vin dintr-un fișier JSON de forma `{ "sterge": [12, 34], "ascunde": [56] }`, făcut dintr-o

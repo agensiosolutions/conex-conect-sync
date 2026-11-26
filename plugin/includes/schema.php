@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const CCS_SCHEMA_VERSIUNE = 7;
+const CCS_SCHEMA_VERSIUNE = 8;
 
 /**
  * Numele unui tabel al pluginului, cu prefixul bazei.
@@ -36,6 +36,7 @@ function ccs_schema_instaleaza() {
 	$colatie = $wpdb->get_charset_collate();
 
 	$produse = ccs_tabel( 'products' );
+	$atribute = ccs_tabel( 'atribute' );
 	$links   = ccs_tabel( 'links' );
 	$rulari  = ccs_tabel( 'runs' );
 	$jurnal  = ccs_tabel( 'log' );
@@ -73,6 +74,21 @@ function ccs_schema_instaleaza() {
 
 	// Legătura produs WooCommerce -> produs Conex. Mai multe produse Woo pot arăta spre același produs Conex
 	// (același ștergător listat per model auto), deci cheia primară e produsul Woo.
+	// Datele tehnice ale produselor furnizorului. Fara cheie unica pe (product_id, nume): tabelul se golește și
+	// se rescrie întreg la fiecare preluare, exact ca cel de imagini, deci duplicatele nu pot apărea.
+	dbDelta(
+		"CREATE TABLE $atribute (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			product_id BIGINT UNSIGNED NOT NULL,
+			nume VARCHAR(120) NOT NULL DEFAULT '',
+			valoare VARCHAR(255) NOT NULL DEFAULT '',
+			vazut_la DATETIME NULL,
+			PRIMARY KEY  (id),
+			KEY product_id (product_id),
+			KEY nume (nume(60))
+		) $colatie;"
+	);
+
 	dbDelta(
 		"CREATE TABLE $links (
 			wc_product_id BIGINT UNSIGNED NOT NULL,

@@ -66,7 +66,11 @@ function ccs_joburi_porneste() {
 			as_unschedule_all_actions( $hook, null, CCS_GRUP_JOBURI );
 		}
 
-		$start = $job['doar_noaptea'] ? ccs_joburi_urmatoarea_noapte() : time() + $job['interval'];
+		// Fiecare job de noapte pornește la minutul lui: amândouă citesc din aceeași fereastră, iar rata de eșec a
+		// furnizorului crește pe parcursul nopții, deci nu are rost să concureze între ele.
+		$start = $job['doar_noaptea']
+			? ccs_joburi_urmatoarea_noapte( isset( $job['minut'] ) ? (int) $job['minut'] : 10 )
+			: time() + $job['interval'];
 		as_schedule_recurring_action( $start, $job['interval'], $hook, array(), CCS_GRUP_JOBURI );
 		ccs_jurnal( 'info', sprintf( 'Job programat: %s, la fiecare %d minute.', $hook, $job['interval'] / MINUTE_IN_SECONDS ) );
 	}
@@ -125,7 +129,7 @@ function ccs_job_interval_programat( $hook ) {
  *
  * @return int Timestamp.
  */
-function ccs_joburi_urmatoarea_noapte() {
+function ccs_joburi_urmatoarea_noapte( $minut = 10 ) {
 	// Ora se socotește în fusul furnizorului și se întoarce ca timestamp real, cum vrea Action Scheduler.
 	// Amestecul dintre `current_time('timestamp')` și `strtotime()` dă o oră deplasată cu offsetul fusului: pe un
 	// site pe Europe/Bucharest, un job gândit pentru 19:10 ajunge programat la 21:10.
@@ -134,7 +138,7 @@ function ccs_joburi_urmatoarea_noapte() {
 		return time() + HOUR_IN_SECONDS;
 	}
 
-	$tinta = $acum->setTime( CCS_NOAPTE_DE_LA, 10, 0 );
+	$tinta = $acum->setTime( CCS_NOAPTE_DE_LA, max( 0, min( 59, (int) $minut ) ), 0 );
 	if ( $tinta <= $acum ) {
 		$tinta = $tinta->modify( '+1 day' );
 	}

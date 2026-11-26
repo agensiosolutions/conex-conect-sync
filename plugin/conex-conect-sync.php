@@ -36,6 +36,7 @@ require CCS_DIR . 'includes/aplica.php';
 require CCS_DIR . 'includes/decizii.php';
 require CCS_DIR . 'includes/categorii.php';
 require CCS_DIR . 'includes/imagini.php';
+require CCS_DIR . 'includes/atribute.php';
 require CCS_DIR . 'includes/import.php';
 require CCS_DIR . 'includes/corectii.php';
 require CCS_DIR . 'includes/retragere.php';

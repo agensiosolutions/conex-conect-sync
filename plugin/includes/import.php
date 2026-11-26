@@ -83,6 +83,18 @@ function ccs_import_pregateste( $p ) {
 	);
 	$poze = $pid ? ccs_imagini_produs( $pid, (int) $setari['poze_per_produs'] ) : array();
 
+	// O singură dată: și datele produsului, și explicația de mai jos se uită la aceeași listă, iar la un import de
+	// o mie de produse o a doua interogare pe fiecare s-ar simți.
+	$atribute = $pid
+		? ccs_atribute_pentru_produs(
+			$pid,
+			array(
+				'Brand'          => $brand,
+				'Cod producător' => $mpn,
+			)
+		)
+		: array( 'globale' => array(), 'locale' => array_filter( array( 'Brand' => $brand, 'Cod producător' => $mpn ) ) );
+
 	$piedici = array();
 	if ( ! $poze ) {
 		$piedici['fara_poza'] = __( 'Furnizorul nu transmite nicio imagine. Produsele fără imagine nu se importă.', 'conex-conect-sync' );
@@ -123,12 +135,7 @@ function ccs_import_pregateste( $p ) {
 			'stare_stoc'    => $stoc > 0 ? 'instock' : 'outofstock',
 			'categorie'     => $term,
 			'poze'          => $poze,
-			'atribute'      => array_filter(
-				array(
-					'Brand'           => $brand,
-					'Cod producător'  => $mpn,
-				)
-			),
+			'atribute'      => $atribute,
 			// Furnizorul nu trimite descrieri, măsurat pe tot catalogul în octombrie. Produsul urcă fără descriere,
 			// iar asta e o limită de date, nu o scăpare de implementare.
 			'descriere'     => '',
@@ -146,6 +153,7 @@ function ccs_import_pregateste( $p ) {
 				ccs_lei( $pret )
 			),
 			'categorie' => ccs_import_motiv_categorie( $p, $term ),
+			'atribute'  => ccs_import_motiv_atribute( $atribute ),
 			'poze'      => $poze
 				? sprintf(
 					/* translators: 1: câte se iau, 2: câte are furnizorul. */
@@ -464,16 +472,8 @@ function ccs_import_creeaza( $pregatit, $publica = false ) {
 	// Furnizorul nu trimite descrieri, măsurat pe tot catalogul. Produsul rămâne fără, iar asta se vede în panou.
 	$produs->set_description( (string) $d['descriere'] );
 
-	if ( $d['atribute'] ) {
-		$atribute = array();
-		foreach ( $d['atribute'] as $nume => $valoare ) {
-			$a = new WC_Product_Attribute();
-			$a->set_name( $nume );
-			$a->set_options( array( $valoare ) );
-			$a->set_visible( true );
-			$a->set_variation( false );
-			$atribute[] = $a;
-		}
+	$atribute = ccs_import_atribute_woo( $d['atribute'] );
+	if ( $atribute ) {
 		$produs->set_attributes( $atribute );
 	}
 
@@ -488,6 +488,9 @@ function ccs_import_creeaza( $pregatit, $publica = false ) {
 			)
 		);
 	}
+
+	// Termenii atributelor globale se pun după salvare: `wp_set_object_terms()` are nevoie de un id de produs.
+	ccs_import_atribute_termeni( $wc_id, $d['atribute'] );
 
 	$poze = ccs_import_poze( $wc_id, (array) $d['poze'], $d['nume'], $d['sku'] );
 
@@ -507,6 +510,99 @@ function ccs_import_creeaza( $pregatit, $publica = false ) {
 		'wc_id' => (int) $wc_id,
 		'poze'  => $poze,
 	);
+}
+
+/**
+ * Explicația pe scurt a datelor tehnice.
+ *
+ * @param array $atribute array( 'globale' => ..., 'locale' => ... ).
+ * @return string Explicația.
+ */
+function ccs_import_motiv_atribute( $atribute ) {
+	$globale = count( (array) ( $atribute['globale'] ?? array() ) );
+	$locale  = count( (array) ( $atribute['locale'] ?? array() ) );
+	if ( ! $globale && ! $locale ) {
+		return __( 'furnizorul n-are date tehnice pentru produsul ăsta', 'conex-conect-sync' );
+	}
+
+	return sprintf(
+		/* translators: 1: câte date tehnice în total, 2: câte dintre ele devin filtre. */
+		__( '%1$d date tehnice de la furnizor, %2$d dintre ele intră în filtrele magazinului', 'conex-conect-sync' ),
+		$globale + $locale,
+		$globale
+	);
+}
+
+/**
+ * Atributele produsului, în forma pe care o cere WooCommerce.
+ *
+ * Cele filtrabile devin atribute globale (`pa_*`), legate de o taxonomie, fiindcă numai alea produc filtre în
+ * magazin. Restul rămân atribute locale: se văd pe pagina produsului, dar nu filtrează nimic. Despărțirea o face
+ * `ccs_atribute_pentru_produs()`; aici doar le punem în obiectele WooCommerce.
+ *
+ * Dacă o taxonomie nu se poate crea, atributul coboară la local în loc să se piardă: o dată tehnică văzută pe
+ * pagina produsului e mai bună decât una dispărută.
+ *
+ * @param array $atribute array( 'globale' => ..., 'locale' => ... ).
+ * @return array Obiecte `WC_Product_Attribute`.
+ */
+function ccs_import_atribute_woo( $atribute ) {
+	$iesire  = array();
+	$pozitie = 0;
+	$locale  = (array) ( $atribute['locale'] ?? array() );
+
+	foreach ( (array) ( $atribute['globale'] ?? array() ) as $nume => $valoare ) {
+		$taxonomie = ccs_atribut_taxonomie( $nume );
+		if ( is_wp_error( $taxonomie ) ) {
+			ccs_jurnal( 'avertisment', sprintf( 'Atributul „%s” rămâne local: %s', $nume, $taxonomie->get_error_message() ) );
+			$locale[ $nume ] = $valoare;
+			continue;
+		}
+
+		$a = new WC_Product_Attribute();
+		$a->set_id( wc_attribute_taxonomy_id_by_name( $taxonomie ) );
+		$a->set_name( $taxonomie );
+		$a->set_options( array( $valoare ) );
+		$a->set_position( $pozitie++ );
+		$a->set_visible( true );
+		$a->set_variation( false );
+		$iesire[] = $a;
+	}
+
+	foreach ( $locale as $nume => $valoare ) {
+		if ( '' === (string) $valoare ) {
+			continue;
+		}
+		$a = new WC_Product_Attribute();
+		$a->set_name( (string) $nume );
+		$a->set_options( array( (string) $valoare ) );
+		$a->set_position( $pozitie++ );
+		$a->set_visible( true );
+		$a->set_variation( false );
+		$iesire[] = $a;
+	}
+
+	return $iesire;
+}
+
+/**
+ * Pune termenii atributelor globale pe produs.
+ *
+ * `WC_Product::save()` scrie legătura produs-atribut, dar nu creează termenii în taxonomie. Fără pasul ăsta,
+ * atributul apare gol în admin și nu filtrează nimic.
+ *
+ * @param int   $wc_id    Produsul.
+ * @param array $atribute array( 'globale' => ... ).
+ * @return void
+ */
+function ccs_import_atribute_termeni( $wc_id, $atribute ) {
+	foreach ( (array) ( $atribute['globale'] ?? array() ) as $nume => $valoare ) {
+		$taxonomie = ccs_atribut_taxonomie( $nume );
+		if ( is_wp_error( $taxonomie ) || '' === (string) $valoare ) {
+			continue;
+		}
+		wp_set_object_terms( (int) $wc_id, (string) $valoare, $taxonomie, false );
+	}
 }
 
 /**
