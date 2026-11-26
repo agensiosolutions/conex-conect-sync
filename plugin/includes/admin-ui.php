@@ -1212,7 +1212,7 @@ function ccs_ui_catalog_mapare() {
 	);
 
 	if ( ! $reguli ) {
-		ccs_ui_gol( __( 'Nicio regulă încă.', 'conex-conect-sync' ), __( 'Rulează `wp ccs categorii`.', 'conex-conect-sync' ) );
+		ccs_ui_gol( __( 'Nicio regulă încă.', 'conex-conect-sync' ), __( 'Se învață automat din produsele deja legate de furnizor, la sincronizarea de noapte.', 'conex-conect-sync' ) );
 		ccs_ui_card_sfarsit();
 		return;
 	}
@@ -1353,7 +1353,7 @@ function ccs_ui_catalog_produse_noi( $c ) {
 	);
 
 	if ( ! $c['lista'] ) {
-		ccs_ui_gol( __( 'Niciun produs pot fi importate.', 'conex-conect-sync' ), __( 'Verifică dacă imaginile au fost preluate de la furnizor.', 'conex-conect-sync' ) );
+		ccs_ui_gol( __( 'Niciun produs nu poate fi importat deocamdată.', 'conex-conect-sync' ), __( 'Verifică dacă imaginile au fost preluate de la furnizor.', 'conex-conect-sync' ) );
 		ccs_ui_card_sfarsit();
 		return;
 	}
