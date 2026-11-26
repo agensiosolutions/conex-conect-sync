@@ -73,7 +73,6 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Așteaptă
 
-- [ ] Tabul „Catalogul” pus pe live, după „push pe live” @iulian
 - [ ] Cele 2.435 rămase din feed-ul Mega Drive, de hotărât @iulian
   1.826 sunt încă afișate ca disponibile, deși feed-ul e înghețat din noiembrie 2025 și Conex nu le mai are.
   Aceeași comandă, grupul `din_feed`. Cele 292 cu SKU `CZ*`, introduse manual de echipă, rămân neatinse.
@@ -101,6 +100,9 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Tabul „Catalogul” pe live, versiunea 0.6.0 (26.11.2026)
+      Pe datele de acolo: 3 produse noi, 10 ieșite, 20.718 în catalog. Grupurile: 2.439 din feed (1.830 încă de
+      vânzare), 292 manuale, 16 altele, 26 excluse (toate retrase). Toate cele 7 taburi fără erori.
 - [x] Tabul „Catalogul”: mișcarea furnizorului plus restanța, pe două coloane (26.11.2026)
       Sus: produse noi și ieșite în ultimele 7 zile, cu liste. Jos: „Ce dispare”, pe grupuri după tiparul codului,
       cu buton de retragere, și „Ce vine nou”, cu pâlnia de motive. „Vezi lista” duce în lista de produse din
