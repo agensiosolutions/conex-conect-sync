@@ -74,7 +74,16 @@ function ccs_corectii_lista() {
 			'categ_vechi' => ccs_categorie_adanca( $wc_id ),
 			'conex'       => $conex,
 			'nume_nou'    => (string) $conex['nume'],
-			'pret_nou'    => ccs_pret( $conex['cost'], $conex['taxa_eco'] ),
+			'pret_nou'    => ccs_pret(
+				$conex['cost'],
+				$conex['taxa_eco'],
+				array(
+					'brand' => $conex['brand'] ?? '',
+					'cat1'  => $conex['cat1'] ?? '',
+					'cat2'  => $conex['cat2'] ?? '',
+					'cat3'  => $conex['cat3'] ?? '',
+				)
+			),
 			'stoc_nou'    => (int) $conex['stoc'],
 			'categ_nou'   => $pregatit['date']['categorie'],
 			'poze'        => count( $pregatit['date']['poze'] ),

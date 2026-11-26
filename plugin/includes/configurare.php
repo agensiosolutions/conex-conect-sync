@@ -56,6 +56,12 @@ function ccs_setari_implicite() {
 		'prag_schimbari'      => 0.25,
 		'lot_aplicare'        => 200,    // Câte produse se scriu între două pauze de golire a cache-ului.
 
+		// Excepții de la regula de preț, pentru un brand sau pentru o categorie a furnizorului. Fiecare e de forma
+		// array( 'tip' => 'brand'|'categorie', 'valoare' => '...', plus câmpurile pe care le schimbă ).
+		// Prima regulă care se potrivește câștigă, în ordinea din listă, ca omul să poată pune o excepție îngustă
+		// înaintea uneia largi fără să inventăm un scor de specificitate pe care tot el ar trebui să-l ghicească.
+		'exceptii_pret'       => array(),
+
 		// Joburile sunt oprite până le pornește cineva. Un plugin care începe să scrie singur în magazin imediat ce
 		// a fost activat e un plugin în care nu ai încredere a doua oară.
 		// O regulă de categorie învățată dintr-un singur produs are 100% „încredere” fiindcă n-are cu ce se
@@ -86,17 +92,90 @@ function ccs_setari() {
 }
 
 /**
+ * Prima excepție de preț care se potrivește cu produsul, sau null.
+ *
+ * Potrivirea pe categorie se face pe **categoria furnizorului**, nu pe cea din magazin. Motivul: regulile trebuie
+ * să funcționeze la fel pentru un produs care e deja pe site și pentru unul care tocmai se importă, iar al doilea
+ * n-are încă nicio categorie din magazin. Categoria furnizorului e singurul lucru pe care îl au amândouă.
+ *
+ * Se compară cu oricare dintre cele trei niveluri ale căii, fără să conteze literele mari, fiindcă omul care
+ * scrie regula se uită la calea afișată în panou și nu știe pe ce nivel stă bucata pe care o vrea.
+ *
+ * @param array $context brand, cat1, cat2, cat3.
+ * @return array|null Regula.
+ */
+function ccs_exceptie_pret( $context ) {
+	$exceptii = ccs_setari()['exceptii_pret'];
+	if ( ! is_array( $exceptii ) || ! $exceptii || ! is_array( $context ) || ! $context ) {
+		return null;
+	}
+
+	$brand = mb_strtoupper( trim( (string) ( $context['brand'] ?? '' ) ) );
+	$cai   = array();
+	foreach ( array( 'cat1', 'cat2', 'cat3' ) as $nivel ) {
+		$c = mb_strtoupper( trim( (string) ( $context[ $nivel ] ?? '' ) ) );
+		if ( '' !== $c ) {
+			$cai[] = $c;
+		}
+	}
+
+	foreach ( $exceptii as $regula ) {
+		$valoare = mb_strtoupper( trim( (string) ( $regula['valoare'] ?? '' ) ) );
+		$tip     = (string) ( $regula['tip'] ?? '' );
+		if ( '' === $valoare ) {
+			continue;
+		}
+		if ( 'brand' === $tip && '' !== $brand && $brand === $valoare ) {
+			return $regula;
+		}
+		if ( 'categorie' === $tip && in_array( $valoare, $cai, true ) ) {
+			return $regula;
+		}
+	}
+
+	return null;
+}
+
+/**
+ * Setările de preț pentru un produs anume: cele generale, cu excepția lui pusă peste.
+ *
+ * @param array $context brand, cat1, cat2, cat3.
+ * @return array Setările.
+ */
+function ccs_setari_pret( $context = array() ) {
+	$setari = ccs_setari();
+	$regula = ccs_exceptie_pret( $context );
+	if ( ! $regula ) {
+		return $setari;
+	}
+
+	// Doar câmpurile care au voie să difere. Cota de TVA e aici fiindcă există produse cu cotă diferită, dar
+	// `include_taxa_eco` nu e: taxa verde ori se adaugă peste tot, ori nicăieri.
+	foreach ( array( 'adaos', 'cota_tva', 'marja_minima_lei', 'pret_minim_lei', 'rotunjire' ) as $camp ) {
+		if ( isset( $regula[ $camp ] ) && '' !== $regula[ $camp ] ) {
+			$setari[ $camp ] = 'rotunjire' === $camp ? (string) $regula[ $camp ] : (float) $regula[ $camp ];
+		}
+	}
+
+	return $setari;
+}
+
+/**
  * Prețul de vânzare pentru un cost de achiziție.
  *
  * `max()` între trei reguli, nu doar adaosul: adaosul procentual, marja minimă în lei și un preț minim absolut.
  * Fără marja minimă, produsele foarte ieftine se vând în pierdere oricât de mare ar fi procentul.
  *
+ * Dacă produsul are brandul sau categoria într-o excepție, regula aia bate setările generale. Contextul e
+ * opțional tocmai ca apelurile care n-au de unde să-l știe să rămână corecte, pe setările generale.
+ *
  * @param float $cost_fara_tva Prețul de achiziție fără TVA.
  * @param float $taxa_eco      Taxa verde, dacă există.
+ * @param array $context       Opțional: brand, cat1, cat2, cat3, pentru excepții.
  * @return float Prețul de vânzare, rotunjit după setare.
  */
-function ccs_pret( $cost_fara_tva, $taxa_eco = 0.0 ) {
-	$setari = ccs_setari();
+function ccs_pret( $cost_fara_tva, $taxa_eco = 0.0, $context = array() ) {
+	$setari = ccs_setari_pret( $context );
 	$cost   = (float) $cost_fara_tva * (float) $setari['cota_tva'];
 	if ( $setari['include_taxa_eco'] ) {
 		$cost += (float) $taxa_eco;

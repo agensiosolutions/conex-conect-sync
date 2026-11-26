@@ -361,6 +361,152 @@ foreach ( array( 5, 6, 12, 18 ) as $ora ) {
 verifica( 'exact 19:00 intră', true, ccs_api_in_fereastra( 19 ) );
 verifica( 'exact 05:00 nu mai intră', false, ccs_api_in_fereastra( 5 ) );
 
+/* ------------------------------------------------------------------------------------------------ excepții */
+
+sectiune( 'ccs_pret(), excepții pe brand și pe categorie' );
+
+/*
+ * Excepțiile sunt singurul loc din plugin unde două produse cu același cost ies cu prețuri diferite. O greșeală
+ * aici se vede ca un preț aiurea pe o întreagă categorie, nu pe un produs, deci merită verificate și cazurile
+ * care nu se potrivesc, nu doar cele care se potrivesc.
+ */
+
+setari(
+	array(
+		'adaos'            => 1.35,
+		'cota_tva'         => 1.21,
+		'marja_minima_lei' => 4.0,
+		'rotunjire'        => 'sus',
+		'include_taxa_eco' => false,
+		'exceptii_pret'    => array(
+			array(
+				'tip'     => 'brand',
+				'valoare' => 'MANNOL',
+				'adaos'   => 1.5,
+			),
+			array(
+				'tip'              => 'categorie',
+				'valoare'          => 'Ulei motor',
+				'adaos'            => 1.2,
+				'marja_minima_lei' => 10.0,
+			),
+		),
+	)
+);
+
+// 100 lei cost, TVA 21% = 121. Adaos general 1,35 ar da 164; excepția de brand 1,5 dă 182.
+verifica( 'fără context, se aplică regula generală', 164.0, ccs_pret( 100 ) );
+verifica( 'brandul are excepție', 182.0, ccs_pret( 100, 0, array( 'brand' => 'MANNOL' ) ) );
+verifica( 'alt brand, regula generală', 164.0, ccs_pret( 100, 0, array( 'brand' => 'MOTUL' ) ) );
+
+// Literele mari nu contează: omul scrie regula uitându-se la ce vede pe ecran.
+verifica( 'brandul se potrivește indiferent de litere', 182.0, ccs_pret( 100, 0, array( 'brand' => 'mannol' ) ) );
+verifica( 'spațiile din jur nu încurcă', 182.0, ccs_pret( 100, 0, array( 'brand' => '  MANNOL ' ) ) );
+
+// Categoria se potrivește pe oricare dintre cele trei niveluri ale căii.
+verifica( 'categoria prinde pe nivelul 1', 146.0, ccs_pret( 100, 0, array( 'cat1' => 'Ulei motor' ) ) );
+verifica( 'categoria prinde pe nivelul 3', 146.0, ccs_pret( 100, 0, array( 'cat3' => 'Ulei motor' ) ) );
+verifica( 'o categorie fără excepție lasă regula generală', 164.0, ccs_pret( 100, 0, array( 'cat1' => 'Becuri' ) ) );
+
+// Prima regulă care se potrivește câștigă. Aici brandul e înaintea categoriei în listă, deci un ulei MANNOL
+// primește adaosul de brand, nu pe cel de categorie.
+verifica(
+	'prima regulă din listă câștigă',
+	182.0,
+	ccs_pret( 100, 0, array( 'brand' => 'MANNOL', 'cat1' => 'Ulei motor' ) )
+);
+
+// Tipul regulii chiar contează: o regulă de categorie nu are voie să prindă un produs doar fiindcă brandul lui
+// se cheamă la fel, și invers. Fără verificările astea două, o regulă pusă pe „Ulei motor” ar fi schimbat prețul
+// și la un brand cu același nume.
+setari(
+	array(
+		'exceptii_pret' => array(
+			array(
+				'tip'     => 'categorie',
+				'valoare' => 'MANNOL',
+				'adaos'   => 3.0,
+			),
+		),
+	)
+);
+verifica(
+	'o regulă de categorie nu prinde un brand cu același nume',
+	164.0,
+	ccs_pret( 100, 0, array( 'brand' => 'MANNOL' ) )
+);
+
+setari(
+	array(
+		'exceptii_pret' => array(
+			array(
+				'tip'     => 'brand',
+				'valoare' => 'Ulei motor',
+				'adaos'   => 3.0,
+			),
+		),
+	)
+);
+verifica(
+	'o regulă de brand nu prinde o categorie cu același nume',
+	164.0,
+	ccs_pret( 100, 0, array( 'cat1' => 'Ulei motor' ) )
+);
+
+setari(
+	array(
+		'exceptii_pret' => array(
+			array(
+				'tip'     => 'brand',
+				'valoare' => 'MANNOL',
+				'adaos'   => 1.5,
+			),
+			array(
+				'tip'              => 'categorie',
+				'valoare'          => 'Ulei motor',
+				'adaos'            => 1.2,
+				'marja_minima_lei' => 10.0,
+			),
+		),
+	)
+);
+
+// Marja minimă din excepție se aplică acolo unde bate adaosul: cost 1 leu, TVA 21% = 1,21; adaosul de 1,2 dă
+// 1,45, dar marja minimă de 10 lei din excepție dă 11,21, rotunjit în sus 12.
+verifica( 'marja minimă din excepție intră în joc', 12.0, ccs_pret( 1, 0, array( 'cat1' => 'Ulei motor' ) ) );
+
+// O excepție cu valoarea goală nu trebuie să prindă tot. Fără verificarea asta, un rând lăsat necompletat în
+// panou ar schimba prețul la întreg magazinul.
+setari(
+	array(
+		'exceptii_pret' => array(
+			array(
+				'tip'     => 'brand',
+				'valoare' => '',
+				'adaos'   => 3.0,
+			),
+		),
+	)
+);
+verifica( 'o excepție necompletată nu prinde nimic', 164.0, ccs_pret( 100, 0, array( 'brand' => 'MANNOL' ) ) );
+verifica( 'o excepție necompletată nu prinde nici produsele fără brand', 164.0, ccs_pret( 100, 0, array( 'brand' => '' ) ) );
+
+// O excepție poate schimba și cota de TVA, fiindcă există produse cu cotă diferită.
+setari(
+	array(
+		'exceptii_pret' => array(
+			array(
+				'tip'      => 'categorie',
+				'valoare'  => 'Carti tehnice',
+				'cota_tva' => 1.05,
+			),
+		),
+	)
+);
+verifica( 'excepția poate schimba cota de TVA', 142.0, ccs_pret( 100, 0, array( 'cat2' => 'Carti tehnice' ) ) );
+
+setari( array( 'exceptii_pret' => array() ) );
+
 /* ------------------------------------------------------------------------------------------- nume de fișier */
 
 /*

@@ -65,8 +65,14 @@ function ccs_import_pregateste( $p ) {
 	$stoc  = (int) ( $p['stoc'] ?? 0 );
 	$pid   = (int) ( $p['productid'] ?? $p['product_id'] ?? 0 );
 
-	$setari = ccs_setari();
-	$pret   = ccs_pret( $cost, $taxa );
+	$context = array(
+		'brand' => $brand,
+		'cat1'  => (string) ( $p['categorie1'] ?? $p['cat1'] ?? '' ),
+		'cat2'  => (string) ( $p['categorie2'] ?? $p['cat2'] ?? '' ),
+		'cat3'  => (string) ( $p['categorie3'] ?? $p['cat3'] ?? '' ),
+	);
+	$setari = ccs_setari_pret( $context );
+	$pret   = ccs_pret( $cost, $taxa, $context );
 	$term   = ccs_categorie_pentru(
 		array(
 			'cat1' => $p['categorie1'] ?? $p['cat1'] ?? '',

@@ -143,7 +143,7 @@ function ccs_plan( $argumente = array() ) {
 	// alt produs; intră în raportul de verificat, nu în plan.
 	$legaturi = $wpdb->get_results(
 		"SELECT l.wc_product_id, l.metoda, l.incredere, l.nume_scor,
-		        c.product_id, c.cod, c.nume, c.brand, c.cost, c.taxa_eco, c.stoc, c.lipsa_runde
+		        c.product_id, c.cod, c.nume, c.brand, c.cat1, c.cat2, c.cat3, c.cost, c.taxa_eco, c.stoc, c.lipsa_runde
 		 FROM $tabel_l l
 		 INNER JOIN $tabel_p c ON c.product_id = l.product_id
 		 WHERE l.incredere IN ('A','B')
@@ -178,10 +178,21 @@ function ccs_plan( $argumente = array() ) {
 			continue;
 		}
 
-		$cost        = (float) $l->cost;
-		$taxa        = (float) $l->taxa_eco;
-		$cost_cu_tva = $cost * (float) $setari['cota_tva'] + ( $setari['include_taxa_eco'] ? $taxa : 0 );
-		$pret_tinta  = ccs_pret( $cost, $taxa );
+		$cost = (float) $l->cost;
+		$taxa = (float) $l->taxa_eco;
+
+		// Excepțiile de preț se uită la brandul și la categoria furnizorului, deci prețul se calculează cu
+		// contextul produsului, nu numai cu setările generale. Și costul cu TVA se ia din aceleași setări, altfel
+		// explicația din raport ar arăta o cotă, iar prețul ar fi calculat cu alta.
+		$context     = array(
+			'brand' => (string) $l->brand,
+			'cat1'  => (string) $l->cat1,
+			'cat2'  => (string) $l->cat2,
+			'cat3'  => (string) $l->cat3,
+		);
+		$ale_lui     = ccs_setari_pret( $context );
+		$cost_cu_tva = $cost * (float) $ale_lui['cota_tva'] + ( $ale_lui['include_taxa_eco'] ? $taxa : 0 );
+		$pret_tinta  = ccs_pret( $cost, $taxa, $context );
 		$pret_site   = '' === $s['pret'] ? null : (float) $s['pret'];
 
 		// Stocul țintă: ce spune furnizorul, sau zero dacă produsul lipsește din feed de prea multe runde la rând.
