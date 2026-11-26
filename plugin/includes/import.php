@@ -584,7 +584,17 @@ function ccs_import_webp( $cale, $calitate ) {
 	}
 	$editor->set_quality( min( 100, max( 1, (int) $calitate ) ) );
 
-	$tinta  = preg_replace( '/\.[^.\/\\]*$/', '', $cale ) . '.webp';
+	// Ținta se face din bucățile căii, nu cu un regex peste tot drumul. O cale ca `/tmp/dosar.vechi/poza` are
+	// punctul în dosar, nu în fișier, iar o tăiere pe ultimul punct ar scrie altundeva. Prima variantă scrisă
+	// aici chiar avea regexul stricat: `preg_replace` întorcea null, ținta ieșea `.webp`, o cale relativă, iar
+	// fișierul ateriza în directorul curent al procesului.
+	$dosar = rtrim( dirname( $cale ), "/\\\\" );
+	$baza  = pathinfo( $cale, PATHINFO_FILENAME );
+	$tinta = $dosar . DIRECTORY_SEPARATOR . $baza . '.webp';
+	for ( $numar = 1; file_exists( $tinta ) && $numar < 100; $numar++ ) {
+		$tinta = $dosar . DIRECTORY_SEPARATOR . $baza . '-' . $numar . '.webp';
+	}
+
 	$salvat = $editor->save( $tinta, 'image/webp' );
 	if ( is_wp_error( $salvat ) ) {
 		return $salvat;
