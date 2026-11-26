@@ -87,6 +87,44 @@ colț și cifra în culoarea stării, ceea ce păstrează citirea dintr-o privir
 de produse retrase au primit și ele iconiță, cifră mare și o bară care arată cât s-a făcut deja: fără bară,
 „2.435” și „1.826 încă de vânzare” sunt două numere care cer o scădere în minte.
 
+**Importul scrie, în sfârșit.** Până acum `ccs_import_pregateste()` doar spunea ce s-ar crea. Acum există și
+partea care creează: produs prin CRUD-ul WooCommerce, ca ciornă, cu preț, stoc, categorie, atribute și poze, legat
+pe loc de furnizor. Trei porți, în ordinea tăriei: `mod_raport`, o limită explicită sau `--forteaza`, și lipsa
+oricărei piedici pe produs.
+
+Categoria e poartă dură, verificată de două ori: o dată ca piedică în pregătire, și încă o dată chiar înainte de
+scriere. Cele 5.215 produse pe care nu știm unde să le punem nu se importă, iar asta e cerut explicit. Dublura e
+intenționată: un produs aterizat în categoria greșită se găsește mai greu decât unul care n-a fost creat.
+
+Importul e reversibil. `wp ccs revino <rulare>` știe acum și câmpul `creat`: trimite produsul la coșul de gunoi,
+nu îl șterge, și scoate legătura. Pozele descărcate rămân, ca o revenire greșită să nu coste o a doua descărcare.
+
+**Două lucruri găsite probind.** Primul, un fatal tăcut: `wp_handle_sideload()` primește primul argument prin
+referință, iar eu îi dădeam un array literal. În PHP 8 asta nu e avertisment, e eroare fatală. Rezultatul a fost
+cel mai prost cu putință: trei produse create pe jumătate, fără poze și fără legătură, trei rulări rămase pe
+„pornit”, și o comandă care se termina cu cod de ieșire 0 și fără niciun mesaj.
+
+Al doilea, numele pozelor. `media_sideload_image()` ar fi fost o linie, dar păstrează numele din URL, iar Conex
+trimite fișiere numite `4e668598-bda0-4478-bfbb-af20f332d9b6.jpg`. Pozele sunt singurul conținut pe care îl primim
+de la furnizor, fiindcă descrieri nu trimite, deci un fișier cu nume de UUID și fără text alternativ aruncă tot ce
+se putea lua din Google Images. Acum numele vine din denumirea produsului plus cod, iar `alt` e denumirea.
+`ccs_import_nume_fisier()` e scoasă separat și are nouă verificări; toate trei mutațiile încercate pe ea pică.
+
+`Lecție:` Când o funcție WordPress primește un argument prin referință, un array literal în apel e eroare fatală în
+PHP 8, nu avertisment. Simptomul e înșelător: procesul moare fără mesaj, cu cod de ieșire 0, iar munca făcută până
+atunci rămâne pe jumătate scrisă. `wp_handle_sideload()`, `wp_handle_upload()` și `wp_update_user()` sunt din
+familia asta. Dacă o comandă se oprește brusc și nu lasă nicio urmă, caută un apel cu array literal înainte să
+cauți în logica ta.
+
+`Lecție:` O operație care scrie în mai multe locuri trebuie să lase urma înainte de partea care poate cădea, nu
+după. Aici produsul se crea, apoi se descărcau pozele, apoi se scria rândul de revenire; fatalul dintre ele a lăsat
+produse pe care nimic nu le mai putea da înapoi. Simptomul: după o cădere, găsești obiecte create fără niciun rând
+care să spună cine le-a creat.
+
+`Lecție:` Fișierele luate dintr-un feed sau API vin cu nume generate, de obicei UUID-uri. Pentru un magazin, numele
+fișierului și textul alternativ sunt singura descriere pe care o are imaginea, și de multe ori furnizorul nu
+trimite descrieri deloc. Redenumește la import, din denumirea produsului; după import nu se mai face niciodată.
+
 **0.7.0 pe live.** Backup întâi (16 MB, cu `-- Dump completed on` verificat), apoi fișierele într-un director de
 probă, unde au trecut toate de `php -l` rulat cu PHP-ul serverului, 8.1.34, nu cu al meu. Abia după aia mutate
 peste. Migrarea schemei la v7 a trecut, deci `ccs_decizii.referinta` e acum `varchar(255)` și pe live: căile de

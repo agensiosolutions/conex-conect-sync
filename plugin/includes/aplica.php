@@ -301,6 +301,7 @@ function ccs_revino( $rulare_id ) {
 		'rulare'  => $rulare,
 		'produse' => 0,
 		'valori'  => 0,
+		'sterse'  => 0,
 		'esuate'  => 0,
 	);
 
@@ -310,6 +311,29 @@ function ccs_revino( $rulare_id ) {
 			$rezumat['esuate']++;
 			continue;
 		}
+		// Un produs creat de import nu se dă înapoi câmp cu câmp: se duce la coșul de gunoi, întreg. Nu se șterge
+		// definitiv, ca pozele descărcate și orice legătură făcută între timp să se poată recupera.
+		$create = array();
+		foreach ( $ale_lui as $m ) {
+			if ( 'creat' === $m->camp ) {
+				$create[] = (int) $m->id;
+			}
+		}
+		if ( $create ) {
+			wp_trash_post( $wc_id );
+			$wpdb->delete( ccs_tabel( 'links' ), array( 'wc_product_id' => $wc_id ) );
+			$rezumat['sterse']++;
+			$locuri = implode( ',', array_fill( 0, count( $create ), '%d' ) );
+			$wpdb->query(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL
+					"UPDATE $tabel SET revenit_la = %s WHERE id IN ($locuri)",
+					array_merge( array( $acum ), $create )
+				)
+			);
+			continue;
+		}
+
 		$ids_revenite = array();
 		foreach ( $ale_lui as $m ) {
 			if ( 'pret' === $m->camp ) {

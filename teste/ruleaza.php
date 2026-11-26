@@ -82,6 +82,35 @@ require __DIR__ . '/../plugin/includes/potrivire.php';
 define( 'MINUTE_IN_SECONDS', 60 );
 require __DIR__ . '/../plugin/includes/api.php';
 
+/**
+ * Varianta minimă a lui `sanitize_title()`: doar cât folosește `ccs_import_nume_fisier()`.
+ *
+ * @param string $text Textul.
+ * @return string Slug-ul.
+ */
+function sanitize_title( $text ) {
+	$text = mb_strtolower( (string) $text, 'UTF-8' );
+	$text = strtr(
+		$text,
+		array( 'ă' => 'a', 'â' => 'a', 'î' => 'i', 'ș' => 's', 'ț' => 't' )
+	);
+	$text = preg_replace( '/[^a-z0-9]+/u', '-', $text );
+	return trim( (string) $text, '-' );
+}
+
+/**
+ * `wp_parse_url()` din WordPress e `parse_url()` cu câteva corecturi care nu ne privesc aici.
+ *
+ * @param string $url       URL-ul.
+ * @param int    $componenta Componenta cerută.
+ * @return mixed Componenta.
+ */
+function wp_parse_url( $url, $componenta = -1 ) {
+	return parse_url( $url, $componenta ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+}
+
+require __DIR__ . '/../plugin/includes/import.php';
+
 /* ------------------------------------------------------------------------------------------------ ajutoare */
 
 $GLOBALS['ccs_trecute'] = 0;
@@ -331,6 +360,74 @@ foreach ( array( 5, 6, 12, 18 ) as $ora ) {
 // Marginile, scrise explicit: 19 intră, 5 nu.
 verifica( 'exact 19:00 intră', true, ccs_api_in_fereastra( 19 ) );
 verifica( 'exact 05:00 nu mai intră', false, ccs_api_in_fereastra( 5 ) );
+
+/* ------------------------------------------------------------------------------------------- nume de fișier */
+
+/*
+ * Pozele sunt singurul conținut pe care îl primim de la Conex: descrieri nu trimite. Numele fișierului e deci tot
+ * ce are produsul nou pentru Google Images, iar furnizorul le dă nume de UUID. Cazurile de mai jos sunt luate din
+ * catalogul real.
+ */
+
+sectiune( 'ccs_import_nume_fisier(), numele pozelor importate' );
+
+verifica(
+	'prima poză: denumire plus cod',
+	'laveta-piele-sintetica-chamois-43x32cm-07222.jpg',
+	ccs_import_nume_fisier( 'LAVETA PIELE SINTETICA CHAMOIS 43x32CM', '07222', 0, 'https://x.ro/4e668598-bda0-4478.jpg' )
+);
+
+verifica(
+	'a doua poză primește număr, nu suprascrie prima',
+	'set-bare-portbagaj-aluminiu-brio-120cm-07775-2.jpg',
+	ccs_import_nume_fisier( 'SET BARE PORTBAGAJ ALUMINIU BRIO 120CM', '07775', 1, 'https://x.ro/a.jpg' )
+);
+
+verifica(
+	'diacriticele nu ajung în numele fișierului',
+	'stergatoare-parbriz-cz1.jpg',
+	ccs_import_nume_fisier( 'Ștergătoare parbriz', 'CZ1', 0, 'https://x.ro/a.jpg' )
+);
+
+// O denumire de 120 de caractere ar da un fișier pe care unele sisteme de fișiere îl taie, iar WordPress adaugă
+// peste el și sufixele de dimensiune („-1000x1000”). Tăiem la 60 înainte, nu după.
+verifica_ca(
+	'denumirile lungi se taie la 60 de caractere plus cod',
+	strlen( ccs_import_nume_fisier( str_repeat( 'ABCDEFGHIJ', 12 ), '99999', 0, 'https://x.ro/a.jpg' ) ) <= 72,
+	ccs_import_nume_fisier( str_repeat( 'ABCDEFGHIJ', 12 ), '99999', 0, 'https://x.ro/a.jpg' )
+);
+
+verifica(
+	'extensia vine din URL când e una așteptată',
+	'spray-cu-silicon-22362.png',
+	ccs_import_nume_fisier( 'SPRAY CU SILICON', '22362', 0, 'https://x.ro/poza.PNG' )
+);
+
+// Un URL fără extensie, sau cu una inventată, ar produce un fișier pe care WordPress îl respinge la încărcare.
+verifica(
+	'URL fără extensie: presupunem jpg',
+	'spray-cu-silicon-22362.jpg',
+	ccs_import_nume_fisier( 'SPRAY CU SILICON', '22362', 0, 'https://x.ro/imagine?id=4' )
+);
+
+verifica(
+	'extensie neașteptată: tot jpg',
+	'spray-cu-silicon-22362.jpg',
+	ccs_import_nume_fisier( 'SPRAY CU SILICON', '22362', 0, 'https://x.ro/poza.exe' )
+);
+
+// Fără plasa asta, un produs cu denumire goală ar încerca să salveze un fișier numit „.jpg”.
+verifica(
+	'fără denumire și fără cod, rămâne id-ul produsului',
+	'produs-4312.jpg',
+	ccs_import_nume_fisier( '', '', 0, 'https://x.ro/a.jpg', 4312 )
+);
+
+verifica(
+	'fără denumire, dar cu cod',
+	'07222.jpg',
+	ccs_import_nume_fisier( '', '07222', 0, 'https://x.ro/a.jpg', 4312 )
+);
 
 /* ------------------------------------------------------------------------------------------------ rezultatul */
 

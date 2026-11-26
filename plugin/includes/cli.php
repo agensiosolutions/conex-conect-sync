@@ -375,7 +375,14 @@ class CCS_CLI {
 		if ( is_wp_error( $r ) ) {
 			WP_CLI::error( $r->get_error_message() );
 		}
-		WP_CLI::success( sprintf( '%d produse readuse la valorile dinainte (%d valori).', $r['produse'], $r['valori'] ) );
+		$spuse = array();
+		if ( $r['produse'] ) {
+			$spuse[] = sprintf( '%d produse readuse la valorile dinainte (%d valori)', $r['produse'], $r['valori'] );
+		}
+		if ( ! empty( $r['sterse'] ) ) {
+			$spuse[] = sprintf( '%d produse create de import, trecute la coșul de gunoi', $r['sterse'] );
+		}
+		WP_CLI::success( ( $spuse ? implode( '. ', $spuse ) : 'Nimic de dat înapoi' ) . '.' );
 		if ( $r['esuate'] ) {
 			WP_CLI::line( sprintf( '  produse care nu mai există  %d', $r['esuate'] ) );
 		}
@@ -686,16 +693,44 @@ class CCS_CLI {
 	}
 
 	/**
-	 * Arată ce produse s-ar putea importa și de ce nu se pot celelalte.
+	 * Arată ce produse s-ar putea importa, și le aduce pe site cu `--creeaza`.
+	 *
+	 * Fără `--creeaza` nu scrie nimic: arată doar pâlnia și primele zece produse. Produsele se creează ca ciornă,
+	 * cu poze, preț, stoc și categorie, și se leagă pe loc de furnizor. Cele fără categorie asociată nu se importă.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--creeaza]
+	 * : Chiar creează produsele. Fără asta, comanda doar arată ce s-ar importa.
+	 *
+	 * [--limita=<n>]
+	 * : Câte produse cel mult. Obligatoriu la prima rulare, dacă nu dai `--coduri` sau `--forteaza`.
+	 *
+	 * [--coduri=<lista>]
+	 * : Coduri EAN despărțite prin virgulă, ca să probezi câteva produse anume.
+	 *
+	 * [--publica]
+	 * : Publicate, nu ciorne. Implicit produsele rămân ciorne.
+	 *
+	 * [--proba]
+	 * : Numără ce s-ar crea, fără să scrie.
+	 *
+	 * [--forteaza]
+	 * : Fără limită. Creează tot ce e gata de import.
 	 *
 	 * ## EXAMPLES
 	 *
 	 *     wp ccs import
+	 *     wp ccs import --creeaza --coduri=5901234567890
+	 *     wp ccs import --creeaza --limita=50
 	 *
+	 * @param array $args       Argumentele.
+	 * @param array $asociative Opțiunile.
 	 * @return void
 	 */
-	public function import() {
-		$r = ccs_import_candidati();
+	public function import( $args, $asociative ) {
+		$face = isset( $asociative['creeaza'] );
+		$r    = ccs_import_candidati();
 
 		WP_CLI::success( sprintf( '%s produse se pot importa acum.', number_format( $r['gata'], 0, ',', '.' ) ) );
 		WP_CLI::line( '' );
@@ -724,6 +759,53 @@ class CCS_CLI {
 					$t && ! is_wp_error( $t ) ? $t->name : '?'
 				)
 			);
+		}
+
+		if ( ! $face ) {
+			WP_CLI::line( '' );
+			WP_CLI::line( 'Nimic nu s-a creat. Adaugă `--creeaza` când vrei să le aduci pe site.' );
+			return;
+		}
+
+		$coduri = isset( $asociative['coduri'] ) ? array_filter( array_map( 'trim', explode( ',', (string) $asociative['coduri'] ) ) ) : array();
+		$proba  = isset( $asociative['proba'] );
+
+		$rezumat = ccs_import_executa(
+			array(
+				'limita'   => isset( $asociative['limita'] ) ? (int) $asociative['limita'] : 0,
+				'proba'    => $proba,
+				'publica'  => isset( $asociative['publica'] ),
+				'forteaza' => isset( $asociative['forteaza'] ),
+				'coduri'   => $coduri,
+				'raport'   => $proba ? null : function ( $facut, $total ) {
+					if ( 0 === $facut % 10 || $facut === $total ) {
+						WP_CLI::line( sprintf( '  %d / %d', $facut, $total ) );
+					}
+				},
+			)
+		);
+
+		if ( is_wp_error( $rezumat ) ) {
+			WP_CLI::error( $rezumat->get_error_message() );
+		}
+
+		WP_CLI::line( '' );
+		WP_CLI::success(
+			sprintf(
+				'%d produse create, %d poze%s.',
+				$rezumat['create'],
+				$rezumat['poze'],
+				$rezumat['proba'] ? ' (probă, n-am scris nimic)' : ''
+			)
+		);
+		WP_CLI::line( sprintf( '  sărite  %d', $rezumat['sarite'] ) );
+		WP_CLI::line( sprintf( '  eșuate  %d', $rezumat['esuate'] ) );
+		foreach ( $rezumat['motive'] as $motiv => $n ) {
+			WP_CLI::line( sprintf( '    %-16s %d', $motiv, $n ) );
+		}
+		if ( $rezumat['rulare'] ) {
+			WP_CLI::line( '' );
+			WP_CLI::line( sprintf( 'Dacă trebuie date înapoi: wp ccs revino %d', $rezumat['rulare'] ) );
 		}
 	}
 
