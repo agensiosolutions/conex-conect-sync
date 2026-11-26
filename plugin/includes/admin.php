@@ -29,6 +29,7 @@ function ccs_admin_taburi() {
 		'scaderi'   => array( __( 'Prețuri care coboară', 'conex-conect-sync' ), 'arrow-down-alt', __( 'Scăderi mai mari de jumătate', 'conex-conect-sync' ), 'scadere' ),
 		'subcost'   => array( __( 'Vândute sub cost', 'conex-conect-sync' ), 'warning', __( 'Preț mai mic decât achiziția', 'conex-conect-sync' ), 'sub_cost' ),
 		'stoc'      => array( __( 'Stocul', 'conex-conect-sync' ), 'archive', __( 'Cantități și produse epuizate', 'conex-conect-sync' ), '' ),
+		'catalog'   => array( __( 'Catalogul', 'conex-conect-sync' ), 'list-view', __( 'Ce dispare și ce vine nou', 'conex-conect-sync' ), '' ),
 	);
 }
 
@@ -191,6 +192,35 @@ function ccs_admin_potrivire( $proaspat = false ) {
 }
 
 /**
+ * Candidații la import, ținuți în cache.
+ *
+ * Calculul trece prin toate produsele nelegate și cheamă maparea de categorii pentru fiecare, deci nu are ce căuta
+ * la fiecare încărcare de pagină.
+ *
+ * @param bool $proaspat Dacă true, recalculează.
+ * @return array Rezumatul.
+ */
+function ccs_admin_candidati( $proaspat = false ) {
+	static $memorie = null;
+	if ( null !== $memorie && ! $proaspat ) {
+		return $memorie;
+	}
+	if ( ! $proaspat ) {
+		$cache = get_transient( 'ccs_candidati_cache' );
+		if ( is_array( $cache ) ) {
+			$memorie = $cache;
+			return $memorie;
+		}
+	}
+	$r = ccs_import_candidati();
+	// Lista întreagă n-are ce căuta în cache; păstrăm doar primele, pentru exemple.
+	$r['lista'] = array_slice( $r['lista'], 0, 10 );
+	set_transient( 'ccs_candidati_cache', $r, 10 * MINUTE_IN_SECONDS );
+	$memorie = $r;
+	return $memorie;
+}
+
+/**
  * Șterge cache-urile.
  *
  * @return void
@@ -198,6 +228,7 @@ function ccs_admin_potrivire( $proaspat = false ) {
 function ccs_admin_uita() {
 	delete_transient( 'ccs_plan_cache' );
 	delete_transient( 'ccs_potrivire_cache' );
+	delete_transient( 'ccs_candidati_cache' );
 }
 
 /**
@@ -494,3 +525,55 @@ function ccs_admin_ajax_joburi() {
 	);
 }
 add_action( 'wp_ajax_ccs_joburi', 'ccs_admin_ajax_joburi' );
+
+/**
+ * Retrage de la vânzare un grup de produse.
+ *
+ * @return void
+ */
+function ccs_admin_ajax_retrage() {
+	ccs_admin_ajax_poarta();
+
+	$grup    = sanitize_key( wp_unslash( $_POST['grup'] ?? '' ) );
+	$grupuri = ccs_retragere_grupuri();
+	if ( ! isset( $grupuri[ $grup ] ) ) {
+		wp_send_json_error( array( 'mesaj' => __( 'Grup necunoscut.', 'conex-conect-sync' ) ) );
+	}
+
+	$r = ccs_retrage( array_keys( $grupuri[ $grup ] ), array( 'motiv' => 'din panou, grupul ' . $grup ) );
+
+	wp_send_json_success(
+		array(
+			'efect' => sprintf(
+				/* translators: 1: câte produse, 2: id-ul rulării. */
+				__( '%1$d produse trecute pe stoc epuizat. Se pot readuce cu `wp ccs revino %2$d`.', 'conex-conect-sync' ),
+				$r['atinse'],
+				$r['rulare']
+			),
+		)
+	);
+}
+add_action( 'wp_ajax_ccs_retrage', 'ccs_admin_ajax_retrage' );
+
+/**
+ * Filtrează lista de produse din WordPress pe un grup al nostru.
+ *
+ * Pentru „ce dispare” nu construim tabel propriu: alea sunt produse WooCommerce reale, iar clientul le lucrează mai
+ * bine în lista pe care o știe, cu filtrele și acțiunile ei.
+ *
+ * @param WP_Query $q Interogarea.
+ * @return void
+ */
+function ccs_admin_filtru_lista( $q ) {
+	if ( ! is_admin() || ! $q->is_main_query() || 'product' !== $q->get( 'post_type' ) ) {
+		return;
+	}
+	$grup = isset( $_GET['ccs_grup'] ) ? sanitize_key( wp_unslash( $_GET['ccs_grup'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( ! $grup || ! current_user_can( CCS_CAPACITATE ) ) {
+		return;
+	}
+	$grupuri = ccs_retragere_grupuri();
+	// `post__in` gol ar întoarce tot, deci punem un id imposibil când grupul e gol.
+	$q->set( 'post__in', isset( $grupuri[ $grup ] ) && $grupuri[ $grup ] ? array_keys( $grupuri[ $grup ] ) : array( 0 ) );
+}
+add_action( 'pre_get_posts', 'ccs_admin_filtru_lista' );

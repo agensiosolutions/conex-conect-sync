@@ -79,6 +79,87 @@ function ccs_rulare_stop( $id, $stare, $rezumat = array() ) {
 }
 
 /**
+ * Mișcarea catalogului: ce a intrat și ce a ieșit la furnizor.
+ *
+ * Restanța adunată până acum se rezolvă o dată; mișcarea e ce se schimbă de la o rulare la alta și rămâne
+ * interesantă pentru totdeauna. Datele sunt deja în tabel: `prima_vedere` spune când a apărut un produs, iar
+ * `ultima_vedere` plus `lipsa_runde` spun când a dispărut.
+ *
+ * Atenție la citire: cifrele astea au sens doar dacă preluarea rulează regulat. Cu joburile oprite, „ultimele șapte
+ * zile” înseamnă de fapt „de la ultimele două-trei rulări pe care le-a pornit cineva de mână”.
+ *
+ * @param int $zile Câte zile în urmă.
+ * @return array Cifrele mișcării.
+ */
+function ccs_miscare( $zile = 7 ) {
+	global $wpdb;
+	$tabel = ccs_tabel( 'products' );
+	$de_la = gmdate( 'Y-m-d H:i:s', strtotime( '-' . (int) $zile . ' days', (int) current_datetime()->format( 'U' ) ) );
+
+	$ultima = $wpdb->get_row(
+		"SELECT inceput, sfarsit, rezumat FROM " . ccs_tabel( 'runs' ) . " WHERE tip = 'catalog' AND stare = 'gata' ORDER BY id DESC LIMIT 1" // phpcs:ignore WordPress.DB.PreparedSQL
+	);
+	$rezumat_ultima = $ultima && $ultima->rezumat ? json_decode( $ultima->rezumat, true ) : array();
+
+	// Prima preluare a scris tot catalogul deodată, deci toate produsele au `prima_vedere` în ziua aia. Fără
+	// pragul ăsta, „produse noi în ultimele șapte zile” ar fi tot catalogul, în prima săptămână de funcționare.
+	$prag = ccs_catalog_dupa_pornire();
+	$de_la = max( $de_la, $prag );
+
+	return array(
+		'zile'          => (int) $zile,
+		'ultima_rulare' => $ultima ? $ultima->inceput : '',
+		'ultima'        => is_array( $rezumat_ultima ) ? $rezumat_ultima : array(),
+		'de_la_pornire' => '' === $prag,
+		'noi'           => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $tabel WHERE prima_vedere > %s", $de_la ) ), // phpcs:ignore WordPress.DB.PreparedSQL
+		'iesite'        => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $tabel WHERE lipsa_runde > 0 AND ultima_vedere >= %s", $de_la ) ), // phpcs:ignore WordPress.DB.PreparedSQL
+		'lipsesc_total' => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $tabel WHERE lipsa_runde > 0" ), // phpcs:ignore WordPress.DB.PreparedSQL
+		'in_catalog'    => (int) $wpdb->get_var( "SELECT COUNT(*) FROM $tabel WHERE lipsa_runde = 0" ), // phpcs:ignore WordPress.DB.PreparedSQL
+	);
+}
+
+/**
+ * Momentul de după care un produs chiar e nou, nu doar scris la prima preluare.
+ *
+ * @return string Data, în format MySQL. Gol dacă n-a rulat nimic.
+ */
+function ccs_catalog_dupa_pornire() {
+	global $wpdb;
+	$prima = $wpdb->get_var(
+		"SELECT sfarsit FROM " . ccs_tabel( 'runs' ) . " WHERE tip = 'catalog' AND stare = 'gata' ORDER BY id ASC LIMIT 1" // phpcs:ignore WordPress.DB.PreparedSQL
+	);
+	return $prima ? (string) $prima : '';
+}
+
+/**
+ * Produsele intrate sau ieșite din catalog în ultimele zile.
+ *
+ * @param string $ce     'noi' sau 'iesite'.
+ * @param int    $zile   Câte zile în urmă.
+ * @param int    $limita Câte, cel mult.
+ * @return array Rândurile.
+ */
+function ccs_miscare_lista( $ce, $zile = 7, $limita = 10 ) {
+	global $wpdb;
+	$tabel = ccs_tabel( 'products' );
+	$de_la = gmdate( 'Y-m-d H:i:s', strtotime( '-' . (int) $zile . ' days', (int) current_datetime()->format( 'U' ) ) );
+
+	$de_la = max( $de_la, ccs_catalog_dupa_pornire() );
+	$unde  = 'noi' === $ce
+		? $wpdb->prepare( 'prima_vedere > %s', $de_la )
+		: $wpdb->prepare( 'lipsa_runde > 0 AND ultima_vedere >= %s', $de_la );
+
+	return (array) $wpdb->get_results(
+		$wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL
+			"SELECT product_id, cod, nume, brand, cost, stoc, prima_vedere, ultima_vedere
+			 FROM $tabel WHERE $unde ORDER BY " . ( 'noi' === $ce ? 'prima_vedere' : 'ultima_vedere' ) . " DESC LIMIT %d",
+			(int) $limita
+		)
+	);
+}
+
+/**
  * Preia catalogul și îl scrie în tabelul propriu, raportând diferențele.
  *
  * Protecție, din `PLAN.md` și confirmată de eșecurile măsurate: dacă numărul de produse scade brusc față de rularea

@@ -257,6 +257,44 @@
 		} );
 	}
 
+	/* Retragerea unui grup de la vanzare. Doi pasi, ca la „la fel pentru toate”: operatia atinge mii de produse. */
+	document.addEventListener( 'click', function ( ev ) {
+		var buton = ev.target.closest( '.ccs-retrage' );
+		if ( ! buton ) {
+			return;
+		}
+		ev.preventDefault();
+
+		var grup = buton.closest( '[data-grup]' );
+		var stare = grup.querySelector( '.ccs-stare-text' );
+
+		if ( 'da' !== buton.getAttribute( 'data-confirma' ) ) {
+			buton.setAttribute( 'data-confirma', 'da' );
+			buton.textContent = texte.confirma;
+			return;
+		}
+
+		buton.disabled = true;
+		buton.textContent = buton.getAttribute( 'data-eticheta' );
+		buton.removeAttribute( 'data-confirma' );
+		arataStare( stare, texte.lucrez, false );
+
+		trimite( 'ccs_retrage', { grup: buton.getAttribute( 'data-grup' ) } )
+			.then( function ( raspuns ) {
+				if ( ! raspuns || ! raspuns.success ) {
+					buton.disabled = false;
+					arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || texte.eroare, true );
+					return;
+				}
+				arataStare( stare, raspuns.data.efect, false );
+				buton.remove();
+			} )
+			.catch( function () {
+				buton.disabled = false;
+				arataStare( stare, texte.eroare, true );
+			} );
+	} );
+
 	/* ---------------------------------------------------------------- simulatorul de preț */
 
 	if ( ! document.getElementById( 'ccs-adaos' ) || ! sim.cost || ! sim.cost.length ) {

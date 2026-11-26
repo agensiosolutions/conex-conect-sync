@@ -317,6 +317,19 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-efect .ccs-total th, .ccs-efect .ccs-total td { padding-top: 12px; border-top: 1px solid var(--c-linie-tare); border-bottom: 0; font-size: 14px; }
 .ccs-efect .ccs-total th { font-weight: 500; color: var(--c-text); }
 
+/* Grupurile din cardul „Ce dispare”: fiecare cu numele, explicatia si actiunea lui. */
+.ccs-grup { padding: 16px 0; border-top: 1px solid var(--c-linie); }
+.ccs-grup:first-of-type { padding-top: 0; border-top: 0; }
+.ccs-grup:last-of-type { padding-bottom: 0; }
+.ccs-grup__cap { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; }
+.ccs-grup__cap strong { font-size: 14px; font-weight: 500; color: var(--c-text); }
+.ccs-grup .ccs-mic { margin: 0 0 12px; max-width: 56ch; }
+.ccs-grup .ccs-butoane { margin: 0; }
+
+/* Cele doua carduri din josul tabului Catalogul stau pe coloane egale. */
+.ccs-doua--egale { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.ccs-doua--egale > .ccs-card { margin-bottom: 0; }
+
 /* ---------------------------------------------------------------- tabele */
 .ccs-tabel-cadru { border: 1px solid var(--c-linie); border-radius: 8px; overflow: hidden; }
 .ccs-tabel { width: 100%; border-collapse: collapse; }

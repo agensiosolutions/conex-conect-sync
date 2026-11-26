@@ -45,6 +45,34 @@ iar `wp ccs revino` a readus 38 de valori exact cum erau.
 Pus pe live ca 0.5.0, cu backup înainte. Cele 26 sunt retrase: 19 trecute pe epuizat, 7 erau deja, 38 de valori
 păstrate pentru revenire. Pagina produsului arată „Stoc epuizat” și rămâne în Google, cum trebuie.
 
+**Tabul „Catalogul”.** Împărțit în două feluri de informație, pentru că răspund la întrebări diferite: mișcarea,
+adică ce s-a schimbat la furnizor de la o rulare la alta, și restanța adunată până acum. Prima rămâne interesantă
+pentru totdeauna, a doua se rezolvă o dată.
+
+Mișcarea n-a cerut date noi: tabelul de catalog are deja `prima_vedere`, `ultima_vedere` și `lipsa_runde`. O
+capcană, văzută imediat la prima rulare: prima preluare a scris tot catalogul deodată, deci toate produsele au
+`prima_vedere` în aceeași zi, iar „produse noi în ultimele șapte zile” arăta 20.760. Pragul e sfârșitul primei
+rulări reușite; după el, cifrele devin 5 noi și 35 ieșite, adică adevărul.
+
+Jos, două coloane. „Ce dispare”, pe grupuri după tiparul codului, fiecare cu explicația de unde vine și cu buton de
+retragere. „Ce vine nou”, ca pâlnie: gata de import, fără poză, fără categorie, fără stoc.
+
+Două hotărâri de structură. Pentru „ce dispare” n-am construit tabel propriu: alea sunt produse WooCommerce reale,
+iar „Vezi lista” duce în lista de produse din WordPress, filtrată pe grup printr-un `pre_get_posts`. Clientul
+lucrează acolo cu filtrele și acțiunile pe care le știe. Pentru „ce vine nou” tabelul propriu e inevitabil, fiindcă
+produsele alea nu există încă în WordPress.
+
+Niciun buton de ștergere, nicăieri, nici pentru produse ieșite din catalog de un an. Singura acțiune e retragerea
+de la vânzare.
+
+`Lecție:` Într-un tablou de bord, desparte fluxul de restanță. „Ce s-a schimbat săptămâna asta” și „ce s-a adunat
+până acum” arată la fel ca date, dar prima se citește mereu, iar a doua o dată. Puse împreună, cifra mare a
+restanței îneacă mișcarea, care e singura care spune dacă sistemul e viu.
+
+`Lecție:` Prima rulare a unei sincronizări strică orice statistică de tip „nou în ultimele N zile”, pentru că
+inserează tot deodată. Ține minte când s-a încheiat rularea de pornire și numără numai după ea. Simptomul: în prima
+săptămână, „produse noi” e egal cu tot catalogul.
+
 `Lecție:` Un tipar de cod spune de unde vine un produs, iar asta e adesea tot ce-ți trebuie ca să împarți un catalog
 moștenit. La Cez Auto, `CZ1135` e pus de mână de echipă și `10000` a venit din feed-ul vechi; aceeași întrebare
 pusă clientului produs cu produs ar fi însemnat 2.743 de răspunsuri, iar pe tipare a însemnat două.
