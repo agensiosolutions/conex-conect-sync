@@ -65,6 +65,35 @@ produsele alea nu există încă în WordPress.
 Niciun buton de ștergere, nicăieri, nici pentru produse ieșite din catalog de un an. Singura acțiune e retragerea
 de la vânzare.
 
+**Tabul refăcut, după ce Iulian a spus că e sec.** Avea dreptate și motivul e instructiv: celelalte taburi pun o
+întrebare și primesc un răspuns, deci gri plus o pastilă ajung. Tabul ăsta arată două cataloage de zeci de mii de
+produse, iar acolo gri înseamnă „citește toate cifrele și adună-le singur”.
+
+Ce s-a schimbat: trei carduri de acțiune în culoare plină, cu cifra mare și cu ce e de făcut scris pe ele; două
+bare segmentate, una pentru produsele de pe site și una pentru catalogul Conex, fiecare cu legendă; mișcarea cu un
+plus verde și un minus chihlimbar.
+
+Plus cele două lucruri care lipseau și pe care Iulian le-a numit: **asocierea categoriilor**, ca listă de reguli cu
+calea furnizorului, raionul de pe site, bara de încredere și cuvântul care împarte o cale în două; și **cum arată
+un produs adus**, cinci carduri cu poza reală de la furnizor, numele, prețul calculat și etichetele de raion, stoc
+și număr de poze.
+
+Al doilea a fost cel mai ieftin de făcut și probabil cel mai valoros: adresele pozelor erau deja în tabel, iar un
+`<img>` în admin arată mai bine decât orice descriere a ce s-ar importa.
+
+`Lecție:` Regula de design se alege după ce face ecranul, nu pentru tot produsul. Un ecran care pune o întrebare se
+descurcă cu gri și o singură culoare de accent. Un ecran care arată un catalog de zeci de mii de rânduri are nevoie
+de culoare plină și de bare, altfel omul trebuie să citească și să adune singur. Aceeași paletă, altă cantitate.
+
+`Lecție:` Când clientul spune „nu se deduce nimic de la prima vedere”, nu adăuga explicații, adaugă forme. O bară
+segmentată cu patru culori spune în două secunde ce spune un tabel cu patru rânduri în douăzeci. Și arată ce
+lipsește: la Cez Auto, bara catalogului Conex face vizibil dintr-o privire că jumătate din el e blocat de lipsa
+pozelor, ceea ce nicio cifră din tabel nu transmitea.
+
+`Lecție:` Dacă produsele tale au poze, arată-le. O previzualizare a cinci produse cu poza reală răspunde la
+întrebarea „ce se va importa” mai bine decât orice listă de câmpuri, și costă un `<img>` dacă adresele sunt deja în
+baza ta.
+
 `Lecție:` Într-un tablou de bord, desparte fluxul de restanță. „Ce s-a schimbat săptămâna asta” și „ce s-a adunat
 până acum” arată la fel ca date, dar prima se citește mereu, iar a doua o dată. Puse împreună, cifra mare a
 restanței îneacă mișcarea, care e singura care spune dacă sistemul e viu.

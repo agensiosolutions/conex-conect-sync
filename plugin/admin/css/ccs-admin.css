@@ -395,3 +395,130 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   .ccs-admin * { transition: none !important; }
   .ccs-btn:active { transform: none; }
 }
+
+/* ================================================================ tabul Catalogul
+ *
+ * Aici regula „culoare doar pe stare” din restul panoului se relaxează deliberat. Celelalte taburi pun o întrebare
+ * și primesc un răspuns; ăsta arată două cataloage de zeci de mii de produse și trebuie citit dintr-o privire.
+ * Culoarea plină e singurul lucru care face o bară de 20.718 produse inteligibilă fără să citești cifre.
+ *
+ * Un sens, o culoare, peste tot în tab:
+ *   verde      = merge, e sincronizat sau gata de intrat
+ *   albastru   = al magazinului, pus de om
+ *   chihlimbar = cere o hotărâre
+ *   gri        = blocat de furnizor, nu avem ce face
+ */
+.ccs-admin {
+  --c-verde-plin: #16a34a;
+  --c-verde-moale: #86efac;
+  --c-albastru-plin: #2563eb;
+  --c-albastru-moale: #93c5fd;
+  --c-galben-plin: #d97706;
+  --c-galben-moale: #fcd34d;
+  --c-gri-plin: #9ca3af;
+  --c-gri-moale: #e5e7eb;
+}
+
+/* ---------------------------------------------------------------- bara segmentată */
+.ccs-bara { margin-bottom: 24px; }
+.ccs-bara:last-child { margin-bottom: 0; }
+.ccs-bara__cap { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.ccs-bara__titlu { font-size: 14px; font-weight: 500; color: var(--c-text); }
+.ccs-bara__total { font-size: 20px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.ccs-bara__pista { display: flex; height: 28px; border-radius: 8px; overflow: hidden; background: var(--c-gri-moale); }
+.ccs-bara__bucata { position: relative; min-width: 3px; transition: filter 140ms var(--c-curba); }
+.ccs-bara__bucata:hover { filter: brightness(1.08); }
+.ccs-bara__bucata--verde { background: var(--c-verde-plin); }
+.ccs-bara__bucata--albastru { background: var(--c-albastru-plin); }
+.ccs-bara__bucata--galben { background: var(--c-galben-plin); }
+.ccs-bara__bucata--gri { background: var(--c-gri-plin); }
+.ccs-bara__bucata--verde-moale { background: var(--c-verde-moale); }
+.ccs-bara__bucata--gri-moale { background: var(--c-gri-moale); }
+
+.ccs-legenda { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; }
+.ccs-legenda__item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--c-text-2); }
+.ccs-legenda__pata { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.ccs-legenda__cifra { font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- carduri de acțiune */
+.ccs-actiuni-mari { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.ccs-actiune {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 20px; border-radius: 12px; color: #fff;
+}
+.ccs-actiune--verde { background: var(--c-verde-plin); }
+.ccs-actiune--galben { background: var(--c-galben-plin); }
+.ccs-actiune--albastru { background: var(--c-albastru-plin); }
+.ccs-actiune--gri { background: var(--c-text); }
+.ccs-actiune__cifra { font-size: 32px; line-height: 36px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ccs-actiune__titlu { font-size: 15px; font-weight: 500; }
+.ccs-actiune__desc { font-size: 13px; line-height: 18px; opacity: .88; }
+.ccs-actiune .ccs-btn {
+  align-self: flex-start; margin-top: 4px;
+  background: rgba(255, 255, 255, .18); border-color: rgba(255, 255, 255, .4); color: #fff;
+}
+.ccs-actiune .ccs-btn:hover { background: rgba(255, 255, 255, .3); color: #fff; }
+.ccs-actiune .ccs-stare-text { color: #fff; }
+
+/* ---------------------------------------------------------------- mișcarea */
+.ccs-miscare { display: flex; flex-wrap: wrap; gap: 24px; }
+.ccs-miscare__item { display: flex; align-items: center; gap: 12px; }
+.ccs-miscare__semn {
+  display: grid; place-items: center; width: 40px; height: 40px;
+  border-radius: 10px; font-size: 20px; font-weight: 600; color: #fff;
+}
+.ccs-miscare__semn--intra { background: var(--c-verde-plin); }
+.ccs-miscare__semn--iese { background: var(--c-galben-plin); }
+.ccs-miscare__cifra { display: block; font-size: 20px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.ccs-miscare__eticheta { display: block; font-size: 13px; color: var(--c-text-3); }
+
+/* ---------------------------------------------------------------- asocierea categoriilor */
+.ccs-mapare { display: grid; gap: 2px; }
+.ccs-mapare__rand {
+  display: grid; grid-template-columns: minmax(0, 1fr) 24px minmax(0, 220px) 84px 56px;
+  align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px;
+}
+.ccs-mapare__rand:nth-child(odd) { background: var(--c-fundal); }
+.ccs-mapare__cale { font-size: 13px; color: var(--c-text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ccs-mapare__sageata { color: var(--c-text-3); text-align: center; }
+.ccs-mapare__dest { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--c-text); }
+.ccs-mapare__dest::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--c-verde-plin); flex: none; }
+.ccs-mapare__rand--cuvant .ccs-mapare__dest::before { background: var(--c-albastru-plin); }
+.ccs-mapare__rand--fara .ccs-mapare__dest { color: var(--c-galben); }
+.ccs-mapare__rand--fara .ccs-mapare__dest::before { background: var(--c-galben-plin); }
+.ccs-mapare__bara { height: 6px; border-radius: 3px; background: var(--c-gri-moale); overflow: hidden; }
+.ccs-mapare__bara span { display: block; height: 100%; background: var(--c-verde-plin); }
+.ccs-mapare__n { font-size: 12px; color: var(--c-text-3); text-align: right; font-variant-numeric: tabular-nums; }
+.ccs-mapare__cuvant {
+  display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px;
+  background: var(--c-albastru-fundal); color: var(--c-albastru-inchis);
+  font-family: var(--c-mono); font-size: 11px; line-height: 18px;
+}
+
+/* ---------------------------------------------------------------- previzualizarea unui produs importat */
+.ccs-produse-noi { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.ccs-produs-nou {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--c-linie); border-radius: 12px; overflow: hidden; background: var(--c-card);
+}
+.ccs-produs-nou__poza {
+  display: grid; place-items: center; height: 150px; padding: 12px;
+  background: #fff; border-bottom: 1px solid var(--c-linie);
+}
+.ccs-produs-nou__poza img { max-width: 100%; max-height: 126px; object-fit: contain; }
+.ccs-produs-nou__corp { display: flex; flex-direction: column; gap: 6px; padding: 12px; }
+.ccs-produs-nou__nume { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--c-text); }
+.ccs-produs-nou__pret { font-size: 18px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.ccs-produs-nou__jos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.ccs-eticheta {
+  display: inline-flex; align-items: center; padding: 0 8px;
+  border-radius: 4px; font-size: 11px; line-height: 20px; font-weight: 500; color: #fff;
+}
+.ccs-eticheta--categorie { background: var(--c-albastru-plin); }
+.ccs-eticheta--stoc { background: var(--c-verde-plin); }
+.ccs-eticheta--poze { background: var(--c-text-3); }
+
+@media (max-width: 960px) {
+  .ccs-mapare__rand { grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr); }
+  .ccs-mapare__bara, .ccs-mapare__n { display: none; }
+}

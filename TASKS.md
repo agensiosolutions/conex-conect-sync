@@ -100,6 +100,12 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Tabul „Catalogul”, refăcut ca să se citească dintr-o privire (26.11.2026)
+      Trei carduri de acțiune în culoare plină, două bare segmentate pentru cele două cataloage, mișcarea cu plus
+      și minus, asocierea categoriilor cu bară de încredere, și cinci produse desenate exact cum ar arăta pe site,
+      cu poza furnizorului. Aici regula „culoare doar pe stare” se relaxează deliberat: tabul arată două cataloage
+      de zeci de mii de produse, iar culoarea plină e singurul lucru care le face inteligibile fără să citești
+      cifre.
 - [x] Tabul „Catalogul” pe live, versiunea 0.6.0 (26.11.2026)
       Pe datele de acolo: 3 produse noi, 10 ieșite, 20.718 în catalog. Grupurile: 2.439 din feed (1.830 încă de
       vânzare), 292 manuale, 16 altele, 26 excluse (toate retrase). Toate cele 7 taburi fără erori.
