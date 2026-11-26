@@ -41,6 +41,15 @@ function ccs_setari_implicite() {
 		// care începe să creeze produse fără ca cineva să fi apăsat ceva e un plugin în care nu ai încredere a doua
 		// oară. Plafonul e pe rulare, ca o zi în care furnizorul adaugă cinci mii de poze să nu umple magazinul
 		// într-o noapte.
+		// Emailul. Există fiindcă feed-ul Mega Drive s-a oprit în noiembrie 2025 și nimeni n-a aflat până în
+		// octombrie 2026. Alertele sunt pornite implicit, rezumatul zilnic la fel; adresa goală înseamnă adresa
+		// administratorului site-ului.
+		'email_catre'           => '',
+		'email_alerte'          => true,
+		'email_rezumat'         => true,
+		'alerta_pauza_ore'      => 12,    // Cât timp nu se repetă aceeași alertă.
+		'ore_fara_sincronizare' => 6,     // După câte ore fără o preluare reușită se dă alarma.
+
 		'import_automat'        => false,
 		'import_automat_limita' => 50,
 

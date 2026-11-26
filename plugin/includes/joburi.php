@@ -162,8 +162,12 @@ function ccs_job_catalog() {
 		$catalog = ccs_catalog_preia();
 		if ( is_wp_error( $catalog ) ) {
 			ccs_jurnal( 'eroare', 'Preluarea catalogului a eșuat: ' . $catalog->get_error_message() );
+			// Scrisă, nu doar jurnalizată: verificarea de sănătate trebuie să poată spune ce fel de problemă e,
+			// iar un token respins și un catalog înjumătățit cer de la om lucruri complet diferite.
+			ccs_eroare_retine( $catalog );
 			return;
 		}
+		ccs_eroare_uita();
 
 		// Potrivirea se reface doar dacă s-au adăugat produse noi la furnizor; altfel legăturile sunt aceleași.
 		if ( $catalog['noi'] > 0 ) {
