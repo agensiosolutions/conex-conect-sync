@@ -742,6 +742,10 @@ class CCS_CLI {
 		WP_CLI::line( sprintf( '    gata de import                     %s', number_format( $r['gata'], 0, ',', '.' ) ) );
 
 		if ( ! $r['lista'] ) {
+			if ( $face ) {
+				WP_CLI::line( '' );
+				WP_CLI::warning( 'Nu e nimic de importat, deci n-am creat nimic.' );
+			}
 			return;
 		}
 		WP_CLI::line( '' );
