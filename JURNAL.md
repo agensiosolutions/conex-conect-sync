@@ -87,6 +87,25 @@ colț și cifra în culoarea stării, ceea ce păstrează citirea dintr-o privir
 de produse retrase au primit și ele iconiță, cifră mare și o bară care arată cât s-a făcut deja: fără bară,
 „2.435” și „1.826 încă de vânzare” sunt două numere care cer o scădere în minte.
 
+**0.7.0 pe live.** Backup întâi (16 MB, cu `-- Dump completed on` verificat), apoi fișierele într-un director de
+probă, unde au trecut toate de `php -l` rulat cu PHP-ul serverului, 8.1.34, nu cu al meu. Abia după aia mutate
+peste. Migrarea schemei la v7 a trecut, deci `ccs_decizii.referinta` e acum `varchar(255)` și pe live: căile de
+categorie care depășesc 64 de caractere se pot salva. Scrierea în WooCommerce e în continuare oprită,
+`mod_raport` e tot pe `true`.
+
+Pe live au ieșit la iveală două texte pe care previzualizarea locală nu le arătase, fiindcă apar doar în stări
+goale: „Niciun produs pot fi importate”, un dezacord dintr-o etichetă de plural refolosită, și starea goală a
+regulilor de categorie, care îi spunea ownerului să ruleze `wp ccs categorii`. Amândouă corectate și reurcate.
+
+`Lecție:` Stările goale scapă de la verificare tocmai pentru că pe mediul de lucru sunt pline cu date. Mediul
+local avea 1.059 de produse gata de import, deci ramura „niciunul” nu s-a randat niciodată; pe live, unde pozele
+nu fuseseră încă preluate, s-a văzut din prima. Când treci textele unei interfețe printr-o revizuire, caută
+explicit ramurile goale în cod, nu te baza pe ce apare pe ecran.
+
+`Lecție:` O stare goală care spune „rulează comanda X” e scrisă pentru dezvoltator, nu pentru client. Simptomul:
+textul cere o acțiune pe care omul care îl citește n-are cum să o facă. Spune în schimb ce se întâmplă de la sine
+și când.
+
 **Textele din panou, trecute prin regulile de redactare.** Iulian a dat două exemple: „Aceleași cifre pe care
 le-ai vedea într-un tabel, dar pe lungime” și „alege raionul”. Amândouă greșesc în feluri diferite, și amândouă
 sunt greșeli pe care le-am făcut eu, nu moșteniri.
