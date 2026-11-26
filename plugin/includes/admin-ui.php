@@ -1008,8 +1008,8 @@ function ccs_ui_catalog_actiuni( $c, $grupuri, $m ) {
 		printf(
 			'<div class="ccs-actiune ccs-actiune--albastru"><span class="ccs-actiune__icon dashicons dashicons-category" aria-hidden="true"></span><span class="ccs-actiune__cifra">%s</span><span class="ccs-actiune__titlu">%s</span><span class="ccs-actiune__desc">%s</span></div>',
 			esc_html( ccs_nr( $c['fara_categorie'] ) ),
-			esc_html__( 'produse așteaptă o categorie', 'conex-conect-sync' ),
-			esc_html__( 'Aproape toate sunt piese OE. Dacă hotărăști că intri pe ele, intră și produsele.', 'conex-conect-sync' )
+			esc_html__( 'produse așteaptă doar o categorie', 'conex-conect-sync' ),
+			esc_html__( 'Au poză, cost și stoc. Singurul lucru care le oprește e că nu știm în ce raion de pe site merg.', 'conex-conect-sync' )
 		);
 	}
 
@@ -1048,7 +1048,7 @@ function ccs_ui_catalog_bare( $c, $grupuri, $pot, $m ) {
 		array(
 			array( 'verde', __( 'deja pe site', 'conex-conect-sync' ), $legate ),
 			array( 'verde-moale', __( 'gata de adus', 'conex-conect-sync' ), $c['gata'] ),
-			array( 'galben', __( 'așteaptă o categorie', 'conex-conect-sync' ), $c['fara_categorie'] ),
+			array( 'galben', __( 'le lipsește doar categoria', 'conex-conect-sync' ), $c['fara_categorie'] ),
 			array( 'gri', __( 'fără poză la furnizor', 'conex-conect-sync' ), $c['fara_poza'] ),
 			array( 'gri-moale', __( 'fără stoc', 'conex-conect-sync' ), $c['fara_stoc'] ),
 		)
