@@ -623,6 +623,100 @@ add_action( 'wp_ajax_ccs_mapeaza', 'ccs_admin_ajax_mapeaza' );
  * @param WP_Query $q Interogarea.
  * @return void
  */
+/**
+ * Grupurile după care se poate filtra lista de produse din wp-admin.
+ *
+ * Ownerul lucrează în `Produse`, nu în panoul pluginului, și cu mii de produse în listă nu mai găsește nimic.
+ * Grupurile de aici sunt întrebările pe care și le pune de fapt: „ce vine de la Conex”, „ce am pus eu de mână”,
+ * „ce a rămas din feed-ul vechi”.
+ *
+ * @return array cheie => eticheta.
+ */
+function ccs_admin_lista_grupuri() {
+	return array(
+		'conex'          => __( 'Legate de Conex', 'conex-conect-sync' ),
+		'manuale'        => __( 'Introduse manual de echipă', 'conex-conect-sync' ),
+		'din_feed'       => __( 'Rămase din feed-ul vechi', 'conex-conect-sync' ),
+		'ascunse'        => __( 'Ascunse din catalog', 'conex-conect-sync' ),
+		'fara_categorie' => __( 'Fără categorie', 'conex-conect-sync' ),
+	);
+}
+
+/**
+ * Id-urile produselor dintr-un grup, luate direct din baza de date.
+ *
+ * Nu folosim `ccs_retragere_grupuri()`, deși are aceleași nume de grupuri: aia cheamă potrivirea întreagă, care
+ * ia minute pe un catalog de douăzeci de mii de produse. Pentru un filtru pe care omul îl apasă des, trebuie
+ * interogări care trec prin indecși.
+ *
+ * @param string $grup Cheia grupului.
+ * @return array|null Id-uri, sau null dacă grupul nu se filtrează pe id-uri.
+ */
+function ccs_admin_lista_ids( $grup ) {
+	global $wpdb;
+	$links = ccs_tabel( 'links' );
+
+	if ( 'conex' === $grup ) {
+		return array_map( 'intval', (array) $wpdb->get_col( "SELECT wc_product_id FROM $links" ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+	}
+
+	// Tiparul codului spune de unde vine produsul: `CZ1135` e pus de mână, `10000` a venit din feed-ul Mega Drive.
+	// Aceeași regulă ca în `retragere.php`, scrisă aici în SQL ca să nu ceară potrivirea întreagă.
+	$tipare = array(
+		'manuale'  => '^[A-Za-z]{2}[0-9]+$',
+		'din_feed' => '^[0-9]{4,6}$',
+	);
+	if ( isset( $tipare[ $grup ] ) ) {
+		return array_map(
+			'intval',
+			(array) $wpdb->get_col(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL
+					"SELECT m.post_id FROM {$wpdb->postmeta} m
+					 LEFT JOIN $links l ON l.wc_product_id = m.post_id
+					 WHERE m.meta_key = '_sku' AND m.meta_value REGEXP %s AND l.wc_product_id IS NULL",
+					$tipare[ $grup ]
+				)
+			)
+		);
+	}
+
+	return null;
+}
+
+/**
+ * Căsuța de filtrare de deasupra listei de produse.
+ *
+ * @return void
+ */
+function ccs_admin_lista_filtru_ui() {
+	global $typenow;
+	if ( 'product' !== $typenow || ! current_user_can( CCS_CAPACITATE ) ) {
+		return;
+	}
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$acum = isset( $_GET['ccs_grup'] ) ? sanitize_key( wp_unslash( $_GET['ccs_grup'] ) ) : '';
+
+	echo '<select name="ccs_grup" id="ccs_grup">';
+	printf( '<option value="">%s</option>', esc_html__( 'Toate sursele', 'conex-conect-sync' ) );
+	foreach ( ccs_admin_lista_grupuri() as $cheie => $eticheta ) {
+		printf(
+			'<option value="%s"%s>%s</option>',
+			esc_attr( $cheie ),
+			selected( $acum, $cheie, false ),
+			esc_html( $eticheta )
+		);
+	}
+	echo '</select>';
+}
+add_action( 'restrict_manage_posts', 'ccs_admin_lista_filtru_ui' );
+
+/**
+ * Aplică filtrul pe lista de produse.
+ *
+ * @param WP_Query $q Interogarea.
+ * @return void
+ */
 function ccs_admin_filtru_lista( $q ) {
 	if ( ! is_admin() || ! $q->is_main_query() || 'product' !== $q->get( 'post_type' ) ) {
 		return;
@@ -631,8 +725,143 @@ function ccs_admin_filtru_lista( $q ) {
 	if ( ! $grup || ! current_user_can( CCS_CAPACITATE ) ) {
 		return;
 	}
-	$grupuri = ccs_retragere_grupuri();
+
+	if ( 'ascunse' === $grup ) {
+		$q->set(
+			'tax_query',
+			array(
+				array(
+					'taxonomy' => 'product_visibility',
+					'field'    => 'name',
+					'terms'    => 'exclude-from-catalog',
+				),
+			)
+		);
+		return;
+	}
+
+	if ( 'fara_categorie' === $grup ) {
+		$q->set(
+			'tax_query',
+			array(
+				array(
+					'taxonomy' => 'product_cat',
+					'operator' => 'NOT EXISTS',
+				),
+			)
+		);
+		return;
+	}
+
+	$ids = ccs_admin_lista_ids( $grup );
+	if ( null === $ids ) {
+		// Grupurile vechi, din panou, care vin tot pe `?ccs_grup=`. Aici chiar merită potrivirea întreagă,
+		// fiindcă se ajunge pe link din panou, nu prin apăsarea unui filtru.
+		$grupuri = ccs_retragere_grupuri();
+		$ids     = isset( $grupuri[ $grup ] ) ? array_keys( $grupuri[ $grup ] ) : array();
+	}
+
 	// `post__in` gol ar întoarce tot, deci punem un id imposibil când grupul e gol.
-	$q->set( 'post__in', isset( $grupuri[ $grup ] ) && $grupuri[ $grup ] ? array_keys( $grupuri[ $grup ] ) : array( 0 ) );
+	$q->set( 'post__in', $ids ? $ids : array( 0 ) );
 }
 add_action( 'pre_get_posts', 'ccs_admin_filtru_lista' );
+
+/**
+ * Coloana „Conex” din lista de produse.
+ *
+ * @param array $coloane Coloanele.
+ * @return array Coloanele, cu a noastră înaintea prețului.
+ */
+function ccs_admin_coloana( $coloane ) {
+	$iesire = array();
+	foreach ( $coloane as $cheie => $eticheta ) {
+		if ( 'price' === $cheie ) {
+			$iesire['ccs'] = __( 'Conex', 'conex-conect-sync' );
+		}
+		$iesire[ $cheie ] = $eticheta;
+	}
+	if ( ! isset( $iesire['ccs'] ) ) {
+		$iesire['ccs'] = __( 'Conex', 'conex-conect-sync' );
+	}
+	return $iesire;
+}
+add_filter( 'manage_edit-product_columns', 'ccs_admin_coloana' );
+
+/**
+ * Conținutul coloanei: ce știe furnizorul despre produsul ăsta, acum.
+ *
+ * Costul și stocul sunt cele din ultima citire a catalogului, nu din WooCommerce. Asta e și ideea: coloana
+ * răspunde la „mai există la furnizor și cu cât?”, întrebare la care lista de produse nu răspundea deloc.
+ *
+ * @param string $coloana Coloana.
+ * @param int    $post_id Produsul.
+ * @return void
+ */
+function ccs_admin_coloana_continut( $coloana, $post_id ) {
+	global $wpdb;
+	if ( 'ccs' !== $coloana ) {
+		return;
+	}
+
+	$links    = ccs_tabel( 'links' );
+	$produse  = ccs_tabel( 'products' );
+	$furnizor = $wpdb->get_row(
+		$wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL
+			"SELECT c.cod, c.cost, c.stoc, l.incredere
+			 FROM $links l INNER JOIN $produse c ON c.product_id = l.product_id
+			 WHERE l.wc_product_id = %d",
+			(int) $post_id
+		)
+	);
+
+	if ( ! $furnizor ) {
+		$sku = (string) get_post_meta( $post_id, '_sku', true );
+		if ( preg_match( '/^[A-Za-z]{2}[0-9]+$/', $sku ) ) {
+			printf( '<span class="ccs-col ccs-col--manual">%s</span>', esc_html__( 'pus de echipă', 'conex-conect-sync' ) );
+			return;
+		}
+		printf( '<span class="ccs-col ccs-col--lipsa">%s</span>', esc_html__( 'nu e la Conex', 'conex-conect-sync' ) );
+		return;
+	}
+
+	printf(
+		'<span class="ccs-col ccs-col--legat">%s</span><br><span class="ccs-col-mic">%s</span>',
+		esc_html(
+			sprintf(
+				/* translators: %d: stocul la furnizor. */
+				_n( 'stoc %d la furnizor', 'stoc %d la furnizor', (int) $furnizor->stoc, 'conex-conect-sync' ),
+				(int) $furnizor->stoc
+			)
+		),
+		esc_html(
+			sprintf(
+				/* translators: %s: costul de achiziție. */
+				__( 'cost %s lei', 'conex-conect-sync' ),
+				ccs_lei( (float) $furnizor->cost )
+			)
+		)
+	);
+}
+add_action( 'manage_product_posts_custom_column', 'ccs_admin_coloana_continut', 10, 2 );
+
+/**
+ * Puțin stil pentru coloană, pus direct: trei reguli nu merită un fișier încărcat pe tot adminul.
+ *
+ * @return void
+ */
+function ccs_admin_coloana_stil() {
+	global $typenow;
+	if ( 'product' !== $typenow ) {
+		return;
+	}
+	echo '<style>
+		.column-ccs { width: 11em; }
+		.ccs-col { font-size: 12px; }
+		.ccs-col--legat { color: #1a7f45; }
+		.ccs-col--manual { color: #8a6d1f; }
+		.ccs-col--lipsa { color: #9aa0a6; }
+		.ccs-col-mic { font-size: 11px; color: #6b7280; }
+	</style>';
+}
+add_action( 'admin_head', 'ccs_admin_coloana_stil' );

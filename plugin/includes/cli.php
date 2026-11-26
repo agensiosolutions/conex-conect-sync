@@ -382,6 +382,9 @@ class CCS_CLI {
 		if ( ! empty( $r['sterse'] ) ) {
 			$spuse[] = sprintf( '%d produse create de import, trecute la coșul de gunoi', $r['sterse'] );
 		}
+		if ( ! empty( $r['readuse'] ) ) {
+			$spuse[] = sprintf( '%d produse scoase din coșul de gunoi', $r['readuse'] );
+		}
 		WP_CLI::success( ( $spuse ? implode( '. ', $spuse ) : 'Nimic de dat înapoi' ) . '.' );
 		if ( $r['esuate'] ) {
 			WP_CLI::line( sprintf( '  produse care nu mai există  %d', $r['esuate'] ) );
@@ -811,6 +814,91 @@ class CCS_CLI {
 			WP_CLI::line( '' );
 			WP_CLI::line( sprintf( 'Dacă trebuie date înapoi: wp ccs revino %d', $rezumat['rulare'] ) );
 		}
+	}
+
+	/**
+	 * Șterge și ascunde produsele pe care furnizorul nu le mai are deloc.
+	 *
+	 * Hotărârile vin dintr-un fișier JSON de forma `{ "sterge": [12, 34], "ascunde": [56] }`, făcut dintr-o
+	 * măsurătoare Search Console. Vezi `includes/curatenie.php` pentru de ce nu e automat.
+	 *
+	 * Fără `--executa` nu scrie nimic: arată doar ce ar face.
+	 *
+	 * ## OPTIONS
+	 *
+	 * --fisier=<cale>
+	 * : Fișierul JSON cu hotărârile.
+	 *
+	 * [--executa]
+	 * : Chiar scrie. Fără asta, comanda doar arată ce ar face.
+	 *
+	 * [--limita=<n>]
+	 * : Cel mult atâtea produse din fiecare listă.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs curata --fisier=curatenie.json
+	 *     wp ccs curata --fisier=curatenie.json --executa --limita=50
+	 *     wp ccs curata --fisier=curatenie.json --executa
+	 *
+	 * @param array $args       Argumentele.
+	 * @param array $asociative Opțiunile.
+	 * @return void
+	 */
+	public function curata( $args, $asociative ) {
+		$cale = isset( $asociative['fisier'] ) ? (string) $asociative['fisier'] : '';
+		if ( '' === $cale ) {
+			WP_CLI::error( 'Lipsește --fisier=<cale>.' );
+		}
+
+		$decizii = ccs_curatenie_citeste( $cale );
+		if ( is_wp_error( $decizii ) ) {
+			WP_CLI::error( $decizii->get_error_message() );
+		}
+
+		$executa = isset( $asociative['executa'] );
+		$rezumat = ccs_curata(
+			$decizii,
+			array(
+				'limita' => isset( $asociative['limita'] ) ? (int) $asociative['limita'] : 0,
+				'proba'  => ! $executa,
+			)
+		);
+		if ( is_wp_error( $rezumat ) ) {
+			WP_CLI::error( $rezumat->get_error_message() );
+		}
+
+		WP_CLI::line( sprintf( '  de șters   %s', number_format( $rezumat['de_sters'], 0, ',', '.' ) ) );
+		WP_CLI::line( sprintf( '  de ascuns  %s', number_format( $rezumat['de_ascuns'], 0, ',', '.' ) ) );
+		if ( $rezumat['in_amandoua'] ) {
+			WP_CLI::warning(
+				sprintf(
+					'%d produse erau pe ambele liste. Le-am ascuns, nu le-am șters.',
+					$rezumat['in_amandoua']
+				)
+			);
+		}
+
+		if ( ! $executa ) {
+			WP_CLI::line( '' );
+			WP_CLI::success( 'Probă. N-am scris nimic. Adaugă `--executa` când ești gata.' );
+			return;
+		}
+
+		WP_CLI::line( '' );
+		WP_CLI::success(
+			sprintf(
+				'%d produse la coșul de gunoi, %d ascunse din catalog.',
+				$rezumat['sterse'],
+				$rezumat['ascunse']
+			)
+		);
+		WP_CLI::line( sprintf( '  trecute pe stoc epuizat  %d', $rezumat['epuizate'] ) );
+		WP_CLI::line( sprintf( '  sărite, erau deja așa    %d', $rezumat['sarite'] ) );
+		WP_CLI::line( sprintf( '  eșuate                   %d', $rezumat['esuate'] ) );
+		WP_CLI::line( '' );
+		WP_CLI::line( sprintf( 'Dacă trebuie date înapoi: wp ccs revino %d', $rezumat['rulare'] ) );
+		WP_CLI::line( 'Atenție: WordPress golește singur coșul de gunoi după 30 de zile.' );
 	}
 
 	/**

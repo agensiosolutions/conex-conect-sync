@@ -302,13 +302,47 @@ function ccs_revino( $rulare_id ) {
 		'produse' => 0,
 		'valori'  => 0,
 		'sterse'  => 0,
+		'readuse' => 0,
 		'esuate'  => 0,
 	);
 
 	foreach ( $pe_produs as $wc_id => $ale_lui ) {
+		// Un produs trimis la coșul de gunoi de curățenie se scoate de acolo întâi: `wc_get_product()` nu-l mai
+		// întoarce după ștergere, deci orice altă revenire pe el ar eșua dacă n-ar fi scos mai întâi.
+		$scoase = array();
+		foreach ( $ale_lui as $m ) {
+			if ( 'sters' === $m->camp ) {
+				wp_untrash_post( $wc_id );
+				// `wp_untrash_post()` readuce produsul ca ciornă pe unele versiuni. Punem starea pe care am
+				// găsit-o, ca produsul să se întoarcă exact cum era, nu aproape cum era.
+				if ( '' !== (string) $m->vechi && get_post_status( $wc_id ) !== $m->vechi ) {
+					wp_update_post(
+						array(
+							'ID'          => $wc_id,
+							'post_status' => (string) $m->vechi,
+						)
+					);
+				}
+				$scoase[] = (int) $m->id;
+			}
+		}
+		if ( $scoase ) {
+			$rezumat['readuse'] = ( $rezumat['readuse'] ?? 0 ) + 1;
+			$locuri_s           = implode( ',', array_fill( 0, count( $scoase ), '%d' ) );
+			$wpdb->query(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL
+					"UPDATE $tabel SET revenit_la = %s WHERE id IN ($locuri_s)",
+					array_merge( array( $acum ), $scoase )
+				)
+			);
+		}
+
 		$produs = wc_get_product( $wc_id );
 		if ( ! $produs ) {
-			$rezumat['esuate']++;
+			if ( ! $scoase ) {
+				$rezumat['esuate']++;
+			}
 			continue;
 		}
 		// Un produs creat de import nu se dă înapoi câmp cu câmp: se duce la coșul de gunoi, întreg. Nu se șterge
@@ -340,6 +374,8 @@ function ccs_revino( $rulare_id ) {
 				$produs->set_regular_price( $m->vechi );
 			} elseif ( 'stoc' === $m->camp ) {
 				$produs->set_stock_quantity( '' === $m->vechi ? null : (int) $m->vechi );
+			} elseif ( 'vizibilitate' === $m->camp ) {
+				$produs->set_catalog_visibility( $m->vechi );
 			} elseif ( 'stare_stoc' === $m->camp ) {
 				// Starea o lăsăm pe seama cantității readuse, exact cum a fost pusă. O setăm doar dacă produsul nu
 				// gestionează stocul, caz în care nimic n-o recalculează.
