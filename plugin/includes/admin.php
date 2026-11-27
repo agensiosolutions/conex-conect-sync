@@ -102,6 +102,60 @@ function ccs_admin_assets( $hook ) {
 add_action( 'admin_enqueue_scripts', 'ccs_admin_assets' );
 
 /**
+ * Pornește scrierea pe site, adică oprește modul raport.
+ *
+ * E singura comandă din panou după care sincronizarea începe să schimbe produse de la sine, deci are trei
+ * lucruri pe care celelalte nu le au: cere confirmare de două ori în interfață, scrie în jurnal cine a pornit-o,
+ * și nu pornește dacă politica de preț nu e confirmată. Ultima nu e o formalitate: fără o politică asumată,
+ * prima rulare ar rescrie câteva mii de prețuri după valori pe care nu le-a aprobat nimeni.
+ *
+ * Oprirea nu are nicio condiție. Un buton de oprire care întreabă ceva e un buton de oprire stricat.
+ *
+ * @return void
+ */
+function ccs_admin_ajax_scriere() {
+	ccs_admin_ajax_poarta();
+
+	$pornit = ! empty( $_POST['pornit'] ) && 'false' !== $_POST['pornit'];
+
+	if ( $pornit ) {
+		$politica = ccs_decizii_curente( 'politica_pret' );
+		if ( empty( $politica[''] ) ) {
+			wp_send_json_error(
+				array(
+					'mesaj' => __( 'Confirmă întâi politica de preț. Fără ea, prima rulare ar schimba prețurile după valori pe care nu le-a aprobat nimeni.', 'conex-conect-sync' ),
+				)
+			);
+		}
+	}
+
+	$setari               = (array) get_option( CCS_OPTIUNE_SETARI, array() );
+	$setari['mod_raport'] = ! $pornit;
+	update_option( CCS_OPTIUNE_SETARI, $setari );
+
+	ccs_jurnal(
+		'info',
+		sprintf(
+			'Scrierea pe site a fost %s de %s.',
+			$pornit ? 'pornită' : 'oprită',
+			wp_get_current_user()->user_login
+		)
+	);
+
+	ccs_admin_uita();
+
+	wp_send_json_success(
+		array(
+			'pornit' => $pornit,
+			'efect'  => $pornit
+				? __( 'Scrierea e pornită. De acum, sincronizarea schimbă prețurile și stocurile pe site.', 'conex-conect-sync' )
+				: __( 'Scrierea e oprită. Panoul doar arată ce s-ar schimba.', 'conex-conect-sync' ),
+		)
+	);
+}
+add_action( 'wp_ajax_ccs_scriere', 'ccs_admin_ajax_scriere' );
+
+/**
  * Închide ghidul cu pași, definitiv.
  *
  * @return void

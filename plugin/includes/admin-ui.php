@@ -537,10 +537,16 @@ function ccs_ui_pasi() {
 			'gata'  => ! $setari['mod_raport'],
 			'titlu' => __( 'Scrierea pe site e pornită', 'conex-conect-sync' ),
 			'text'  => $setari['mod_raport']
-				? __( 'Deocamdată panoul doar îți arată ce s-ar schimba. Nimic nu se aplică pe produse.', 'conex-conect-sync' )
+				? __( 'Deocamdată panoul doar îți arată ce s-ar schimba. Nimic nu se aplică pe produse. Pornește scrierea când ești mulțumit de ce vezi în celelalte taburi.', 'conex-conect-sync' )
 				: __( 'Sincronizarea schimbă prețurile și stocurile pe site.', 'conex-conect-sync' ),
 			'buton' => '',
 			'tab'   => '',
+			// Butonul e aici, nu un link spre alt tab: e singura comandă din tot panoul după care site-ul începe
+			// să se schimbe singur, deci trebuie să stea lângă explicația ei.
+			'html'  => sprintf(
+				'<button type="button" class="ccs-btn ccs-btn--mic ccs-btn--principal ccs-porneste-scrierea" data-eticheta="%1$s">%1$s</button> <span class="ccs-stare-text"></span>',
+				esc_attr__( 'Pornește scrierea pe site', 'conex-conect-sync' )
+			),
 		),
 		array(
 			'gata'  => $aplicari > 0,
@@ -630,6 +636,9 @@ function ccs_ui_card_pasi() {
 					<a class="ccs-btn ccs-btn--mic ccs-btn--principal" href="<?php echo esc_url( ccs_admin_url( $p['tab'] ) ); ?>">
 						<?php echo esc_html( $p['buton'] ); ?>
 					</a>
+				<?php endif; ?>
+				<?php if ( $acesta && ! empty( $p['html'] ) ) : ?>
+					<span class="ccs-pas__actiune"><?php echo $p['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit de noi. ?></span>
 				<?php endif; ?>
 			</span>
 		</li>
@@ -1047,6 +1056,7 @@ function ccs_admin_pagina() {
 					'confirma' => __( 'Apasă din nou ca să confirmi', 'conex-conect-sync' ),
 					'confirmaRevenirea' => __( 'Sigur? Apasă din nou ca să dai înapoi', 'conex-conect-sync' ),
 					'selectate' => __( '%d produse selectate', 'conex-conect-sync' ),
+					'confirmaScrierea' => __( 'Sigur? De acum se schimbă produse', 'conex-conect-sync' ),
 					'nimic'    => __( 'Nu mai sunt produse de hotărât.', 'conex-conect-sync' ),
 				),
 			)
@@ -1457,10 +1467,6 @@ function ccs_admin_tab_pret() {
 				<?php endforeach; ?>
 			</div>
 
-			<div class="ccs-efect-total">
-				<span><?php esc_html_e( 'Marjă brută, la o bucată din fiecare', 'conex-conect-sync' ); ?></span>
-				<strong id="ccs-e-marja"></strong>
-			</div>
 
 			<h3 class="ccs-subtitlu"><?php esc_html_e( 'Pe produse concrete', 'conex-conect-sync' ); ?></h3>
 			<div class="ccs-tabel-cadru">
@@ -1971,13 +1977,25 @@ function ccs_ui_catalog_actiuni( $c, $grupuri, $m ) {
 
 	echo '<div class="ccs-tile-grila">';
 
+	// Zero nu spune nimic de unul singur. Pâlnia știe de ce, deci o întrebăm: aproape întotdeauna lipsesc pozele,
+	// care se iau doar noaptea, iar omul care vede „0” fără explicație crede că ceva s-a stricat.
+	if ( $c['gata'] ) {
+		$de_ce = __( 'Au imagine, cost de achiziție, stoc și o categorie asociată.', 'conex-conect-sync' );
+	} elseif ( $c['fara_poza'] >= max( 1, $c['nelegate'] ) * 0.9 ) {
+		$de_ce = __( 'Niciun produs nu are încă poze. Pozele se iau de la furnizor noaptea, între 19:00 și 05:00, fiindcă doar atunci le dă. Până atunci nu se poate importa nimic.', 'conex-conect-sync' );
+	} elseif ( $c['fara_categorie'] ) {
+		$de_ce = __( 'Produsele au poze, cost și stoc, dar le lipsește categoria din magazin. Asociaz-o mai jos.', 'conex-conect-sync' );
+	} else {
+		$de_ce = __( 'Niciun produs nu îndeplinește deocamdată toate condițiile.', 'conex-conect-sync' );
+	}
+
 	ccs_ui_tile(
 		array(
 			'cifra' => ccs_nr( $c['gata'] ),
 			'titlu' => __( 'produse pot fi importate', 'conex-conect-sync' ),
-			'desc'  => __( 'Au imagine, cost de achiziție, stoc și o categorie asociată.', 'conex-conect-sync' ),
+			'desc'  => $de_ce,
 			'icon'  => 'download',
-			'ton'   => 'bine',
+			'ton'   => $c['gata'] ? 'bine' : '',
 		)
 	);
 

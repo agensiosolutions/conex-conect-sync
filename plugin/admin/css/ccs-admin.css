@@ -508,8 +508,23 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-potrivire .ccs-butoane { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--c-linie); }
 
 /* Ce a primit răspuns se stinge, ca ochiul să cadă pe ce a rămas. */
-.ccs-rezolvat { opacity: .62; transition: opacity 140ms var(--c-curba); }
-.ccs-rezolvat:hover { opacity: 1; }
+/* Un rand la care s-a raspuns nu se decoloreaza. Alegerea facuta se vede deja in controlul segmentat, iar cand
+   toate randurile sunt rezolvate, ca pe cezauto.ro unde cele 60 de produse sub cost au primit deja raspuns, un
+   tabel intreg la 62% opacitate arata ca si cum pagina ar fi stricata. Un fundal abia perceptibil spune acelasi
+   lucru fara sa stinga textul. */
+.ccs-rezolvat > td { background: var(--c-fundal); }
+.ccs-rezolvat:hover > td { background: transparent; }
+
+/* In bara „la fel pentru toate” nu exista o alegere facuta, deci nu exista stare apasata, deci butoanele
+   ramaneau gri si pareau dezactivate. Acolo tonul se poarta din start: butonul nu arata o stare, propune o
+   actiune. */
+.ccs-lot[data-ton="bine"] { color: var(--c-verde); font-weight: 500; }
+.ccs-lot[data-ton="atentie"] { color: var(--c-atentie); font-weight: 500; }
+.ccs-lot[data-ton="bine"]:hover { background: var(--c-verde-fundal); }
+.ccs-lot[data-ton="atentie"]:hover { background: var(--c-atentie-fundal); }
+
+/* Butonul de actiune dintr-un pas al ghidului. */
+.ccs-pas__actiune { display: inline-flex; align-items: center; gap: 10px; margin-top: 4px; }
 
 /* ---------------------------------------------------------------- bara „la fel pentru toate” */
 .ccs-lot-bara {

@@ -447,6 +447,43 @@
 			} );
 	} );
 
+	/* Pornirea scrierii pe site. Doua apasari, ca la revenire: dupa asta sincronizarea chiar schimba produse. */
+	document.addEventListener( 'click', function ( ev ) {
+		var buton = ev.target.closest( '.ccs-porneste-scrierea' );
+		if ( ! buton ) {
+			return;
+		}
+		ev.preventDefault();
+
+		var stare = buton.parentNode.querySelector( '.ccs-stare-text' );
+
+		if ( 'da' !== buton.getAttribute( 'data-confirma' ) ) {
+			buton.setAttribute( 'data-confirma', 'da' );
+			buton.textContent = texte.confirmaScrierea;
+			return;
+		}
+
+		buton.disabled = true;
+		buton.textContent = buton.getAttribute( 'data-eticheta' );
+		buton.removeAttribute( 'data-confirma' );
+		arataStare( stare, texte.lucrez, false );
+
+		trimite( 'ccs_scriere', { pornit: '1' } )
+			.then( function ( raspuns ) {
+				if ( ! raspuns || ! raspuns.success ) {
+					buton.disabled = false;
+					arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || texte.eroare, true );
+					return;
+				}
+				arataStare( stare, raspuns.data.efect, false );
+				buton.remove();
+			} )
+			.catch( function () {
+				buton.disabled = false;
+				arataStare( stare, texte.eroare, true );
+			} );
+	} );
+
 	/* Inchiderea ghidului cu pasi. */
 	document.addEventListener( 'click', function ( ev ) {
 		var buton = ev.target.closest( '.ccs-inchide-ghid' );
@@ -525,7 +562,7 @@
 	function deseneaza() {
 		var p = politicaDinPagina();
 		var sus = 0, jos = 0, egal = 0, subCost = 0;
-		var marjaAcum = 0, marjaProp = 0, deltaSus = 0, deltaJos = 0;
+		var deltaSus = 0, deltaJos = 0;
 		var i;
 
 		for ( i = 0; i < sim.cost.length; i++ ) {
@@ -533,8 +570,6 @@
 			var nou = pretPropus( sim.cost[ i ], sim.taxa[ i ], p );
 			var acum = sim.pret[ i ];
 
-			marjaAcum += acum - costCuTva;
-			marjaProp += nou - costCuTva;
 			if ( nou - costCuTva < 0 ) {
 				subCost++;
 			}
@@ -561,10 +596,6 @@
 		document.getElementById( 'ccs-e-egal' ).textContent = nr( egal );
 		document.getElementById( 'ccs-e-subcost' ).textContent = nr( subCost );
 
-		var procent = marjaAcum > 0 ? ( marjaProp / marjaAcum - 1 ) * 100 : 0;
-		document.getElementById( 'ccs-e-marja' ).textContent =
-			lei( marjaAcum, 0 ) + ' → ' + lei( marjaProp, 0 ) + ' lei  (' +
-			( procent >= 0 ? '+' : '−' ) + lei( Math.abs( procent ), 1 ) + '%)';
 
 		document.getElementById( 'ccs-exemple' ).innerHTML = exemple.map( function ( i ) {
 			var costCuTva = sim.cost[ i ] * p.cota + ( p.include_taxa_eco ? sim.taxa[ i ] : 0 );
