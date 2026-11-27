@@ -202,6 +202,35 @@ function ccs_admin_ajax_arata_ghid() {
 add_action( 'wp_ajax_ccs_arata_ghid', 'ccs_admin_ajax_arata_ghid' );
 
 /**
+ * Ține un mesaj pentru ecranul de acces până după reîncărcare.
+ *
+ * Starea tabului („Token configurat”, butonul de ștergere, masca) se randează pe server. După o salvare prin
+ * AJAX, JS-ul schimba doar textul de lângă buton, iar restul ecranului rămânea pe starea veche: scria „Token
+ * lipsește” și, alături, că salvarea a mers. Un ecran care se contrazice singur îl face pe om să nu creadă
+ * nici partea adevărată.
+ *
+ * Deci reîncărcăm pagina, iar rezultatul probei trece prin tranzient ca să nu se piardă pe drum. E tiparul
+ * obișnuit din WordPress pentru o acțiune urmată de o redirectare.
+ *
+ * @param string|null $mesaj Mesajul de pus deoparte, sau null ca să-l iei și să-l ștergi.
+ * @return string Mesajul, când îl ceri.
+ */
+function ccs_admin_efect_token( $mesaj = null ) {
+	$cheie = 'ccs_efect_token_' . get_current_user_id();
+
+	if ( null !== $mesaj ) {
+		set_transient( $cheie, (string) $mesaj, 2 * MINUTE_IN_SECONDS );
+		return '';
+	}
+
+	$acum = (string) get_transient( $cheie );
+	if ( '' !== $acum ) {
+		delete_transient( $cheie );
+	}
+	return $acum;
+}
+
+/**
  * Salvează tokenul de acces, apoi probează legătura.
  *
  * Tokenul nu se întoarce niciodată către pagină, nici după salvare: câmpul e numai de scris. Ce se arată
@@ -230,7 +259,9 @@ function ccs_admin_ajax_token() {
 	if ( $sterge ) {
 		unset( $setari['token'] );
 		update_option( CCS_OPTIUNE_SETARI, $setari );
-		wp_send_json_success( array( 'efect' => __( 'Tokenul a fost șters. Sincronizarea nu mai poate cere nimic de la furnizor.', 'conex-conect-sync' ) ) );
+		$efect = __( 'Tokenul a fost șters. Sincronizarea nu mai poate cere nimic de la furnizor.', 'conex-conect-sync' );
+		ccs_admin_efect_token( $efect );
+		wp_send_json_success( array( 'efect' => $efect, 'reincarca' => true ) );
 	}
 
 	// Câmp gol, dar există deja un token: nu-l atingem, doar probăm. Asta e și ce așteaptă omul de la buton.
@@ -252,15 +283,13 @@ function ccs_admin_ajax_token() {
 			);
 		}
 
-		wp_send_json_success(
-			array(
-				'efect' => sprintf(
-					/* translators: %d: câte produse a întors furnizorul. */
-					__( 'Tokenul de acum merge. Furnizorul a răspuns cu %d produse.', 'conex-conect-sync' ),
-					(int) $proba
-				),
-			)
+		$efect = sprintf(
+			/* translators: %d: câte produse a întors furnizorul. */
+			__( 'Tokenul de acum merge. Furnizorul a răspuns cu %d produse.', 'conex-conect-sync' ),
+			(int) $proba
 		);
+		ccs_admin_efect_token( $efect );
+		wp_send_json_success( array( 'efect' => $efect, 'reincarca' => true ) );
 	}
 
 	$setari['token'] = $token;
@@ -280,15 +309,13 @@ function ccs_admin_ajax_token() {
 		);
 	}
 
-	wp_send_json_success(
-		array(
-			'efect' => sprintf(
-				/* translators: %d: câte produse a întors furnizorul. */
-				__( 'Legătura merge. Furnizorul a răspuns cu %d produse.', 'conex-conect-sync' ),
-				(int) $proba
-			),
-		)
+	$efect = sprintf(
+		/* translators: %d: câte produse a întors furnizorul. */
+		__( 'Legătura merge. Furnizorul a răspuns cu %d produse.', 'conex-conect-sync' ),
+		(int) $proba
 	);
+	ccs_admin_efect_token( $efect );
+	wp_send_json_success( array( 'efect' => $efect, 'reincarca' => true ) );
 }
 add_action( 'wp_ajax_ccs_token', 'ccs_admin_ajax_token' );
 

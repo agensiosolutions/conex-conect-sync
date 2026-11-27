@@ -744,6 +744,16 @@ function ccs_admin_tab_acces() {
 		__( 'Se salvează și se probează pe loc, cu o cerere adevărată către furnizor.', 'conex-conect-sync' )
 	);
 
+	// Rezultatul ultimei salvări, pus deoparte înainte de reîncărcare. Vezi `ccs_admin_efect_token()`.
+	$efect = function_exists( 'ccs_admin_efect_token' ) ? ccs_admin_efect_token() : '';
+	if ( '' !== $efect ) {
+		printf(
+			'<div class="ccs-nota ccs-nota--bine"><span class="ccs-nota__icon">%1$s</span><div class="ccs-nota__text">%2$s</div></div>',
+			ccs_icon( 'yes-alt', 18 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG al nostru.
+			esc_html( $efect )
+		);
+	}
+
 	// Cazul rar: cineva a pus tokenul în `wp-config.php`. Atunci câmpul chiar nu poate schimba nimic, iar
 	// tăcerea ar fi mai rea decât explicația: omul ar schimba tokenul, n-ar păți nimic, și ar căuta ore.
 	if ( $din_cod ) {

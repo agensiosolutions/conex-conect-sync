@@ -535,8 +535,17 @@
 		}
 
 		trimite( 'ccs_token', { token: camp.value } ).then( function ( r ) {
-			buton.disabled = false;
 			camp.value = '';
+
+			/* Starea de sus („Token configurat”, butonul de stergere, masca) se randeaza pe server. Daca am
+			   schimba doar textul de langa buton, ecranul s-ar contrazice: sus ar scrie ca tokenul lipseste,
+			   jos ca s-a salvat. Reincarcam, iar mesajul vine inapoi din tranzient. */
+			if ( r && r.success && r.data && r.data.reincarca ) {
+				window.location.reload();
+				return;
+			}
+
+			buton.disabled = false;
 			if ( ! stare ) {
 				return;
 			}
