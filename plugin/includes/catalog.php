@@ -73,8 +73,8 @@ function ccs_rulari_recente( $limita = 10, $tip = '' ) {
 	$iesire = array();
 	foreach ( (array) $randuri as $r ) {
 		$rezumat = json_decode( (string) $r->rezumat, true );
-		$inceput = $r->inceput ? (int) mysql2date( 'U', $r->inceput, false ) : 0;
-		$sfarsit = $r->sfarsit ? (int) mysql2date( 'U', $r->sfarsit, false ) : 0;
+		$inceput = $r->inceput ? ccs_ts( $r->inceput ) : 0;
+		$sfarsit = $r->sfarsit ? ccs_ts( $r->sfarsit ) : 0;
 
 		$iesire[] = array(
 			'id'      => (int) $r->id,

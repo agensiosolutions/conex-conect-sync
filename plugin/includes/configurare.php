@@ -184,6 +184,30 @@ function ccs_setari_pret( $context = array() ) {
 }
 
 /**
+ * Un moment scris în baza noastră, ca timestamp.
+ *
+ * Toate datele pluginului se scriu cu `current_time( 'mysql' )`, adică în ora site-ului. La citire foloseam
+ * `mysql2date( 'U', $x, false )`, care interpretează șirul ca UTC fiindcă PHP-ul serverului e pe UTC. Pe un
+ * site românesc, asta adăuga două ore: ultima preluare de la 22:55 se afișa „28 noiembrie, 00:55”.
+ *
+ * Partea care nu se vedea era mai rea: aceeași conversie se folosea la „de câte ore n-a mai rulat
+ * sincronizarea”, unde scădea vârsta cu două ore, deci alerta pleca cu două ore mai târziu decât ar fi
+ * trebuit.
+ *
+ * `get_gmt_from_date()` citește șirul în fusul site-ului, care e exact cum a fost scris.
+ *
+ * @param string $mysql Data, în forma `Y-m-d H:i:s`, ora site-ului.
+ * @return int Timestamp, sau 0.
+ */
+function ccs_ts( $mysql ) {
+	$mysql = trim( (string) $mysql );
+	if ( '' === $mysql ) {
+		return 0;
+	}
+	return (int) get_gmt_from_date( $mysql, 'U' );
+}
+
+/**
  * Marginile fiecărei setări numerice.
  *
  * Panoul și linia de comandă scriau amândouă setările fără nicio margine. Un adaos pus din greșeală la 0,9 ar

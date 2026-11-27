@@ -207,7 +207,7 @@ function ccs_verifica_sanatatea() {
 				__( "Sincronizarea cu furnizorul este pornită, dar nu a reușit nicio preluare până acum.\nDeschide panoul și verifică dacă tokenul este configurat.", 'conex-conect-sync' ),
 			);
 		} else {
-			$ore = ( time() - (int) mysql2date( 'U', $ultima, false ) ) / HOUR_IN_SECONDS;
+			$ore = ( time() - ccs_ts( $ultima ) ) / HOUR_IN_SECONDS;
 			if ( $ore > $ore_prag ) {
 				$probleme['fara_sincronizare'] = array(
 					__( 'Sincronizarea s-a oprit', 'conex-conect-sync' ),

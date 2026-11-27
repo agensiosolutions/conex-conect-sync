@@ -122,7 +122,7 @@ function ccs_data( $cand, $cu_an = false ) {
 		return '?';
 	}
 
-	$ts = is_numeric( $cand ) ? (int) $cand : (int) mysql2date( 'U', (string) $cand, false );
+	$ts = is_numeric( $cand ) ? (int) $cand : ccs_ts( (string) $cand );
 	if ( ! $ts ) {
 		return '?';
 	}
@@ -223,7 +223,7 @@ function ccs_de_cand( $data ) {
 	if ( ! $data ) {
 		return '?';
 	}
-	return ccs_durata( time() - (int) mysql2date( 'U', $data, false ) );
+	return ccs_durata( time() - ccs_ts( $data ) );
 }
 
 /**
@@ -956,7 +956,7 @@ function ccs_ui_fapte_sistem() {
 
 	$ultima = function_exists( 'ccs_ultima_sincronizare' ) ? ccs_ultima_sincronizare() : null;
 	if ( $ultima ) {
-		$trecut = time() - (int) mysql2date( 'U', $ultima, false );
+		$trecut = time() - ccs_ts( $ultima );
 		$ore    = $trecut / HOUR_IN_SECONDS;
 		$fapte[] = array(
 			__( 'Ultima preluare', 'conex-conect-sync' ),
