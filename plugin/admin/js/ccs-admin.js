@@ -484,6 +484,20 @@
 			} );
 	} );
 
+	/* Readucerea ghidului. Mergem pe Panou, nu reincarcam tabul curent: cardul cu pasi se randeaza numai
+	   acolo, iar un buton care pare sa nu faca nimic e mai rau decat lipsa butonului. */
+	document.addEventListener( 'click', function ( ev ) {
+		var buton = ev.target.closest( '.ccs-arata-ghid' );
+		if ( ! buton ) {
+			return;
+		}
+		ev.preventDefault();
+		buton.disabled = true;
+		trimite( 'ccs_arata_ghid', {} ).then( function () {
+			window.location.href = buton.dataset.panou || window.location.href;
+		} );
+	} );
+
 	/* Inchiderea ghidului cu pasi. */
 	document.addEventListener( 'click', function ( ev ) {
 		var buton = ev.target.closest( '.ccs-inchide-ghid' );

@@ -186,6 +186,21 @@ function ccs_admin_ajax_inchide_ghid() {
 add_action( 'wp_ajax_ccs_inchide_ghid', 'ccs_admin_ajax_inchide_ghid' );
 
 /**
+ * Readuce ghidul cu pași.
+ *
+ * Ascunderea trebuie să aibă drum de întoarcere: altfel o apăsare dintr-o zi bună ascunde pentru totdeauna
+ * singurul loc din panou care spune ce urmează.
+ *
+ * @return void
+ */
+function ccs_admin_ajax_arata_ghid() {
+	ccs_admin_ajax_poarta();
+	delete_option( 'ccs_ghid_inchis' );
+	wp_send_json_success( array( 'efect' => __( 'Gata, pașii sunt la loc.', 'conex-conect-sync' ) ) );
+}
+add_action( 'wp_ajax_ccs_arata_ghid', 'ccs_admin_ajax_arata_ghid' );
+
+/**
  * Subsolul paginilor pluginului.
  *
  * WordPress scrie acolo „Thank you for creating with WordPress”, ceea ce pe o pagină de plugin nu spune nimic

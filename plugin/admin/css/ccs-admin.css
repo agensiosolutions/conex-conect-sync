@@ -72,7 +72,9 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 }
 .ccs-admin *, .ccs-admin *::before, .ccs-admin *::after { box-sizing: border-box; }
 .ccs-admin h1, .ccs-admin h2, .ccs-admin h3 { color: var(--c-text); }
-.ccs-admin .dashicons { width: 16px; height: 16px; font-size: 16px; }
+/* Mărimea fiecărei iconițe vine din apel, nu din CSS: un SVG are lățimea lui, iar o regulă globală care o
+   forțează ar strica exact cazurile unde am ales altă mărime. Aici rămâne doar alinierea. */
+.ccs-icon { flex: none; display: inline-block; vertical-align: middle; }
 
 /* ---------------------------------------------------------------- antet */
 .ccs-antet { position: relative; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
@@ -101,12 +103,12 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-nav__link > span:nth-child(2) { flex: 1 1 auto; min-width: 0; }
 .ccs-nav__link strong { display: block; font-size: 14px; font-weight: 400; color: var(--c-text); }
 .ccs-nav__link small { display: block; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
-.ccs-nav__link .dashicons { flex: none; width: 20px; height: 20px; font-size: 20px; line-height: 20px; color: var(--c-text-3); }
+.ccs-nav__link .ccs-icon { color: var(--c-text-3); }
 .ccs-nav__link:hover { background: var(--c-ridicat); color: var(--c-text); }
 .ccs-nav__link:focus-visible { box-shadow: var(--c-inel); outline: none; }
 .ccs-nav__link[aria-current="page"] { background: var(--c-card); border-color: var(--c-linie); box-shadow: var(--c-umbra); }
 .ccs-nav__link[aria-current="page"] strong { font-weight: 500; }
-.ccs-nav__link[aria-current="page"] .dashicons { color: var(--c-accent); }
+.ccs-nav__link[aria-current="page"] .ccs-icon { color: var(--c-accent); }
 
 /* Câte răspunsuri lipsesc din tabul acela. Dispare când nu mai e niciunul. */
 .ccs-nav__rest {
@@ -186,7 +188,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   width: 36px; height: 36px; border-radius: 10px;
   background: var(--c-ridicat); color: var(--c-text-2);
 }
-.ccs-plac .dashicons { width: 18px; height: 18px; font-size: 18px; }
+
 .ccs-plac--bine { background: var(--c-verde-fundal); color: var(--c-verde); }
 .ccs-plac--atentie { background: var(--c-atentie-fundal); color: var(--c-atentie); }
 .ccs-plac--problema { background: var(--c-rosu-fundal); color: var(--c-rosu); }
@@ -415,7 +417,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   font-size: 11px; font-weight: 500; line-height: 20px; white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.ccs-pastila .dashicons { width: 12px; height: 12px; font-size: 12px; }
+
 .ccs-pastila--bine { background: var(--c-verde-fundal); color: var(--c-verde); }
 .ccs-pastila--atentie { background: var(--c-atentie-fundal); color: var(--c-atentie); }
 .ccs-pastila--problema { background: var(--c-rosu-fundal); color: var(--c-rosu); }
@@ -502,7 +504,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-potrivire:last-of-type { margin-bottom: 0; }
 .ccs-fata { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 16px; align-items: start; }
 .ccs-parte__cap { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
-.ccs-parte__cap .dashicons { width: 16px; height: 16px; font-size: 16px; }
+
 .ccs-parte__corp { display: flex; gap: 12px; }
 .ccs-parte img { flex: none; width: 48px; height: 48px; object-fit: contain; border: 1px solid var(--c-linie); border-radius: 4px; background: var(--c-fundal); }
 .ccs-parte__nume { margin: 0; font-size: 14px; font-weight: 400; color: var(--c-text); }
@@ -530,7 +532,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
    ce face fara sa fie citit. Fantoma, nu plin: e o iesire, nu o actiune pe care sa o propunem. */
 .ccs-inchide-ghid { color: var(--c-rosu); }
 .ccs-inchide-ghid:hover { background: var(--c-rosu-fundal); color: var(--c-rosu); }
-.ccs-inchide-ghid .dashicons { width: 14px; height: 14px; font-size: 14px; margin-right: 2px; }
+.ccs-inchide-ghid .ccs-icon { margin-right: 2px; }
 
 /* Butonul de actiune dintr-un pas al ghidului. */
 .ccs-pas__actiune { display: inline-flex; align-items: center; gap: 10px; margin-top: 4px; }
@@ -611,14 +613,17 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 /* ---------------------------------------------------------------- carduri de acțiune */
 /* Cardurile de acțiune: fundal alb ca tot panoul, iar culoarea stă în iconița din colț și în cifră. Pline de
    culoare erau citibile, dar trei dreptunghiuri tari unul lângă altul strigă mai tare decât conținutul lor. */
+/* Butonul care readuce ghidul. Apare doar dupa ce a fost ascuns: altfel ar fi un buton care nu face nimic. */
+.ccs-arata-ghid .ccs-icon { margin-right: 4px; }
+
 /* ---------------------------------------------------------------- info la hover */
 /* Explicatia sta langa lucrul pe care il explica. Fara JavaScript: hover si focus pe acelasi element. */
 .ccs-info {
   position: relative; display: inline-flex; align-items: center; gap: 4px;
   cursor: help; vertical-align: middle;
 }
-.ccs-info > .dashicons { width: 14px; height: 14px; font-size: 14px; opacity: .65; }
-.ccs-info:hover > .dashicons, .ccs-info:focus-visible > .dashicons { opacity: 1; }
+.ccs-info > .ccs-icon { opacity: .6; }
+.ccs-info:hover > .ccs-icon, .ccs-info:focus-visible > .ccs-icon { opacity: 1; }
 .ccs-info:focus-visible { outline: none; box-shadow: var(--c-inel); border-radius: 999px; }
 /* Când e chiar pastila, culoarea și fundalul vin de la `.ccs-pastila`; nu le atingem. */
 .ccs-info--pastila { cursor: help; }
@@ -671,7 +676,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   width: 24px; height: 24px; border-radius: 50%;
   background: var(--c-ridicat); color: var(--c-text-3);
 }
-.ccs-pas__bifa .dashicons { width: 14px; height: 14px; font-size: 14px; }
+
 .ccs-pas--gata .ccs-pas__bifa { background: var(--c-verde-fundal); color: var(--c-verde); }
 .ccs-pas--acum .ccs-pas__bifa { background: var(--c-accent-fundal); color: var(--c-accent); }
 .ccs-pas__corp { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -690,7 +695,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   padding: 10px 12px; background: var(--c-fundal); border-radius: 10px;
 }
 .ccs-efect-item .ccs-plac { width: 32px; height: 32px; border-radius: 8px; }
-.ccs-efect-item .ccs-plac .dashicons { width: 16px; height: 16px; font-size: 16px; }
+
 .ccs-efect-item__corp { min-width: 0; }
 .ccs-efect-item__eticheta { display: block; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 .ccs-efect-item strong {

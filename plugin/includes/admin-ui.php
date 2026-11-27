@@ -88,9 +88,7 @@ function ccs_ui_cifra( $eticheta, $valoare, $ton = '', $optiuni = array() ) {
 	printf(
 		'<span class="ccs-plac%1$s">%2$s</span>',
 		$ton ? ' ccs-plac--' . esc_attr( $ton ) : '',
-		$optiuni['icon']
-			? '<span class="dashicons dashicons-' . esc_attr( $optiuni['icon'] ) . '"></span>'
-			: ''
+		$optiuni['icon'] ? ccs_icon( $optiuni['icon'], 18 ) : ''
 	);
 
 	echo '<span class="ccs-cifra__corp">';
@@ -472,7 +470,7 @@ function ccs_ui_jurnal_rulari( $limita = 10 ) {
  */
 function ccs_ui_pastila_info( $text, $ton, $explicatie, $unde = '' ) {
 	return sprintf(
-		'<span class="ccs-pastila ccs-pastila--%1$s ccs-info ccs-info--pastila%2$s" tabindex="0" role="note" aria-label="%3$s">%4$s<span class="dashicons dashicons-info-outline" aria-hidden="true"></span><span class="ccs-info__bula">%5$s</span></span>',
+		'<span class="ccs-pastila ccs-pastila--%1$s ccs-info ccs-info--pastila%2$s" tabindex="0" role="note" aria-label="%3$s">%4$s' . ccs_icon( 'info-outline', 14 ) . '<span class="ccs-info__bula">%5$s</span></span>',
 		esc_attr( $ton ),
 		$unde ? ' ccs-info--' . esc_attr( $unde ) : '',
 		esc_attr( $text . '. ' . wp_strip_all_tags( $explicatie ) ),
@@ -614,6 +612,23 @@ function ccs_ui_pasi() {
 }
 
 /**
+ * Mai are ghidul ceva de arătat?
+ *
+ * Butonul care îl readuce n-are rost când toți pașii sunt bifați: ar aduce înapoi un card gol. Întrebarea asta
+ * o pune și cardul, și butonul din antet, deci stă într-un singur loc.
+ *
+ * @return bool
+ */
+function ccs_ui_mai_sunt_pasi() {
+	foreach ( ccs_ui_pasi() as $p ) {
+		if ( ! $p['gata'] ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
  * Cardul cu pașii de pus la punct.
  *
  * Dispare singur când totul e gata, fiindcă un card bifat în întregime devine mobilier. Se poate și închide, iar
@@ -661,7 +676,7 @@ function ccs_ui_card_pasi() {
 		?>
 		<li class="ccs-pas<?php echo $p['gata'] ? ' ccs-pas--gata' : ''; ?><?php echo $acesta ? ' ccs-pas--acum' : ''; ?>">
 			<span class="ccs-pas__bifa" aria-hidden="true">
-				<span class="dashicons dashicons-<?php echo $p['gata'] ? 'yes' : 'marker'; ?>"></span>
+				<?php echo ccs_icon( $p['gata'] ? 'yes' : 'marker', 14 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			</span>
 			<span class="ccs-pas__corp">
 				<span class="ccs-pas__titlu"><?php echo esc_html( $p['titlu'] ); ?></span>
@@ -683,7 +698,8 @@ function ccs_ui_card_pasi() {
 	echo '</ol>';
 
 	printf(
-		'<p class="ccs-mic"><button type="button" class="ccs-btn ccs-btn--mic ccs-btn--fantoma ccs-inchide-ghid"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span>%s</button></p>',
+		'<p class="ccs-mic"><button type="button" class="ccs-btn ccs-btn--mic ccs-btn--fantoma ccs-inchide-ghid">%s%s</button></p>',
+		ccs_icon( 'no-alt', 14 ),
 		esc_html__( 'Nu îmi mai arăta pașii', 'conex-conect-sync' )
 	);
 
@@ -782,9 +798,9 @@ function ccs_ui_tile( $a ) {
 
 	echo '<span class="ccs-tile__cap">';
 	printf(
-		'<span class="ccs-plac%1$s"><span class="dashicons dashicons-%2$s" aria-hidden="true"></span></span>',
+		'<span class="ccs-plac%1$s">%2$s</span>',
 		$a['ton'] ? ' ccs-plac--' . esc_attr( $a['ton'] ) : '',
-		esc_attr( $a['icon'] )
+		ccs_icon( $a['icon'], 18 )
 	);
 	if ( '' !== (string) $a['cifra'] ) {
 		printf( '<span class="ccs-tile__cifra">%s</span>', esc_html( $a['cifra'] ) );
@@ -826,7 +842,7 @@ function ccs_ui_linie_stare( $fapte ) {
 			esc_html( $f[0] ),
 			esc_html( $f[1] ),
 			$are_info
-				? '<span class="dashicons dashicons-info-outline" aria-hidden="true"></span><span class="ccs-info__bula">' . esc_html( $f[3] ) . '</span>'
+				? ccs_icon( 'info-outline', 14 ) . '<span class="ccs-info__bula">' . esc_html( $f[3] ) . '</span>'
 				: ''
 		);
 	}
@@ -1109,7 +1125,7 @@ function ccs_admin_pagina() {
 	<div class="ccs-admin">
 		<header class="ccs-antet">
 			<div class="ccs-antet__titlu">
-				<span class="ccs-antet__icon dashicons dashicons-update" aria-hidden="true"></span>
+				<span class="ccs-antet__icon"><?php echo ccs_icon( 'update', 20 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
 				<div>
 					<h1><?php esc_html_e( 'Sincronizare Conex', 'conex-conect-sync' ); ?></h1>
 					<p><?php esc_html_e( 'Prețul, stocul și produsele, luate automat de la furnizor', 'conex-conect-sync' ); ?></p>
@@ -1127,8 +1143,16 @@ function ccs_admin_pagina() {
 					)
 					: ccs_ui_pastila( __( 'Sincronizare pornită', 'conex-conect-sync' ), 'bine' );
 				?>
+				<?php if ( get_option( 'ccs_ghid_inchis' ) && ccs_ui_mai_sunt_pasi() ) : ?>
+					<button type="button" class="ccs-btn ccs-btn--fantoma ccs-arata-ghid" data-panou="<?php echo esc_url( ccs_admin_url( 'panou' ) ); ?>">
+						<?php
+						echo ccs_icon( 'editor-help', 15 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						esc_html_e( 'Arată pașii', 'conex-conect-sync' );
+						?>
+					</button>
+				<?php endif; ?>
 				<a class="ccs-btn ccs-btn--fantoma" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=ccs-decizii&tab=' . $tab . '&recalculeaza=1' ), 'ccs-recalculeaza' ) ); ?>">
-					<span class="dashicons dashicons-image-rotate" aria-hidden="true"></span><?php esc_html_e( 'Recalculează', 'conex-conect-sync' ); ?>
+					<?php echo ccs_icon( 'image-rotate', 15 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><?php esc_html_e( 'Recalculează', 'conex-conect-sync' ); ?>
 				</a>
 			</div>
 		</header>
@@ -1146,7 +1170,7 @@ function ccs_admin_pagina() {
 			<nav class="ccs-nav" aria-label="<?php esc_attr_e( 'Secțiunile panoului', 'conex-conect-sync' ); ?>">
 				<?php foreach ( ccs_admin_taburi() as $slug => $t ) : ?>
 					<a href="<?php echo esc_url( ccs_admin_url( $slug ) ); ?>" class="ccs-nav__link"<?php echo $slug === $tab ? ' aria-current="page"' : ''; ?>>
-						<span class="dashicons dashicons-<?php echo esc_attr( $t[1] ); ?>" aria-hidden="true"></span>
+						<?php echo ccs_icon( $t[1], 17 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						<span><strong><?php echo esc_html( $t[0] ); ?></strong><small><?php echo esc_html( $t[2] ); ?></small></span>
 						<?php if ( $t[3] && ! empty( $rest[ $t[3] ] ) ) : ?>
 							<span class="ccs-nav__rest" title="<?php esc_attr_e( 'întrebări fără răspuns', 'conex-conect-sync' ); ?>"><?php echo esc_html( $rest[ $t[3] ] ); ?></span>
@@ -1357,9 +1381,9 @@ function ccs_admin_tab_panou() {
 	echo '<ul class="ccs-stari">';
 	foreach ( $stari as $st ) {
 		printf(
-			'<li class="ccs-stare ccs-stare--%1$s"><span class="ccs-stare__icon dashicons dashicons-%2$s" aria-hidden="true"></span><strong>%3$s</strong><span>%4$s</span></li>',
+			'<li class="ccs-stare ccs-stare--%1$s"><span class="ccs-stare__icon">%2$s</span><strong>%3$s</strong><span>%4$s</span></li>',
 			esc_attr( $st[0] ),
-			esc_attr( $iconuri[ $st[0] ] ),
+			ccs_icon( $iconuri[ $st[0] ], 14 ),
 			esc_html( $st[1] ),
 			esc_html( $st[2] )
 		);
@@ -1506,7 +1530,7 @@ function ccs_admin_tab_pret() {
 				<?php foreach ( $efecte as $e ) : ?>
 					<div class="ccs-efect-item">
 						<span class="ccs-plac<?php echo $e[3] ? ' ccs-plac--' . esc_attr( $e[3] ) : ''; ?>">
-							<span class="dashicons dashicons-<?php echo esc_attr( $e[2] ); ?>" aria-hidden="true"></span>
+							<?php echo ccs_icon( $e[2], 16 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</span>
 						<span class="ccs-efect-item__corp">
 							<span class="ccs-efect-item__eticheta"><?php echo esc_html( $e[1] ); ?></span>
@@ -1586,7 +1610,7 @@ function ccs_admin_tab_potriviri() {
 		<div class="ccs-potrivire <?php echo $luata ? 'ccs-rezolvat' : ''; ?>" data-tip="potrivire" data-referinta="<?php echo esc_attr( $wc_id ); ?>">
 			<div class="ccs-fata">
 				<div class="ccs-parte">
-					<p class="ccs-parte__cap"><span class="dashicons dashicons-admin-home" aria-hidden="true"></span><?php esc_html_e( 'Pe site-ul tău', 'conex-conect-sync' ); ?></p>
+					<p class="ccs-parte__cap"><?php echo ccs_icon( 'admin-home', 15 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><?php esc_html_e( 'Pe site-ul tău', 'conex-conect-sync' ); ?></p>
 					<div class="ccs-parte__corp">
 						<?php if ( $poza ) : ?>
 							<?php // Dacă fișierul lipsește, ascundem imaginea: un pătrat gol spart arată ca o eroare a paginii. ?>
@@ -1610,7 +1634,7 @@ function ccs_admin_tab_potriviri() {
 				</div>
 				<span class="ccs-contra"><?php esc_html_e( 'contra', 'conex-conect-sync' ); ?></span>
 				<div class="ccs-parte">
-					<p class="ccs-parte__cap"><span class="dashicons dashicons-cart" aria-hidden="true"></span><?php esc_html_e( 'La Conex, pe același cod', 'conex-conect-sync' ); ?></p>
+					<p class="ccs-parte__cap"><?php echo ccs_icon( 'cart', 15 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><?php esc_html_e( 'La Conex, pe același cod', 'conex-conect-sync' ); ?></p>
 					<div class="ccs-parte__corp">
 						<div>
 							<p class="ccs-parte__nume"><?php echo esc_html( $v['nume_conex'] ); ?></p>
@@ -2484,9 +2508,9 @@ function ccs_ui_catalog_rasfoire() {
 	);
 
 	printf(
-		'<div class="ccs-nota ccs-nota--%1$s"><span class="ccs-nota__icon dashicons dashicons-%2$s" aria-hidden="true"></span><span>%3$s</span></div>',
+		'<div class="ccs-nota ccs-nota--%1$s"><span class="ccs-nota__icon">%2$s</span><span>%3$s</span></div>',
 		( $gata['gata'] ?? 0 ) ? 'bine' : 'info',
-		( $gata['gata'] ?? 0 ) ? 'yes-alt' : 'info-outline',
+		ccs_icon( ( $gata['gata'] ?? 0 ) ? 'yes-alt' : 'info-outline', 18 ),
 		esc_html( $nota )
 	);
 
@@ -2959,9 +2983,9 @@ function ccs_admin_tab_stoc() {
 	);
 	foreach ( $puncte as $st ) {
 		printf(
-			'<li class="ccs-stare ccs-stare--%1$s"><span class="ccs-stare__icon dashicons dashicons-%2$s" aria-hidden="true"></span><strong>%3$s</strong><span>%4$s</span></li>',
+			'<li class="ccs-stare ccs-stare--%1$s"><span class="ccs-stare__icon">%2$s</span><strong>%3$s</strong><span>%4$s</span></li>',
 			esc_attr( $st[0] ),
-			esc_attr( $iconuri[ $st[0] ] ),
+			ccs_icon( $iconuri[ $st[0] ], 14 ),
 			esc_html( $st[1] ),
 			esc_html( $st[2] )
 		);
