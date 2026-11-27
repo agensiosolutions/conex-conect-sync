@@ -127,7 +127,27 @@ function ccs_rulare_start( $tip ) {
 			'stare'   => 'pornit',
 		)
 	);
-	return (int) $wpdb->insert_id;
+	$id = (int) $wpdb->insert_id;
+	ccs_rulare_curenta( $id );
+	return $id;
+}
+
+/**
+ * Rularea în curs, pentru liniile de jurnal.
+ *
+ * Fiecare apelant își ține id-ul rulării la el, iar `ccs_jurnal()` e chemată din adâncul operației, unde nu
+ * ajunge. Fără legătura asta, jurnalul ar fi o grămadă de linii fără să se știe din ce rulare vin, exact
+ * întrebarea care se pune când ceva a mers prost azi-noapte.
+ *
+ * @param int|null $id Id-ul, la început de rulare; 0 la sfârșit; null ca să întrebi.
+ * @return int Id-ul rulării în curs, sau 0.
+ */
+function ccs_rulare_curenta( $id = null ) {
+	static $acum = 0;
+	if ( null !== $id ) {
+		$acum = (int) $id;
+	}
+	return $acum;
 }
 
 /**
@@ -149,6 +169,9 @@ function ccs_rulare_stop( $id, $stare, $rezumat = array() ) {
 		),
 		array( 'id' => $id )
 	);
+
+	ccs_rulare_curenta( 0 );
+	ccs_jurnal_curata();
 }
 
 /**

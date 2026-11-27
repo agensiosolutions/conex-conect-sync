@@ -1128,6 +1128,70 @@ class CCS_CLI {
 	}
 
 	/**
+	 * Arată jurnalul.
+	 *
+	 * Până acum jurnalul se scria doar în `error_log`, și doar cu `WP_DEBUG` pornit. Pe live e oprit, iar
+	 * joburile rulează prin Action Scheduler, deci nu rămânea nimic. Acum stă în tabel, iar asta e fereastra
+	 * prin care se citește, mai ales a doua zi, după o noapte în care ceva n-a mers.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--nivel=<nivel>]
+	 * : Doar un nivel: info, avertisment sau eroare.
+	 *
+	 * [--rulare=<id>]
+	 * : Doar liniile unei rulări, cum apare în `wp ccs rulari`.
+	 *
+	 * [--numar=<n>]
+	 * : Câte linii. Implicit 50.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp ccs jurnal
+	 *     wp ccs jurnal --nivel=avertisment
+	 *     wp ccs jurnal --rulare=18 --numar=200
+	 *
+	 * @param array $args  Argumentele.
+	 * @param array $optiuni Opțiunile.
+	 * @return void
+	 */
+	public function jurnal( $args, $optiuni = array() ) {
+		$nivel = (string) ( $optiuni['nivel'] ?? '' );
+		if ( '' !== $nivel && ! in_array( $nivel, array( 'info', 'avertisment', 'eroare' ), true ) ) {
+			WP_CLI::error( 'Nivelul poate fi info, avertisment sau eroare.' );
+		}
+
+		$randuri = ccs_jurnal_citeste(
+			array(
+				'nivel'  => $nivel,
+				'rulare' => (int) ( $optiuni['rulare'] ?? 0 ),
+				'numar'  => (int) ( $optiuni['numar'] ?? 50 ),
+			)
+		);
+
+		if ( ! $randuri ) {
+			WP_CLI::line( 'Nicio linie în jurnal pentru ce ai cerut.' );
+			return;
+		}
+
+		// De la cea mai veche la cea mai nouă: un jurnal se citește în ordinea în care s-au întâmplat lucrurile.
+		foreach ( array_reverse( $randuri ) as $l ) {
+			WP_CLI::line(
+				sprintf(
+					'%s  %-11s  %s%s',
+					$l->creat_la,
+					$l->nivel,
+					$l->rulare_id ? '[rularea ' . (int) $l->rulare_id . '] ' : '',
+					$l->mesaj
+				)
+			);
+		}
+
+		WP_CLI::line( '' );
+		WP_CLI::line( sprintf( '%d linii.', count( $randuri ) ) );
+	}
+
+	/**
 	 * Arată sau schimbă o setare.
 	 *
 	 * ## OPTIONS
