@@ -75,7 +75,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-admin .dashicons { width: 16px; height: 16px; font-size: 16px; }
 
 /* ---------------------------------------------------------------- antet */
-.ccs-antet { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.ccs-antet { position: relative; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
 .ccs-antet__titlu { display: flex; align-items: center; gap: 12px; }
 .ccs-antet__icon {
   display: grid !important; place-items: center;
@@ -610,18 +610,45 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 /* ---------------------------------------------------------------- carduri de acțiune */
 /* Cardurile de acțiune: fundal alb ca tot panoul, iar culoarea stă în iconița din colț și în cifră. Pline de
    culoare erau citibile, dar trei dreptunghiuri tari unul lângă altul strigă mai tare decât conținutul lor. */
-/* ---------------------------------------------------------------- banda de sus */
-/* Un singur banner pe pagina, deasupra a tot. Bordura doar in stanga, ca notificarile din WordPress 7.0. */
-.ccs-banner {
-  display: flex; align-items: flex-start; gap: 12px;
-  margin-bottom: 20px; padding: 14px 16px;
-  background: var(--c-atentie-fundal); border-left: 3px solid var(--c-atentie); border-radius: 8px;
+/* ---------------------------------------------------------------- info la hover */
+/* Explicatia sta langa lucrul pe care il explica. Fara JavaScript: hover si focus pe acelasi element. */
+.ccs-info {
+  position: relative; display: inline-flex; align-items: center; margin-left: 4px;
+  color: var(--c-text-3); cursor: help; vertical-align: middle;
 }
-.ccs-banner__icon { flex: none; color: var(--c-atentie); width: 20px; height: 20px; font-size: 20px; }
-.ccs-banner__corp { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
-.ccs-banner__corp strong { font-size: 14px; color: var(--c-text); }
-.ccs-banner__corp span { font-size: 13px; line-height: 18px; color: var(--c-text-2); max-width: 86ch; }
-.ccs-banner .ccs-btn { flex: none; align-self: center; background: var(--c-card); }
+.ccs-info:hover, .ccs-info:focus-visible { color: var(--c-accent); outline: none; }
+.ccs-info .dashicons { width: 15px; height: 15px; font-size: 15px; }
+.ccs-info__bula {
+  position: absolute; top: calc(100% + 8px); left: -8px; z-index: 30;
+  width: max-content; max-width: 320px; padding: 10px 12px;
+  background: #171717; color: #f5f5f5; border-radius: 8px;
+  font-size: 12px; line-height: 17px; font-weight: 400; text-align: left; white-space: normal;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
+  opacity: 0; visibility: hidden; transform: translateY(-2px);
+  transition: opacity .14s var(--c-curba), transform .14s var(--c-curba), visibility .14s;
+}
+/* Langa marginea din dreapta, bula se deschide spre stanga, altfel iese din ecran. */
+.ccs-info--stanga .ccs-info__bula { left: auto; right: -8px; }
+.ccs-info:hover .ccs-info__bula,
+.ccs-info:focus-visible .ccs-info__bula { opacity: 1; visibility: visible; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .ccs-info__bula { transition: none; }
+}
+
+/* ---------------------------------------------------------------- nota dintr-un card */
+/* O informatie care trebuie citita, nu o nota de subsol: iconita si culoare, pe fundal propriu. */
+.ccs-nota {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-bottom: 16px; padding: 12px 14px; border-radius: 10px;
+  background: var(--c-accent-fundal); border: 1px solid rgba(37, 99, 235, .18);
+  font-size: 13px; line-height: 19px; color: var(--c-text-2);
+}
+.ccs-nota__icon { flex: none; width: 18px; height: 18px; font-size: 18px; color: var(--c-accent); }
+.ccs-nota span:last-child { max-width: 90ch; }
+.ccs-nota--bine { background: var(--c-verde-fundal); border-color: rgba(22, 163, 74, .2); }
+.ccs-nota--bine .ccs-nota__icon { color: var(--c-verde); }
+.ccs-nota--atentie { background: var(--c-atentie-fundal); border-color: rgba(194, 65, 12, .2); }
+.ccs-nota--atentie .ccs-nota__icon { color: var(--c-atentie); }
 
 /* ---------------------------------------------------------------- pasii de pus la punct */
 /* Pasii se bifeaza singuri din starea reala. Cel curent e singurul cu text si cu buton: sapte lucruri deodata

@@ -459,40 +459,39 @@ function ccs_ui_jurnal_rulari( $limita = 10 ) {
 }
 
 /**
- * Banda de sus care spune de ce nu se aplică nimic.
+ * O iconiță de info cu explicația la hover.
  *
- * Până acum faptul ăsta stătea într-o pastilă de 11px în antet, adică în cel mai mic text din pagină, deși e
- * singurul lucru care schimbă înțelesul tuturor cifrelor de dedesubt: fără el, „3.692 prețuri de schimbat” se
- * citește ca „s-au schimbat”.
+ * Explicația stă lângă lucrul pe care îl explică, nu într-o bandă peste toată pagina: o bandă pe care o vezi la
+ * fiecare intrare devine mobilier în două zile, iar un semn de întrebare lângă un cuvânt se apasă exact când nu
+ * înțelegi cuvântul.
  *
- * Spune și când se poate porni, fiindcă altfel întrebarea următoare rămâne fără răspuns.
+ * Fără JavaScript. `tabindex` și `role` sunt acolo ca explicația să se vadă și la navigarea cu tastatura, nu doar
+ * cu mouse-ul.
  *
- * @return void
+ * @param string $text   Explicația.
+ * @param string $unde   'stanga' când iconița e lângă marginea din dreapta a ecranului.
+ * @return string HTML.
  */
-function ccs_ui_banner_scriere() {
-	if ( ! ccs_setari()['mod_raport'] ) {
-		return;
-	}
-
-	$politica = ccs_decizii_curente( 'politica_pret' );
-	$gata     = ! empty( $politica[''] );
-
-	printf(
-		'<div class="ccs-banner"><span class="ccs-banner__icon dashicons dashicons-info-outline" aria-hidden="true"></span><span class="ccs-banner__corp"><strong>%s</strong><span>%s</span></span>%s</div>',
-		esc_html__( 'Scrierea pe site e oprită', 'conex-conect-sync' ),
-		esc_html(
-			$gata
-				? __( 'Cifrele de mai jos sunt modificări propuse, nu aplicate. Niciun produs nu se schimbă până nu pornești scrierea. Politica de preț e confirmată, deci o poți porni oricând, din Panou.', 'conex-conect-sync' )
-				: __( 'Cifrele de mai jos sunt modificări propuse, nu aplicate. Niciun produs nu se schimbă. Ca să poți porni scrierea, confirmă întâi politica de preț: adaosul, cota de TVA și marja minimă.', 'conex-conect-sync' )
-		),
-		$gata
-			? ''
-			: sprintf(
-				'<a class="ccs-btn ccs-btn--mic" href="%s">%s</a>',
-				esc_url( ccs_admin_url( 'pret' ) ),
-				esc_html__( 'Deschide politica de preț', 'conex-conect-sync' )
-			)
+function ccs_ui_info( $text, $unde = '' ) {
+	return sprintf(
+		'<span class="ccs-info%1$s" tabindex="0" role="note" aria-label="%2$s"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><span class="ccs-info__bula">%3$s</span></span>',
+		$unde ? ' ccs-info--' . esc_attr( $unde ) : '',
+		esc_attr( wp_strip_all_tags( $text ) ),
+		esc_html( $text )
 	);
+}
+
+/**
+ * Explicația pentru „scrierea pe site e oprită”, adaptată la ce mai e de făcut.
+ *
+ * @return string Textul.
+ */
+function ccs_ui_explica_scrierea() {
+	$politica = ccs_decizii_curente( 'politica_pret' );
+
+	return ! empty( $politica[''] )
+		? __( 'Sincronizarea citește de la furnizor și îți arată ce s-ar schimba, dar nu modifică niciun produs. Politica de preț e confirmată, deci poți porni scrierea din Panou, de la pasul „Scrierea pe site e pornită”.', 'conex-conect-sync' )
+		: __( 'Sincronizarea citește de la furnizor și îți arată ce s-ar schimba, dar nu modifică niciun produs. Ca să o poți porni, confirmă întâi politica de preț: adaosul, cota de TVA și marja minimă.', 'conex-conect-sync' );
 }
 
 /**
@@ -724,6 +723,7 @@ function ccs_ui_fapte_sistem() {
 		__( 'Scrierea pe site', 'conex-conect-sync' ),
 		$setari['mod_raport'] ? __( 'oprită', 'conex-conect-sync' ) : __( 'pornită', 'conex-conect-sync' ),
 		$setari['mod_raport'] ? 'atentie' : 'bine',
+		$setari['mod_raport'] ? ccs_ui_explica_scrierea() : '',
 	);
 
 	$fapte[] = array(
@@ -818,10 +818,12 @@ function ccs_ui_linie_stare( $fapte ) {
 	echo '<div class="ccs-linie-stare">';
 	foreach ( $fapte as $f ) {
 		printf(
-			'<span class="ccs-linie-stare__fapt"><span class="ccs-bulina%1$s"></span>%2$s <b>%3$s</b></span>',
+			'<span class="ccs-linie-stare__fapt"><span class="ccs-bulina%1$s"></span>%2$s <b>%3$s</b>%4$s</span>',
 			! empty( $f[2] ) ? ' ccs-bulina--' . esc_attr( $f[2] ) : '',
 			esc_html( $f[0] ),
-			esc_html( $f[1] )
+			esc_html( $f[1] ),
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit de noi, escapat.
+			! empty( $f[3] ) ? ccs_ui_info( $f[3] ) : ''
 		);
 	}
 	echo '</div>';
@@ -1111,8 +1113,10 @@ function ccs_admin_pagina() {
 			</div>
 			<div class="ccs-antet__dreapta">
 				<?php
-				echo $setari['mod_raport'] // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					? ccs_ui_pastila( __( 'Scrierea pe site e oprită', 'conex-conect-sync' ), 'info' )
+				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit de noi, escapat.
+				echo $setari['mod_raport']
+					? ccs_ui_pastila( __( 'Scrierea pe site e oprită', 'conex-conect-sync' ), 'atentie' )
+						. ccs_ui_info( ccs_ui_explica_scrierea(), 'stanga' )
 					: ccs_ui_pastila( __( 'Sincronizare pornită', 'conex-conect-sync' ), 'bine' );
 				?>
 				<a class="ccs-btn ccs-btn--fantoma" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=ccs-decizii&tab=' . $tab . '&recalculeaza=1' ), 'ccs-recalculeaza' ) ); ?>">
@@ -1143,13 +1147,7 @@ function ccs_admin_pagina() {
 				<?php endforeach; ?>
 			</nav>
 			<main class="ccs-principal">
-				<?php
-				// Un singur banner, deasupra a tot: faptul că nimic nu se aplică e informația care schimbă
-				// înțelesul fiecărei cifre de dedesubt, deci nu are ce căuta într-o pastilă de 11px din antet.
-				ccs_ui_banner_scriere();
-
-				call_user_func( 'ccs_admin_tab_' . str_replace( '-', '_', $tab ) );
-				?>
+				<?php call_user_func( 'ccs_admin_tab_' . str_replace( '-', '_', $tab ) ); ?>
 			</main>
 		</div>
 	</div>
@@ -2459,6 +2457,11 @@ function ccs_ui_catalog_rasfoire() {
 		);
 	}
 
+	// Explicația nu mai e subtitlu gri, ci o notă cu iconiță și culoare: când e singurul lucru de citit dintr-un
+	// card gol, trebuie să arate ca o informație, nu ca o notă de subsol.
+	$nota = $povestea;
+	$povestea = '';
+
 	ccs_ui_card(
 		__( 'Catalogul furnizorului', 'conex-conect-sync' ),
 		$povestea,
@@ -2470,6 +2473,13 @@ function ccs_ui_catalog_rasfoire() {
 			),
 			( $gata['gata'] ?? 0 ) ? 'info' : 'neutru'
 		)
+	);
+
+	printf(
+		'<div class="ccs-nota ccs-nota--%1$s"><span class="ccs-nota__icon dashicons dashicons-%2$s" aria-hidden="true"></span><span>%3$s</span></div>',
+		( $gata['gata'] ?? 0 ) ? 'bine' : 'info',
+		( $gata['gata'] ?? 0 ) ? 'yes-alt' : 'info-outline',
+		esc_html( $nota )
 	);
 
 	ccs_ui_catalog_filtre_bara( $cautare, $brand, $cale, $toate );
