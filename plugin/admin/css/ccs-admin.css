@@ -10,12 +10,6 @@
  *   Semnătura: săgeata de schimbare, `738,00 → 1.529,00`, folosită peste tot unde o valoare se schimbă și nicăieri
  *             altundeva. Dacă o vezi, înseamnă că acolo se schimbă ceva.
  *
- * ## Scara de mărimi
- *
- * Textul panoului pornește de la 15px, nu de la 14, fiindcă Iulian a spus că se citește greu. Panoul se
- * citește pe un monitor de birou, între două comenzi, nu pe un telefon. Cifrele mari și plăcuțele de iconițe
- * au rămas cum erau: ele nu erau problema, iar mărite ar fi stricat raportul dintre titlu și conținut.
- *
  * ## Unde stă culoarea
  *
  * Regula care ține tot fișierul, luată din Omni Supplier Sync după ce am comparat panouri de pluginuri care fac
@@ -73,7 +67,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   margin: 0 auto;
   padding: 24px 24px 64px 4px;
   color: var(--c-text-2);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 20px;
 }
 .ccs-admin *, .ccs-admin *::before, .ccs-admin *::after { box-sizing: border-box; }
@@ -91,7 +85,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   border-radius: 12px; background: var(--c-text); color: #fff; font-size: 20px !important;
 }
 .ccs-antet h1 { margin: 0; padding: 0; font-size: 20px; line-height: 24px; font-weight: 500; }
-.ccs-antet p { margin: 0; font-size: 14px; color: var(--c-text-3); }
+.ccs-antet p { margin: 0; font-size: 13px; color: var(--c-text-3); }
 .ccs-antet__dreapta { display: flex; align-items: center; gap: 8px; }
 
 /* ---------------------------------------------------------------- navigație */
@@ -107,8 +101,8 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   transition: background 140ms var(--c-curba), color 140ms var(--c-curba), border-color 140ms var(--c-curba);
 }
 .ccs-nav__link > span:nth-child(2) { flex: 1 1 auto; min-width: 0; }
-.ccs-nav__link strong { display: block; font-size: 15px; font-weight: 400; color: var(--c-text); }
-.ccs-nav__link small { display: block; font-size: 13px; line-height: 17px; color: var(--c-text-3); }
+.ccs-nav__link strong { display: block; font-size: 14px; font-weight: 400; color: var(--c-text); }
+.ccs-nav__link small { display: block; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 .ccs-nav__link .ccs-icon { color: var(--c-text-3); }
 .ccs-nav__link:hover { background: var(--c-ridicat); color: var(--c-text); }
 .ccs-nav__link:focus-visible { box-shadow: var(--c-inel); outline: none; }
@@ -120,14 +114,14 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-nav__rest {
   flex: none; min-width: 20px; padding: 0 6px;
   border-radius: 4px; background: var(--c-atentie-fundal); color: var(--c-atentie);
-  font-family: var(--c-mono); font-size: 13px; line-height: 21px; text-align: center;
+  font-family: var(--c-mono); font-size: 12px; line-height: 20px; text-align: center;
   font-variant-numeric: tabular-nums;
 }
 
 /* ---------------------------------------------------------------- antetul unui tab */
 .ccs-tab-antet { margin: 0 0 20px; }
 .ccs-tab-antet h2 { margin: 0 0 4px; font-size: 28px; line-height: 32px; font-weight: 500; }
-.ccs-tab-antet p { margin: 0; max-width: 72ch; font-size: 15px; color: var(--c-text-3); }
+.ccs-tab-antet p { margin: 0; max-width: 72ch; font-size: 14px; color: var(--c-text-3); }
 
 /* Progresul: cât din întrebările tabului au primit răspuns. */
 .ccs-progres { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
@@ -136,7 +130,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-progres__pista { flex: 0 0 160px; height: 4px; border-radius: 4px; background: rgba(23, 23, 23, .1); overflow: hidden; }
 .ccs-progres__umplut { height: 100%; border-radius: 4px; background: var(--c-accent); transition: width 300ms var(--c-curba); }
 .ccs-progres__umplut--gata { background: var(--c-verde); }
-.ccs-progres span { font-size: 14px; color: var(--c-text-3); font-variant-numeric: tabular-nums; }
+.ccs-progres span { font-size: 13px; color: var(--c-text-3); font-variant-numeric: tabular-nums; }
 
 /* ---------------------------------------------------------------- carduri */
 .ccs-card {
@@ -145,25 +139,25 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 }
 .ccs-card__cap { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px 20px 0; }
 .ccs-card__cap h2 { margin: 0; font-size: 16px; line-height: 20px; font-weight: 500; }
-.ccs-card__cap p { margin: 4px 0 0; max-width: 72ch; font-size: 14px; color: var(--c-text-3); }
+.ccs-card__cap p { margin: 4px 0 0; max-width: 72ch; font-size: 13px; color: var(--c-text-3); }
 .ccs-card__corp { padding: 16px 20px 20px; }
 .ccs-card__corp > :first-child { margin-top: 0; }
 .ccs-card__corp > :last-child { margin-bottom: 0; }
 
-.ccs-subtitlu { margin: 24px 0 8px; font-size: 14px; font-weight: 500; color: var(--c-text); }
+.ccs-subtitlu { margin: 24px 0 8px; font-size: 13px; font-weight: 500; color: var(--c-text); }
 .ccs-subtitlu--prim { margin-top: 0; }
-.ccs-mic { margin: 8px 0 0; font-size: 13px; line-height: 17px; color: var(--c-text-3); }
+.ccs-mic { margin: 8px 0 0; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 .ccs-gol {
   padding: 20px 16px; border: 1px dashed var(--c-linie-tare); border-radius: 8px;
   background: var(--c-fundal); color: var(--c-text-3); text-align: center;
 }
 /* Cele două paragrafe lungi din cardul „Rularea automată”. Fără lățime maximă, un text de trei rânduri se
    întinde pe toată pagina și devine greu de urmărit cu ochiul de la un rând la altul. */
-.ccs-explic { max-width: 62ch; margin: 0 0 8px; font-size: 14px; line-height: 1.6; color: var(--c-text-2); }
+.ccs-explic { max-width: 62ch; margin: 0 0 8px; font-size: 13px; line-height: 1.6; color: var(--c-text-2); }
 .ccs-explic:last-child { margin-bottom: 0; }
 
-.ccs-gol strong { display: block; margin-bottom: 4px; font-size: 15px; font-weight: 500; color: var(--c-verde); }
-.ccs-gol span { display: block; font-size: 14px; line-height: 1.5; }
+.ccs-gol strong { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 500; color: var(--c-verde); }
+.ccs-gol span { display: block; font-size: 13px; line-height: 1.5; }
 
 /* ---------------------------------------------------------------- cifre */
 .ccs-cifre { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
@@ -178,7 +172,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 /* Eticheta are clasa ei. Prima variantă folosea `.ccs-cifra span`, care lovea și plăcuța de iconiță, tot un
    `span`, și o făcea `display: block`: iconița ateriza în colțul din stânga sus în loc să fie centrată. O regulă
    pe element, într-o componentă care are mai multe elemente de același fel, e o capcană. */
-.ccs-cifra__eticheta { display: block; font-size: 13px; line-height: 17px; color: var(--c-text-3); }
+.ccs-cifra__eticheta { display: block; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 .ccs-cifra strong {
   display: block; margin-top: 2px;
   font-size: 26px; line-height: 32px; font-weight: 600; color: var(--c-text);
@@ -186,7 +180,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 }
 .ccs-cifra .ccs-pastila { margin-top: 6px; }
 /* Valoarea secundară de lângă număr, ca „6 / 6”: aceeași linie, dar retrasă. */
-.ccs-cifra strong em { font-style: normal; font-size: 16px; font-weight: 400; color: var(--c-text-3); }
+.ccs-cifra strong em { font-style: normal; font-size: 15px; font-weight: 400; color: var(--c-text-3); }
 
 /* Plăcuța de iconiță. Singurul loc din card unde intră culoare. */
 .ccs-plac {
@@ -206,7 +200,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-filtre__form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .ccs-admin .ccs-filtre__cauta { flex: 1 1 240px; min-width: 200px; }
 .ccs-admin .ccs-filtre__form .ccs-intrare { min-height: 34px; max-width: 280px; }
-.ccs-filtre__bifa { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--c-text-2); }
+.ccs-filtre__bifa { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--c-text-2); }
 
 /* Bara de selectie o inlocuieste pe cea de filtre cand ai bifat ceva: tiparul Polaris, si singurul moment in
    care actiunile in masa au rost. */
@@ -215,7 +209,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   margin-bottom: 16px; padding: 10px 14px;
   background: var(--c-accent-fundal); border: 1px solid var(--c-accent); border-radius: 10px;
 }
-.ccs-selectie__cate { font-size: 14px; font-weight: 600; color: var(--c-accent-inchis); }
+.ccs-selectie__cate { font-size: 13px; font-weight: 600; color: var(--c-accent-inchis); }
 /* `display: flex` bate atributul `hidden`, deci bara de selectie se vedea si cand nu era nimic bifat. */
 .ccs-selectie[hidden], .ccs-filtre[hidden] { display: none; }
 
@@ -248,16 +242,16 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 
 /* Doua randuri fixe pentru denumire: altfel cardurile din acelasi rand ies de inaltimi diferite. */
 .ccs-produs-card__nume {
-  font-size: 14px; line-height: 19px; font-weight: 500; color: var(--c-text);
+  font-size: 13px; line-height: 18px; font-weight: 500; color: var(--c-text);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   min-height: 36px;
 }
-.ccs-produs-card__cod { font-family: var(--c-mono); font-size: 12px; color: var(--c-text-3); }
+.ccs-produs-card__cod { font-family: var(--c-mono); font-size: 11px; color: var(--c-text-3); }
 .ccs-produs-card__jos { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
-.ccs-produs-card__pret { font-size: 16px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.ccs-produs-card__pret { font-size: 15px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
 
 .ccs-paginare { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 16px; }
-.ccs-paginare__unde { font-size: 14px; color: var(--c-text-3); font-variant-numeric: tabular-nums; }
+.ccs-paginare__unde { font-size: 13px; color: var(--c-text-3); font-variant-numeric: tabular-nums; }
 
 /* ---------------------------------------------------------------- randuri cu poza */
 /* Miniatura stă pe fundalul gri, nu pe alb: pozele furnizorului sunt pe fundal alb, iar fără contrast conturul
@@ -275,7 +269,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-tabel .ccs-rand-grup th {
   padding: 10px 16px; background: var(--c-ridicat);
   border-top: 1px solid var(--c-linie); border-bottom: 1px solid var(--c-linie);
-  color: var(--c-text); font-size: 13px; font-weight: 600;
+  color: var(--c-text); font-size: 12px; font-weight: 600;
   text-transform: none; letter-spacing: 0;
 }
 .ccs-tabel .ccs-rand-grup th .ccs-pastila { margin-left: 8px; }
@@ -283,12 +277,12 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 /* Rândul de totaluri. Răspunde la „cât mă costă în total”, întrebare la care altfel răspundea proza din antet. */
 .ccs-tabel tfoot td {
   padding: 12px 16px; border-top: 2px solid var(--c-linie-tare);
-  background: var(--c-fundal); font-size: 14px; font-weight: 600; color: var(--c-text);
+  background: var(--c-fundal); font-size: 13px; font-weight: 600; color: var(--c-text);
 }
 .ccs-tabel tfoot td.ccs-tabel__slab { font-weight: 400; }
 
 /* ---------------------------------------------------------------- ultima rulare */
-.ccs-rulare__cand { margin: 0 0 12px; font-size: 14px; color: var(--c-text-3); }
+.ccs-rulare__cand { margin: 0 0 12px; font-size: 13px; color: var(--c-text-3); }
 .ccs-rulare__efect { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
 .ccs-rulare__efect .ccs-pastila b { font-weight: 600; color: var(--c-text); }
 .ccs-rulare__verbe { display: flex; align-items: center; gap: 12px; margin: 16px 0 0; }
@@ -304,7 +298,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px;
   margin-bottom: 16px; padding: 12px 16px;
   background: var(--c-card); border: 1px solid var(--c-linie); border-radius: 12px;
-  font-size: 14px;
+  font-size: 13px;
 }
 .ccs-linie-stare__fapt { display: inline-flex; align-items: center; gap: 8px; color: var(--c-text-3); }
 .ccs-linie-stare__fapt b { font-weight: 600; color: var(--c-text); }
@@ -324,7 +318,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 
 /* Eticheta unui grup de carduri. Trei linii de CSS care împart o stivă plată în secțiuni cu sens. */
 .ccs-eticheta-sectiune {
-  margin: 24px 0 8px; font-size: 12px; font-weight: 600; line-height: 17px;
+  margin: 24px 0 8px; font-size: 11px; font-weight: 600; line-height: 16px;
   text-transform: uppercase; letter-spacing: 0.06em; color: var(--c-text-3);
 }
 .ccs-eticheta-sectiune:first-child { margin-top: 0; }
@@ -337,8 +331,8 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 }
 .ccs-stare:first-child { border-top: 0; padding-top: 0; }
 .ccs-stare:last-child { padding-bottom: 0; }
-.ccs-stare strong { font-size: 15px; font-weight: 400; color: var(--c-text); }
-.ccs-stare > span:last-child { font-size: 14px; color: var(--c-text-3); }
+.ccs-stare strong { font-size: 14px; font-weight: 400; color: var(--c-text); }
+.ccs-stare > span:last-child { font-size: 13px; color: var(--c-text-3); }
 .ccs-stare__icon {
   display: grid !important; place-items: center;
   width: 24px !important; height: 24px !important;
@@ -356,7 +350,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   min-height: 36px; padding: 0 16px;
   border: 1px solid var(--c-linie-tare); border-radius: 8px;
   background: var(--c-card); color: var(--c-text);
-  font-size: 15px; font-weight: 400; line-height: 1; text-decoration: none;
+  font-size: 14px; font-weight: 400; line-height: 1; text-decoration: none;
   cursor: pointer; white-space: nowrap;
   transition: background 140ms var(--c-curba), border-color 140ms var(--c-curba), color 140ms var(--c-curba);
 }
@@ -368,7 +362,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-btn--principal:hover { background: var(--c-accent-inchis); border-color: var(--c-accent-inchis); color: #fff; }
 .ccs-btn--fantoma { padding: 0 12px; border-color: transparent; background: transparent; color: var(--c-text-3); }
 .ccs-btn--fantoma:hover { background: var(--c-ridicat); color: var(--c-text); }
-.ccs-btn--mic { min-height: 32px; padding: 0 12px; font-size: 14px; }
+.ccs-btn--mic { min-height: 32px; padding: 0 12px; font-size: 13px; }
 /* Butonul care așteaptă al doilea clic. */
 .ccs-btn[data-confirma="da"] { border-color: var(--c-rosu); background: var(--c-rosu-fundal); color: var(--c-rosu); }
 
@@ -384,7 +378,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   min-height: 28px; padding: 0 12px;
   border: 1px solid transparent; border-radius: 6px;
   background: transparent; color: var(--c-text-2);
-  font-size: 14px; line-height: 1; white-space: nowrap; cursor: pointer;
+  font-size: 13px; line-height: 1; white-space: nowrap; cursor: pointer;
   transition: background 140ms var(--c-curba), color 140ms var(--c-curba), box-shadow 140ms var(--c-curba);
 }
 .ccs-alegere:hover { color: var(--c-text); }
@@ -420,7 +414,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   display: inline-flex; align-items: center; gap: 4px;
   padding: 0 8px; border-radius: 999px;
   background: var(--c-ridicat); color: var(--c-text-2);
-  font-size: 12px; font-weight: 500; line-height: 21px; white-space: nowrap;
+  font-size: 11px; font-weight: 500; line-height: 20px; white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
@@ -431,22 +425,22 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 /* O cifră măsurată, nu o decizie: rămâne neutră, dar cu greutate de mono, ca să se citească. */
 .ccs-pastila--masura { font-family: var(--c-mono); color: var(--c-text-2); }
 
-.ccs-mesaj { margin-bottom: 16px; padding: 12px 16px; border: 1px solid; border-radius: 8px; font-size: 15px; }
+.ccs-mesaj { margin-bottom: 16px; padding: 12px 16px; border: 1px solid; border-radius: 8px; font-size: 14px; }
 .ccs-mesaj--bine { background: var(--c-verde-fundal); border-color: var(--c-verde); color: var(--c-verde); }
 .ccs-mesaj--atentie { background: var(--c-atentie-fundal); border-color: var(--c-atentie); color: var(--c-atentie); }
 .ccs-mesaj--problema { background: var(--c-rosu-fundal); border-color: var(--c-rosu); color: var(--c-rosu); }
 
-.ccs-stare-text { font-size: 13px; line-height: 17px; color: var(--c-verde); }
+.ccs-stare-text { font-size: 12px; line-height: 16px; color: var(--c-verde); }
 .ccs-stare-text.ccs-eroare { color: var(--c-rosu); }
 
 /* ---------------------------------------------------------------- semnătura: acum → nou */
 .ccs-delta { display: inline-flex; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
 .ccs-delta__acum { color: var(--c-text-3); }
-.ccs-delta__sageata { color: var(--c-text-3); font-size: 13px; }
+.ccs-delta__sageata { color: var(--c-text-3); font-size: 12px; }
 .ccs-delta__nou { font-weight: 500; color: var(--c-text); }
 .ccs-delta__cat {
   padding: 0 6px; border-radius: 4px; background: var(--c-ridicat);
-  font-family: var(--c-mono); font-size: 13px; line-height: 21px; color: var(--c-text-3);
+  font-family: var(--c-mono); font-size: 12px; line-height: 20px; color: var(--c-text-3);
 }
 .ccs-delta--sus .ccs-delta__cat { background: var(--c-verde-fundal); color: var(--c-verde); }
 .ccs-delta--jos .ccs-delta__cat { background: var(--c-atentie-fundal); color: var(--c-atentie); }
@@ -456,15 +450,15 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   width: 100%; max-width: 320px; min-height: 36px; padding: 8px 12px;
   border: 1px solid var(--c-linie-tare); border-radius: 8px;
   background: var(--c-card); color: var(--c-text);
-  font-size: 15px; line-height: 21px; box-shadow: none;
+  font-size: 14px; line-height: 20px; box-shadow: none;
   transition: border-color 140ms var(--c-curba);
 }
 .ccs-admin select.ccs-intrare { padding-right: 32px; }
 .ccs-admin .ccs-intrare:focus { border-color: var(--c-accent); box-shadow: var(--c-inel); outline: none; }
 
 .ccs-camp { display: block; margin-bottom: 24px; }
-.ccs-camp > span { display: block; margin-bottom: 4px; font-size: 15px; font-weight: 500; color: var(--c-text); }
-.ccs-camp > small { display: block; margin-bottom: 8px; max-width: 56ch; font-size: 13px; line-height: 17px; color: var(--c-text-3); }
+.ccs-camp > span { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 500; color: var(--c-text); }
+.ccs-camp > small { display: block; margin-bottom: 8px; max-width: 56ch; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 .ccs-glisor { display: flex; align-items: center; gap: 16px; }
 .ccs-glisor input[type="range"] { flex: 1 1 auto; max-width: 280px; accent-color: var(--c-accent); }
 .ccs-glisor output {
@@ -472,7 +466,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   font-variant-numeric: tabular-nums;
 }
 
-.ccs-formula { margin: 0 0 24px; padding: 12px 16px; border-radius: 8px; background: var(--c-fundal); border: 1px solid var(--c-linie); font-size: 14px; }
+.ccs-formula { margin: 0 0 24px; padding: 12px 16px; border-radius: 8px; background: var(--c-fundal); border: 1px solid var(--c-linie); font-size: 13px; }
 .ccs-formula b { font-weight: 500; color: var(--c-text); }
 
 /* Controalele n-au nevoie de jumătate de ecran, iar efectul are. Altfel rămâne o bandă goală sub butonul de
@@ -486,7 +480,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-tabel th {
   padding: 10px 16px; border-bottom: 1px solid var(--c-linie);
   background: var(--c-fundal); color: var(--c-text-3);
-  font-size: 12px; font-weight: 600; line-height: 17px; text-align: left; white-space: nowrap;
+  font-size: 11px; font-weight: 600; line-height: 16px; text-align: left; white-space: nowrap;
   text-transform: uppercase; letter-spacing: 0.06em;
 }
 .ccs-tabel td { padding: 12px 16px; border-bottom: 1px solid var(--c-linie); vertical-align: middle; }
@@ -500,8 +494,8 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-tabel td.num { color: var(--c-text); }
 .ccs-tabel td.ccs-rosu { color: var(--c-rosu); font-weight: 500; }
 .ccs-tabel td:last-child { width: 1%; white-space: nowrap; text-align: right; }
-.ccs-produs strong { display: block; font-size: 15px; font-weight: 400; color: var(--c-text); }
-.ccs-produs span { display: block; margin-top: 4px; font-family: var(--c-mono); font-size: 13px; line-height: 17px; color: var(--c-text-3); }
+.ccs-produs strong { display: block; font-size: 14px; font-weight: 400; color: var(--c-text); }
+.ccs-produs span { display: block; margin-top: 4px; font-family: var(--c-mono); font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 .ccs-produs a { color: var(--c-text-3); }
 .ccs-produs a:hover { color: var(--c-accent); }
 
@@ -509,14 +503,14 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-potrivire { margin-bottom: 8px; padding: 16px; border: 1px solid var(--c-linie); border-radius: 8px; }
 .ccs-potrivire:last-of-type { margin-bottom: 0; }
 .ccs-fata { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 16px; align-items: start; }
-.ccs-parte__cap { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 13px; line-height: 17px; color: var(--c-text-3); }
+.ccs-parte__cap { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 
 .ccs-parte__corp { display: flex; gap: 12px; }
 .ccs-parte img { flex: none; width: 48px; height: 48px; object-fit: contain; border: 1px solid var(--c-linie); border-radius: 4px; background: var(--c-fundal); }
-.ccs-parte__nume { margin: 0; font-size: 15px; font-weight: 400; color: var(--c-text); }
-.ccs-parte__meta { margin: 4px 0 0; font-family: var(--c-mono); font-size: 13px; line-height: 17px; color: var(--c-text-3); }
+.ccs-parte__nume { margin: 0; font-size: 14px; font-weight: 400; color: var(--c-text); }
+.ccs-parte__meta { margin: 4px 0 0; font-family: var(--c-mono); font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 .ccs-parte__meta a { color: var(--c-text-3); }
-.ccs-contra { align-self: center; padding: 0 8px; border-radius: 4px; background: var(--c-ridicat); color: var(--c-text-3); font-size: 13px; line-height: 21px; }
+.ccs-contra { align-self: center; padding: 0 8px; border-radius: 4px; background: var(--c-ridicat); color: var(--c-text-3); font-size: 12px; line-height: 20px; }
 .ccs-potrivire .ccs-butoane { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--c-linie); }
 
 /* Ce a primit răspuns se stinge, ca ochiul să cadă pe ce a rămas. */
@@ -549,7 +543,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   margin-bottom: 16px; padding: 12px 16px;
   border: 1px solid var(--c-linie); border-radius: 8px; background: var(--c-fundal);
 }
-.ccs-lot-bara > span:first-child { margin-right: 4px; font-size: 14px; color: var(--c-text-3); }
+.ccs-lot-bara > span:first-child { margin-right: 4px; font-size: 13px; color: var(--c-text-3); }
 
 /* ---------------------------------------------------------------- ecrane mai mici */
 @media (max-width: 1180px) {
@@ -599,7 +593,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-bara { margin-bottom: 24px; }
 .ccs-bara:last-child { margin-bottom: 0; }
 .ccs-bara__cap { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.ccs-bara__titlu { font-size: 15px; font-weight: 500; color: var(--c-text); }
+.ccs-bara__titlu { font-size: 14px; font-weight: 500; color: var(--c-text); }
 .ccs-bara__total { font-size: 20px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
 .ccs-bara__pista { display: flex; height: 28px; border-radius: 8px; overflow: hidden; background: var(--c-gri-moale); }
 .ccs-bara__bucata { position: relative; min-width: 3px; transition: filter 140ms var(--c-curba); }
@@ -612,7 +606,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-bara__bucata--gri-moale { background: var(--c-gri-moale); }
 
 .ccs-legenda { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; }
-.ccs-legenda__item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--c-text-2); }
+.ccs-legenda__item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--c-text-2); }
 .ccs-legenda__pata { width: 12px; height: 12px; border-radius: 3px; flex: none; }
 .ccs-legenda__cifra { font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
 
@@ -637,7 +631,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   position: absolute; top: calc(100% + 8px); left: 0; z-index: 30;
   width: max-content; max-width: 320px; padding: 10px 12px;
   background: #171717; color: #f5f5f5; border-radius: 8px;
-  font-size: 13px; line-height: 18px; font-weight: 400; text-align: left; white-space: normal;
+  font-size: 12px; line-height: 17px; font-weight: 400; text-align: left; white-space: normal;
   box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
   opacity: 0; visibility: hidden; transform: translateY(-2px);
   transition: opacity .14s var(--c-curba), transform .14s var(--c-curba), visibility .14s;
@@ -658,7 +652,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   display: flex; align-items: flex-start; gap: 10px;
   margin-bottom: 16px; padding: 12px 14px; border-radius: 10px;
   background: var(--c-accent-fundal); border: 1px solid rgba(37, 99, 235, .18);
-  font-size: 14px; line-height: 20px; color: var(--c-text-2);
+  font-size: 13px; line-height: 19px; color: var(--c-text-2);
 }
 .ccs-nota__icon { flex: none; width: 18px; height: 18px; font-size: 18px; color: var(--c-accent); }
 .ccs-nota span:last-child { max-width: 90ch; }
@@ -725,10 +719,10 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-pas--gata .ccs-pas__bifa { background: var(--c-verde-fundal); color: var(--c-verde); }
 .ccs-pas--acum .ccs-pas__bifa { background: var(--c-accent-fundal); color: var(--c-accent); }
 .ccs-pas__corp { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.ccs-pas__titlu { font-size: 15px; color: var(--c-text-3); }
+.ccs-pas__titlu { font-size: 14px; color: var(--c-text-3); }
 .ccs-pas--gata .ccs-pas__titlu { color: var(--c-text-2); }
 .ccs-pas--acum .ccs-pas__titlu { font-weight: 600; color: var(--c-text); }
-.ccs-pas__text { font-size: 14px; line-height: 19px; color: var(--c-text-3); max-width: 70ch; }
+.ccs-pas__text { font-size: 13px; line-height: 18px; color: var(--c-text-3); max-width: 70ch; }
 .ccs-pas .ccs-btn { align-self: flex-start; margin-top: 4px; }
 
 /* ---------------------------------------------------------------- efectul politicii de pret */
@@ -742,9 +736,9 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-efect-item .ccs-plac { width: 32px; height: 32px; border-radius: 8px; }
 
 .ccs-efect-item__corp { min-width: 0; }
-.ccs-efect-item__eticheta { display: block; font-size: 13px; line-height: 17px; color: var(--c-text-3); }
+.ccs-efect-item__eticheta { display: block; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 .ccs-efect-item strong {
-  display: block; font-size: 16px; line-height: 21px; font-weight: 600; color: var(--c-text);
+  display: block; font-size: 15px; line-height: 20px; font-weight: 600; color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -753,7 +747,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   padding: 12px 14px; border: 1px solid var(--c-linie); border-radius: 10px; background: var(--c-card);
 }
-.ccs-efect-total span { font-size: 14px; color: var(--c-text-2); }
+.ccs-efect-total span { font-size: 13px; color: var(--c-text-2); }
 .ccs-efect-total strong {
   font-size: 17px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -786,10 +780,10 @@ a.ccs-tile:focus-visible { box-shadow: var(--c-inel); outline: none; }
   font-size: 28px; line-height: 32px; font-weight: 600; color: var(--c-text);
   font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
 }
-.ccs-tile__titlu { font-size: 15px; font-weight: 500; color: var(--c-text); }
-.ccs-tile__desc { font-size: 14px; line-height: 19px; color: var(--c-text-3); }
+.ccs-tile__titlu { font-size: 14px; font-weight: 500; color: var(--c-text); }
+.ccs-tile__desc { font-size: 13px; line-height: 18px; color: var(--c-text-3); }
 .ccs-tile__jos { display: flex; align-items: center; gap: 12px; margin-top: auto; padding-top: 8px; }
-.ccs-tile__verb { font-size: 14px; font-weight: 500; color: var(--c-accent); }
+.ccs-tile__verb { font-size: 13px; font-weight: 500; color: var(--c-accent); }
 
 /* Un card poate avea sub el si un progres, si butoane: grupurile de retragere au nevoie de amandoua. */
 .ccs-tile-grila--larg { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
@@ -797,7 +791,7 @@ a.ccs-tile:focus-visible { box-shadow: var(--c-inel); outline: none; }
 .ccs-tile__progres { display: flex; align-items: center; gap: 10px; }
 .ccs-tile__pista { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--c-ridicat); overflow: hidden; }
 .ccs-tile__pista span { display: block; height: 100%; background: var(--c-verde); }
-.ccs-tile__stare { font-size: 13px; color: var(--c-text-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ccs-tile__stare { font-size: 12px; color: var(--c-text-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ccs-tile__butoane { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 a.ccs-tile:hover .ccs-tile__verb { color: var(--c-accent-inchis); }
 
@@ -811,7 +805,7 @@ a.ccs-tile:hover .ccs-tile__verb { color: var(--c-accent-inchis); }
 .ccs-miscare__semn--intra { background: var(--c-verde-plin); }
 .ccs-miscare__semn--iese { background: var(--c-atentie-plin); }
 .ccs-miscare__cifra { display: block; font-size: 20px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
-.ccs-miscare__eticheta { display: block; font-size: 14px; color: var(--c-text-3); }
+.ccs-miscare__eticheta { display: block; font-size: 13px; color: var(--c-text-3); }
 
 /* ---------------------------------------------------------------- asocierea categoriilor */
 .ccs-mapare { display: grid; gap: 2px; }
@@ -820,20 +814,20 @@ a.ccs-tile:hover .ccs-tile__verb { color: var(--c-accent-inchis); }
   align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px;
 }
 .ccs-mapare__rand:nth-child(odd) { background: var(--c-fundal); }
-.ccs-mapare__cale { font-size: 14px; color: var(--c-text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ccs-mapare__cale { font-size: 13px; color: var(--c-text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ccs-mapare__sageata { color: var(--c-text-3); text-align: center; }
-.ccs-mapare__dest { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; color: var(--c-text); }
+.ccs-mapare__dest { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--c-text); }
 .ccs-mapare__dest::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--c-verde-plin); flex: none; }
 .ccs-mapare__rand--cuvant .ccs-mapare__dest::before { background: var(--c-albastru-plin); }
 .ccs-mapare__rand--fara .ccs-mapare__dest { color: var(--c-atentie); }
 .ccs-mapare__rand--fara .ccs-mapare__dest::before { background: var(--c-atentie-plin); }
 .ccs-mapare__bara { height: 6px; border-radius: 3px; background: var(--c-gri-moale); overflow: hidden; }
 .ccs-mapare__bara span { display: block; height: 100%; background: var(--c-verde-plin); }
-.ccs-mapare__n { font-size: 13px; color: var(--c-text-3); text-align: right; font-variant-numeric: tabular-nums; }
+.ccs-mapare__n { font-size: 12px; color: var(--c-text-3); text-align: right; font-variant-numeric: tabular-nums; }
 .ccs-mapare__cuvant {
   display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px;
   background: var(--c-albastru-fundal); color: var(--c-albastru-inchis);
-  font-family: var(--c-mono); font-size: 12px; line-height: 19px;
+  font-family: var(--c-mono); font-size: 11px; line-height: 18px;
 }
 
 /* ---------------------------------------------------------------- previzualizarea unui produs importat */
@@ -848,12 +842,12 @@ a.ccs-tile:hover .ccs-tile__verb { color: var(--c-accent-inchis); }
 }
 .ccs-produs-nou__poza img { max-width: 100%; max-height: 126px; object-fit: contain; }
 .ccs-produs-nou__corp { display: flex; flex-direction: column; gap: 6px; padding: 12px; }
-.ccs-produs-nou__nume { font-size: 14px; line-height: 19px; font-weight: 500; color: var(--c-text); }
+.ccs-produs-nou__nume { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--c-text); }
 .ccs-produs-nou__pret { font-size: 18px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
 .ccs-produs-nou__jos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
 .ccs-eticheta {
   display: inline-flex; align-items: center; padding: 0 8px;
-  border-radius: 4px; font-size: 12px; line-height: 21px; font-weight: 500; color: #fff;
+  border-radius: 4px; font-size: 11px; line-height: 20px; font-weight: 500; color: #fff;
 }
 .ccs-eticheta--categorie { background: var(--c-albastru-plin); }
 .ccs-eticheta--stoc { background: var(--c-verde-plin); }
@@ -873,10 +867,10 @@ a.ccs-tile:hover .ccs-tile__verb { color: var(--c-accent-inchis); }
 .ccs-de-mapat__rand:nth-child(odd) { background: var(--c-fundal); }
 .ccs-de-mapat__rand--gata { background: var(--c-verde-fundal); }
 .ccs-de-mapat__stanga { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.ccs-de-mapat__cale { font-size: 14px; color: var(--c-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ccs-de-mapat__n { font-size: 13px; color: var(--c-atentie); font-weight: 500; font-variant-numeric: tabular-nums; }
+.ccs-de-mapat__cale { font-size: 13px; color: var(--c-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ccs-de-mapat__n { font-size: 12px; color: var(--c-atentie); font-weight: 500; font-variant-numeric: tabular-nums; }
 .ccs-de-mapat__rand--gata .ccs-de-mapat__n { color: var(--c-verde); }
-.ccs-admin .ccs-de-mapat__select { max-width: none; min-height: 32px; padding: 4px 10px; font-size: 14px; }
+.ccs-admin .ccs-de-mapat__select { max-width: none; min-height: 32px; padding: 4px 10px; font-size: 13px; }
 
 @media (max-width: 960px) {
   .ccs-de-mapat__rand { grid-template-columns: 1fr; gap: 8px; }
