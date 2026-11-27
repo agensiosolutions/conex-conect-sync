@@ -71,13 +71,130 @@ function ccs_ui_antet_tab( $titlu, $desc ) {
  * @param string $ton      '', 'atentie' sau 'bine'.
  * @return void
  */
-function ccs_ui_cifra( $eticheta, $valoare, $ton = '' ) {
-	printf(
-		'<div class="ccs-cifra%1$s"><span>%2$s</span><strong>%3$s</strong></div>',
-		$ton ? ' ccs-cifra--' . esc_attr( $ton ) : '',
-		esc_html( $eticheta ),
-		esc_html( $valoare )
+function ccs_ui_cifra( $eticheta, $valoare, $ton = '', $optiuni = array() ) {
+	$optiuni = wp_parse_args(
+		$optiuni,
+		array(
+			'icon'       => '',   // Numele unei dashicon, fără prefix.
+			'sub'        => '',   // Pastila de sub număr.
+			'sub_ton'    => '',   // Tonul pastilei, dacă e altul decât al cifrei.
+			'secundar'   => '',   // Valoarea retrasă de lângă număr, ca „6 / 6”.
+		)
 	);
+
+	echo '<div class="ccs-cifra">';
+
+	// Plăcuța de iconiță e singurul loc din card unde intră culoare. Vezi antetul fișierului CSS.
+	printf(
+		'<span class="ccs-plac%1$s">%2$s</span>',
+		$ton ? ' ccs-plac--' . esc_attr( $ton ) : '',
+		$optiuni['icon']
+			? '<span class="dashicons dashicons-' . esc_attr( $optiuni['icon'] ) . '"></span>'
+			: ''
+	);
+
+	echo '<span class="ccs-cifra__corp">';
+	printf( '<span>%s</span>', esc_html( $eticheta ) );
+	printf(
+		'<strong>%1$s%2$s</strong>',
+		esc_html( $valoare ),
+		'' !== (string) $optiuni['secundar'] ? ' <em>' . esc_html( $optiuni['secundar'] ) . '</em>' : ''
+	);
+	if ( '' !== (string) $optiuni['sub'] ) {
+		// `ccs_ui_pastila()` întoarce, nu tipărește.
+		$ton_pastila = $optiuni['sub_ton'] ? $optiuni['sub_ton'] : $ton;
+		echo wp_kses_post( ccs_ui_pastila( $optiuni['sub'], $ton_pastila ? $ton_pastila : 'neutru' ) );
+	}
+	echo '</span></div>';
+}
+
+/**
+ * Faptele despre sistem pentru linia de stare de pe Panou.
+ *
+ * Patru lucruri, în ordinea în care contează pentru cineva care tocmai a deschis pagina: mai vorbim cu furnizorul,
+ * de când, scriem pe site, și rulează singur.
+ *
+ * @return array Faptele, gata de dat lui `ccs_ui_linie_stare()`.
+ */
+function ccs_ui_fapte_sistem() {
+	$setari = ccs_setari();
+	$fapte  = array();
+
+	$ultima = function_exists( 'ccs_ultima_sincronizare' ) ? ccs_ultima_sincronizare() : null;
+	if ( $ultima ) {
+		$trecut = time() - (int) mysql2date( 'U', $ultima, false );
+		$ore    = $trecut / HOUR_IN_SECONDS;
+		$fapte[] = array(
+			__( 'Ultima preluare', 'conex-conect-sync' ),
+			sprintf(
+				/* translators: %s: de cât timp, de exemplu „20 de minute”. */
+				__( 'acum %s', 'conex-conect-sync' ),
+				human_time_diff( (int) mysql2date( 'U', $ultima, false ) )
+			),
+			$ore > (int) $setari['ore_fara_sincronizare'] ? 'problema' : 'bine',
+		);
+	} else {
+		$fapte[] = array( __( 'Ultima preluare', 'conex-conect-sync' ), __( 'niciodată', 'conex-conect-sync' ), 'problema' );
+	}
+
+	$fapte[] = array(
+		__( 'Scrierea pe site', 'conex-conect-sync' ),
+		$setari['mod_raport'] ? __( 'oprită', 'conex-conect-sync' ) : __( 'pornită', 'conex-conect-sync' ),
+		$setari['mod_raport'] ? 'atentie' : 'bine',
+	);
+
+	$fapte[] = array(
+		__( 'Rularea automată', 'conex-conect-sync' ),
+		$setari['joburi_pornite']
+			/* translators: %d: la câte minute rulează. */
+			? sprintf( __( 'la %d minute', 'conex-conect-sync' ), (int) $setari['interval_catalog'] )
+			: __( 'oprită', 'conex-conect-sync' ),
+		$setari['joburi_pornite'] ? 'bine' : 'atentie',
+	);
+
+	$eroare = (array) get_option( 'ccs_ultima_eroare', array() );
+	if ( ! empty( $eroare['cod'] ) ) {
+		$fapte[] = array( __( 'Ultima rulare', 'conex-conect-sync' ), __( 'cu eroare', 'conex-conect-sync' ), 'problema' );
+	}
+
+	return $fapte;
+}
+
+/**
+ * Un rând de fapte despre sistem, deasupra cifrelor.
+ *
+ * Răspunde la „merge?”, întrebarea dinaintea oricărei cifre. Fără cutii: bulină, eticheta în gri, valoarea în
+ * negru. Bulina pulsează numai când chiar rulează ceva.
+ *
+ * @param array $fapte Listă de array( eticheta, valoare, ton ). Tonul: bine, atentie, problema, lucreaza.
+ * @return void
+ */
+function ccs_ui_linie_stare( $fapte ) {
+	if ( ! $fapte ) {
+		return;
+	}
+	echo '<div class="ccs-linie-stare">';
+	foreach ( $fapte as $f ) {
+		printf(
+			'<span class="ccs-linie-stare__fapt"><span class="ccs-bulina%1$s"></span>%2$s <b>%3$s</b></span>',
+			! empty( $f[2] ) ? ' ccs-bulina--' . esc_attr( $f[2] ) : '',
+			esc_html( $f[0] ),
+			esc_html( $f[1] )
+		);
+	}
+	echo '</div>';
+}
+
+/**
+ * Eticheta unui grup de carduri.
+ *
+ * Împarte o stivă plată de carduri în secțiuni cu sens, ceea ce e cea mai ieftină ierarhie din tot panoul.
+ *
+ * @param string $text Eticheta.
+ * @return void
+ */
+function ccs_ui_eticheta_sectiune( $text ) {
+	printf( '<p class="ccs-eticheta-sectiune">%s</p>', esc_html( $text ) );
 }
 
 /**
@@ -404,15 +521,57 @@ function ccs_admin_tab_panou() {
 		__( 'Modificările pe care le-ar aplica sincronizarea în acest moment.', 'conex-conect-sync' )
 	);
 	?>
+	<?php
+	// Întâi „merge?”, apoi „cât?”. O cifră citită fără să știi dacă sincronizarea mai rulează poate fi veche de
+	// nouă luni, exact ce s-a întâmplat cu feed-ul vechi.
+	ccs_ui_linie_stare( ccs_ui_fapte_sistem() );
+	?>
+
 	<div class="ccs-cifre">
 		<?php
-		ccs_ui_cifra( __( 'Produse sincronizate', 'conex-conect-sync' ), ccs_nr( $r['produse'] ) );
-		ccs_ui_cifra( __( 'Prețuri de schimbat', 'conex-conect-sync' ), ccs_nr( $r['pret'] ) );
-		ccs_ui_cifra( __( 'Stocuri de schimbat', 'conex-conect-sync' ), ccs_nr( $r['stoc'] ) );
+		$setari = ccs_setari();
+
+		ccs_ui_cifra(
+			__( 'Produse sincronizate', 'conex-conect-sync' ),
+			ccs_nr( $r['produse'] ),
+			'info',
+			array(
+				'icon' => 'update',
+				'sub'  => __( 'legate de Conex', 'conex-conect-sync' ),
+			)
+		);
+		ccs_ui_cifra(
+			__( 'Prețuri de schimbat', 'conex-conect-sync' ),
+			ccs_nr( $r['pret'] ),
+			$r['pret'] ? 'atentie' : 'bine',
+			array(
+				'icon' => 'tag',
+				'sub'  => $setari['mod_raport']
+					? __( 'doar propuse', 'conex-conect-sync' )
+					: __( 'se aplică automat', 'conex-conect-sync' ),
+			)
+		);
+		ccs_ui_cifra(
+			__( 'Stocuri de schimbat', 'conex-conect-sync' ),
+			ccs_nr( $r['stoc'] ),
+			$r['stoc'] ? 'atentie' : 'bine',
+			array(
+				'icon' => 'archive',
+				'sub'  => $setari['mod_raport']
+					? __( 'doar propuse', 'conex-conect-sync' )
+					: __( 'se aplică automat', 'conex-conect-sync' ),
+			)
+		);
 		ccs_ui_cifra(
 			__( 'Întrebări fără răspuns', 'conex-conect-sync' ),
 			ccs_nr( $total ),
-			$total ? 'atentie' : 'bine'
+			$total ? 'atentie' : 'bine',
+			array(
+				'icon' => $total ? 'editor-help' : 'yes-alt',
+				'sub'  => $total
+					? __( 'așteaptă o decizie', 'conex-conect-sync' )
+					: __( 'nimic de hotărât', 'conex-conect-sync' ),
+			)
 		);
 		?>
 	</div>

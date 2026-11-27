@@ -10,18 +10,36 @@
  *   Semnătura: săgeata de schimbare, `738,00 → 1.529,00`, folosită peste tot unde o valoare se schimbă și nicăieri
  *             altundeva. Dacă o vezi, înseamnă că acolo se schimbă ceva.
  *
- * Reguli: toate spațiile pe grila de 4px, o singură rampă neutră cu trei roluri de text, un singur accent, o singură
- * curbă de animație. Cifrele sunt tabulare peste tot, ca să se poată compara pe coloană.
+ * ## Unde stă culoarea
+ *
+ * Regula care ține tot fișierul, luată din Omni Supplier Sync după ce am comparat panouri de pluginuri care fac
+ * același lucru: **culoarea stă în trei locuri și în niciun altul**.
+ *
+ *   1. plăcuța de iconiță a unei cifre, fundal palid plus glifă saturată;
+ *   2. pastilele mici, fundal palid plus text saturat;
+ *   3. butonul principal, plin.
+ *
+ * Cardul rămâne alb. Suprafața rămâne gri. Un card colorat în întregime a fost încercat și respins: țipă fără să
+ * spună nimic, iar când totul e colorat nimic nu mai iese în evidență. Culoarea pe o plăcuță de 36px spune la fel
+ * de mult și nu obosește.
+ *
+ * ## Ce se citește dintr-o privire
+ *
+ * O valoare importantă nu se scrie ca text liber, se pune într-o pastilă. Un număr de produse, o stare, o durată:
+ * toate au aceeași formă, deci ochiul le găsește fără să citească rândul. Textul liber rămâne pentru explicații.
+ *
+ * Reguli: toate spațiile pe grila de 4px, o singură rampă neutră cu trei roluri de text, un singur accent, o
+ * singură curbă de animație. Cifrele sunt tabulare peste tot, ca să se poată compara pe coloană.
  */
 body.ccs-pagina #wpcontent,
-body.ccs-pagina #wpbody-content { background: #fafafa; }
+body.ccs-pagina #wpbody-content { background: #f7f8fa; }
 body.ccs-pagina #wpbody-content > .notice,
 body.ccs-pagina #wpbody-content > .error,
 body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 
 .ccs-admin {
   /* Rampa graphite, varianta deschisă. Suprafețele rămân gri: lumea se vede în accent, nu în fundal. */
-  --c-fundal: #fafafa;
+  --c-fundal: #f7f8fa;
   --c-card: #fff;
   --c-ridicat: #f4f4f5;
   --c-linie: rgba(23, 23, 23, .08);
@@ -141,18 +159,67 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 
 /* ---------------------------------------------------------------- cifre */
 .ccs-cifre { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+/* Anatomia unei cifre: [plăcuță de iconiță] etichetă / număr / pastilă. Numărul rămâne negru indiferent de ton,
+   fiindcă tonul se vede deja în plăcuță și în pastilă; colorat în trei locuri ar fi de două ori prea mult. */
 .ccs-cifra {
+  display: grid; grid-template-columns: 36px minmax(0, 1fr); align-items: start; gap: 12px;
   padding: 16px; background: var(--c-card); border: 1px solid var(--c-linie);
   border-radius: 12px; box-shadow: var(--c-umbra);
 }
-.ccs-cifra span { display: block; font-size: 13px; color: var(--c-text-3); }
+.ccs-cifra__corp { min-width: 0; }
+.ccs-cifra span { display: block; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 .ccs-cifra strong {
-  display: block; margin-top: 4px;
-  font-size: 28px; line-height: 32px; font-weight: 500; color: var(--c-text);
-  font-variant-numeric: tabular-nums;
+  display: block; margin-top: 2px;
+  font-size: 26px; line-height: 32px; font-weight: 600; color: var(--c-text);
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
 }
-.ccs-cifra--atentie strong { color: var(--c-galben); }
-.ccs-cifra--bine strong { color: var(--c-verde); }
+.ccs-cifra .ccs-pastila { margin-top: 6px; }
+/* Valoarea secundară de lângă număr, ca „6 / 6”: aceeași linie, dar retrasă. */
+.ccs-cifra strong em { font-style: normal; font-size: 15px; font-weight: 400; color: var(--c-text-3); }
+
+/* Plăcuța de iconiță. Singurul loc din card unde intră culoare. */
+.ccs-plac {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--c-ridicat); color: var(--c-text-2);
+}
+.ccs-plac .dashicons { width: 18px; height: 18px; font-size: 18px; }
+.ccs-plac--bine { background: var(--c-verde-fundal); color: var(--c-verde); }
+.ccs-plac--atentie { background: var(--c-galben-fundal); color: var(--c-galben); }
+.ccs-plac--problema { background: var(--c-rosu-fundal); color: var(--c-rosu); }
+.ccs-plac--info { background: var(--c-accent-fundal); color: var(--c-accent-inchis); }
+
+/* ---------------------------------------------------------------- linia de stare */
+/* Un rând de fapte despre sistem, fără cutii: bulină, eticheta în gri, valoarea în negru. Stă deasupra cardurilor
+   fiindcă răspunde la „merge?”, întrebarea dinaintea oricărei cifre. */
+.ccs-linie-stare {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px;
+  margin-bottom: 16px; padding: 12px 16px;
+  background: var(--c-card); border: 1px solid var(--c-linie); border-radius: 12px;
+  font-size: 13px;
+}
+.ccs-linie-stare__fapt { display: inline-flex; align-items: center; gap: 8px; color: var(--c-text-3); }
+.ccs-linie-stare__fapt b { font-weight: 600; color: var(--c-text); }
+.ccs-bulina { width: 8px; height: 8px; border-radius: 50%; background: var(--c-text-3); flex: 0 0 auto; }
+.ccs-bulina--bine { background: var(--c-verde); }
+.ccs-bulina--atentie { background: var(--c-galben); }
+.ccs-bulina--problema { background: var(--c-rosu); }
+/* Pulsează numai cât timp chiar rulează ceva. Starea finală e statică: altfel pagina pare mereu ocupată. */
+.ccs-bulina--lucreaza { background: var(--c-accent); animation: ccs-puls 1.6s var(--c-curba) infinite; }
+@keyframes ccs-puls {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, .45); }
+  70% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ccs-bulina--lucreaza { animation: none; }
+}
+
+/* Eticheta unui grup de carduri. Trei linii de CSS care împart o stivă plată în secțiuni cu sens. */
+.ccs-eticheta-sectiune {
+  margin: 24px 0 8px; font-size: 11px; font-weight: 600; line-height: 16px;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--c-text-3);
+}
+.ccs-eticheta-sectiune:first-child { margin-top: 0; }
 
 /* ---------------------------------------------------------------- starea */
 .ccs-stari { margin: 0; padding: 0; list-style: none; }
@@ -255,11 +322,13 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 
 /* ---------------------------------------------------------------- pastile și mesaje */
 .ccs-pastila {
-  display: inline-flex; align-items: center;
-  padding: 0 8px; border-radius: 4px;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 0 8px; border-radius: 999px;
   background: var(--c-ridicat); color: var(--c-text-2);
-  font-size: 12px; line-height: 20px; white-space: nowrap;
+  font-size: 11px; font-weight: 500; line-height: 20px; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
+.ccs-pastila .dashicons { width: 12px; height: 12px; font-size: 12px; }
 .ccs-pastila--bine { background: var(--c-verde-fundal); color: var(--c-verde); }
 .ccs-pastila--atentie { background: var(--c-galben-fundal); color: var(--c-galben); }
 .ccs-pastila--problema { background: var(--c-rosu-fundal); color: var(--c-rosu); }
@@ -360,9 +429,10 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-tabel-cadru { border: 1px solid var(--c-linie); border-radius: 8px; overflow: hidden; }
 .ccs-tabel { width: 100%; border-collapse: collapse; }
 .ccs-tabel th {
-  padding: 8px 16px; border-bottom: 1px solid var(--c-linie);
+  padding: 10px 16px; border-bottom: 1px solid var(--c-linie);
   background: var(--c-fundal); color: var(--c-text-3);
-  font-size: 12px; font-weight: 400; line-height: 16px; text-align: left; white-space: nowrap;
+  font-size: 11px; font-weight: 600; line-height: 16px; text-align: left; white-space: nowrap;
+  text-transform: uppercase; letter-spacing: 0.06em;
 }
 .ccs-tabel td { padding: 12px 16px; border-bottom: 1px solid var(--c-linie); vertical-align: middle; }
 .ccs-tabel tr:last-child td { border-bottom: 0; }
