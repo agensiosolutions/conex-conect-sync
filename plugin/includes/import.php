@@ -383,6 +383,27 @@ function ccs_catalog_filtre() {
 }
 
 /**
+ * Ia lacătul de scriere, apoi importă.
+ *
+ * Două operații care schimbă produse nu pot rula în paralel: importul automat de la 19:40 și jobul de catalog
+ * de la fiecare jumătate de oră se suprapuneau. Proba nu cere lacătul, fiindcă nu scrie nimic.
+ *
+ * @param array $opt Vezi `ccs_import_executa_lucreaza()`.
+ * @return array|WP_Error
+ */
+function ccs_import_executa( $opt = array() ) {
+	if ( ! empty( $opt['proba'] ) ) {
+		return ccs_import_executa_lucreaza( $opt );
+	}
+	return ccs_cu_lacat(
+		__( 'importul de produse noi', 'conex-conect-sync' ),
+		function () use ( $opt ) {
+			return ccs_import_executa_lucreaza( $opt );
+		}
+	);
+}
+
+/**
  * Creează pe site produsele pe care furnizorul le are și magazinul nu.
  *
  * Singurul loc din plugin care creează produse. Totul trece prin CRUD-ul WooCommerce, din același motiv pentru care
@@ -405,7 +426,7 @@ function ccs_catalog_filtre() {
  * @param array $opt limita, proba, publica, forteaza, coduri, raport.
  * @return array|WP_Error Rezumatul, sau eroare.
  */
-function ccs_import_executa( $opt = array() ) {
+function ccs_import_executa_lucreaza( $opt = array() ) {
 	global $wpdb;
 	$opt = wp_parse_args(
 		$opt,

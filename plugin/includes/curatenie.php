@@ -28,13 +28,34 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
+ * Ia lacătul de scriere, apoi curăță.
+ *
+ * Două operații care schimbă produse nu pot rula în paralel. Proba nu cere lacătul, fiindcă nu scrie nimic.
+ *
+ * @param array $decizii Vezi `ccs_curata_lucreaza()`.
+ * @param array $opt     Vezi `ccs_curata_lucreaza()`.
+ * @return array|WP_Error
+ */
+function ccs_curata( $decizii, $opt = array() ) {
+	if ( ! empty( $opt['proba'] ) ) {
+		return ccs_curata_lucreaza( $decizii, $opt );
+	}
+	return ccs_cu_lacat(
+		__( 'curățenia în catalogul site-ului', 'conex-conect-sync' ),
+		function () use ( $decizii, $opt ) {
+			return ccs_curata_lucreaza( $decizii, $opt );
+		}
+	);
+}
+
+/**
  * Șterge și ascunde produsele dintr-o listă de hotărâri.
  *
  * @param array $decizii array( 'sterge' => id-uri, 'ascunde' => id-uri ).
  * @param array $opt     limita, proba.
  * @return array|WP_Error Rezumatul, sau eroare.
  */
-function ccs_curata( $decizii, $opt = array() ) {
+function ccs_curata_lucreaza( $decizii, $opt = array() ) {
 	global $wpdb;
 	$opt = wp_parse_args(
 		$opt,

@@ -220,6 +220,42 @@ function ccs_atribute_filtrabile() {
 }
 
 /**
+ * Slugul sub care intră un atribut al furnizorului.
+ *
+ * Harta nume -> slug stă într-o opțiune și nu se recalculează: odată ce un atribut a primit un slug, el rămâne,
+ * altfel valorile deja scrise pe produse ar rămâne legate de o taxonomie pe care n-o mai scrie nimeni.
+ *
+ * `$scrie` există pentru verificarea de sănătate, care vrea să știe unde *ar* intra un nume fără să rezerve
+ * nimic. Fără el, simpla verificare ar schimba starea pe care o verifică.
+ *
+ * @param string $nume  Numele de la furnizor.
+ * @param bool   $scrie Dacă memorăm în hartă un slug nou.
+ * @return string Slugul, fără prefixul `pa_`.
+ */
+function ccs_atribut_slug( $nume, $scrie = true ) {
+	$harta = (array) get_option( 'ccs_atribute_slug', array() );
+	if ( isset( $harta[ $nume ] ) ) {
+		return (string) $harta[ $nume ];
+	}
+
+	$slug = substr( sanitize_title( $nume ), 0, 28 );
+	if ( '' === $slug ) {
+		$slug = 'atribut-' . substr( md5( $nume ), 0, 8 );
+	}
+	// Slug deja luat de alt nume: îi punem o coadă scurtă și stabilă.
+	if ( in_array( $slug, $harta, true ) ) {
+		$slug = substr( $slug, 0, 23 ) . '-' . substr( md5( $nume ), 0, 4 );
+	}
+
+	if ( $scrie ) {
+		$harta[ $nume ] = $slug;
+		update_option( 'ccs_atribute_slug', $harta, false );
+	}
+
+	return $slug;
+}
+
+/**
  * Taxonomia WooCommerce pentru un atribut, creată dacă nu există.
  *
  * Numele unui atribut global WooCommerce are cel mult 28 de caractere, fiindcă `pa_` plus numele trebuie să intre
@@ -237,22 +273,7 @@ function ccs_atribut_taxonomie( $nume ) {
 		return new WP_Error( 'ccs_fara_woo', __( 'WooCommerce nu e activ.', 'conex-conect-sync' ) );
 	}
 
-	$harta = (array) get_option( 'ccs_atribute_slug', array() );
-	if ( isset( $harta[ $nume ] ) ) {
-		$slug = (string) $harta[ $nume ];
-	} else {
-		$slug = substr( sanitize_title( $nume ), 0, 28 );
-		if ( '' === $slug ) {
-			$slug = 'atribut-' . substr( md5( $nume ), 0, 8 );
-		}
-		// Slug deja luat de alt nume: îi punem o coadă scurtă și stabilă.
-		if ( in_array( $slug, $harta, true ) ) {
-			$slug = substr( $slug, 0, 23 ) . '-' . substr( md5( $nume ), 0, 4 );
-		}
-		$harta[ $nume ] = $slug;
-		update_option( 'ccs_atribute_slug', $harta, false );
-	}
-
+	$slug      = ccs_atribut_slug( $nume );
 	$taxonomie = wc_attribute_taxonomy_name( $slug );
 
 	if ( ! wc_attribute_taxonomy_id_by_name( $slug ) ) {
@@ -267,6 +288,14 @@ function ccs_atribut_taxonomie( $nume ) {
 		);
 		if ( is_wp_error( $creat ) ) {
 			return $creat;
+		}
+		// Ținem minte care atribute le-am făcut noi. Fără lista asta nu se poate deosebi un atribut al nostru de
+		// unul pe care și l-a făcut magazinul cu același nume, iar deosebirea contează: în al doilea caz scriem
+		// valorile furnizorului peste un vocabular ales de om.
+		$create = (array) get_option( 'ccs_atribute_create', array() );
+		if ( ! in_array( $slug, $create, true ) ) {
+			$create[] = $slug;
+			update_option( 'ccs_atribute_create', $create, false );
 		}
 		// WooCommerce înregistrează taxonomiile de atribut la `init`, care a trecut demult când rulăm din CLI sau
 		// dintr-un job. Fără înregistrarea asta pe loc, `wp_set_object_terms()` de mai jos ar eșua tăcut.

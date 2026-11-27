@@ -74,13 +74,34 @@ function ccs_retragere_de_atins( $ids ) {
 }
 
 /**
+ * Ia lacătul de scriere, apoi retrage.
+ *
+ * Două operații care schimbă produse nu pot rula în paralel. Proba nu cere lacătul, fiindcă nu scrie nimic.
+ *
+ * @param array $ids Id-urile de retras.
+ * @param array $opt Vezi `ccs_retrage_lucreaza()`.
+ * @return array|WP_Error
+ */
+function ccs_retrage( $ids, $opt = array() ) {
+	if ( ! empty( $opt['proba'] ) ) {
+		return ccs_retrage_lucreaza( $ids, $opt );
+	}
+	return ccs_cu_lacat(
+		__( 'retragerea de la vânzare', 'conex-conect-sync' ),
+		function () use ( $ids, $opt ) {
+			return ccs_retrage_lucreaza( $ids, $opt );
+		}
+	);
+}
+
+/**
  * Trece produsele pe stoc epuizat.
  *
  * @param array $ids Id-urile produselor.
  * @param array $opt limita, proba, motiv.
  * @return array Rezumatul.
  */
-function ccs_retrage( $ids, $opt = array() ) {
+function ccs_retrage_lucreaza( $ids, $opt = array() ) {
 	global $wpdb;
 	$opt = wp_parse_args(
 		$opt,

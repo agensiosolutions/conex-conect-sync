@@ -192,6 +192,12 @@ function ccs_verifica_sanatatea() {
 	$probleme  = array();
 	$ore_prag  = max( 1, (int) $setari['ore_fara_sincronizare'] );
 
+	// Presupunerile pluginului despre magazin, verificate în `sanatate.php`. Intră în aceeași listă fiindcă
+	// merită același drum: o dată pe email, apoi tăcere până se repară.
+	if ( function_exists( 'ccs_sanatate_configurare' ) ) {
+		$probleme = ccs_sanatate_configurare();
+	}
+
 	// 1. Sincronizarea s-a oprit. Asta e problema din cauza căreia există fișierul.
 	$ultima = ccs_ultima_sincronizare();
 	if ( $setari['joburi_pornite'] ) {

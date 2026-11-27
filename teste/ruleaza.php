@@ -166,6 +166,98 @@ function __( $text ) {
 defined( 'HOUR_IN_SECONDS' ) || define( 'HOUR_IN_SECONDS', 3600 );
 defined( 'DAY_IN_SECONDS' ) || define( 'DAY_IN_SECONDS', 86400 );
 
+/**
+ * Tranzientele, într-un tablou. Lacătul e singurul lucru testat aici care le folosește.
+ *
+ * @param string $cheie Cheia.
+ * @return mixed Valoarea, sau false.
+ */
+function get_transient( $cheie ) {
+	return $GLOBALS['ccs_tranziente'][ $cheie ] ?? false;
+}
+
+/**
+ * Scrie un tranzient.
+ *
+ * @param string $cheie    Cheia.
+ * @param mixed  $valoare  Valoarea.
+ * @param int    $cat_tine Cât ține, ignorat aici.
+ * @return bool
+ */
+function set_transient( $cheie, $valoare, $cat_tine = 0 ) {
+	$GLOBALS['ccs_tranziente'][ $cheie ] = $valoare;
+	return true;
+}
+
+/**
+ * Șterge un tranzient.
+ *
+ * @param string $cheie Cheia.
+ * @return bool
+ */
+function delete_transient( $cheie ) {
+	unset( $GLOBALS['ccs_tranziente'][ $cheie ] );
+	return true;
+}
+
+$GLOBALS['ccs_tranziente'] = array();
+
+/**
+ * Minimul din `WP_Error` folosit de lacăt.
+ */
+class WP_Error {
+
+	/**
+	 * Codul erorii.
+	 *
+	 * @var string
+	 */
+	public $code;
+
+	/**
+	 * Mesajul.
+	 *
+	 * @var string
+	 */
+	public $message;
+
+	/**
+	 * Construiește eroarea.
+	 *
+	 * @param string $code    Codul.
+	 * @param string $message Mesajul.
+	 */
+	public function __construct( $code = '', $message = '' ) {
+		$this->code    = $code;
+		$this->message = $message;
+	}
+}
+
+/**
+ * Varianta minimă a lui `is_wp_error()`.
+ *
+ * @param mixed $ceva Ce verificăm.
+ * @return bool
+ */
+function is_wp_error( $ceva ) {
+	return $ceva instanceof WP_Error;
+}
+
+/**
+ * Cârligul de dezactivare, fără efect.
+ *
+ * @param string   $fisier Fișierul pluginului.
+ * @param callable $apel   Ce s-ar chema.
+ * @return void
+ */
+function register_deactivation_hook( $fisier, $apel ) {}
+
+define( 'CCS_FISIER', __DIR__ . '/../plugin/conex-conect-sync.php' );
+define( 'HOUR_IN_SECONDS', 3600 );
+define( 'DAY_IN_SECONDS', 86400 );
+
+require __DIR__ . '/../plugin/includes/joburi.php';
+
 require __DIR__ . '/../plugin/includes/admin-ui.php';
 
 /* ------------------------------------------------------------------------------------------------ ajutoare */
@@ -670,6 +762,63 @@ verifica(
 	'07222.jpg',
 	ccs_import_nume_fisier( '', '07222', 0, 'https://x.ro/a.jpg', 4312 )
 );
+
+/* ---------------------------------------------------------------------------------------- lacătul de scriere */
+
+/*
+ * Lacătul merită teste tocmai pentru că reintranța nu se vede din citit. Greșit într-un fel, jobul de catalog
+ * își refuză singur propria aplicare și nu se mai scrie nimic niciodată. Greșit în celălalt, prima eliberare
+ * deschide ușa în mijlocul lucrului și două rulări scriu una peste alta, exact ce trebuia să împiedice.
+ */
+
+$GLOBALS['ccs_tranziente'] = array();
+
+verifica( 'la început, adâncimea e zero', 0, ccs_lacat_adancime() );
+
+$prima = ccs_lacat_ia( 'prima operație' );
+verifica_ca( 'prima luare reușește', true === $prima );
+verifica( 'adâncimea urcă la unu', 1, ccs_lacat_adancime() );
+
+$a_doua = ccs_lacat_ia( 'din interiorul primei' );
+verifica_ca( 'același proces îl poate lua din nou', true === $a_doua );
+verifica( 'adâncimea urcă la doi', 2, ccs_lacat_adancime() );
+
+ccs_lacat_lasa();
+verifica( 'eliberarea interioară coboară adâncimea', 1, ccs_lacat_adancime() );
+verifica_ca(
+	'eliberarea interioară nu deschide lacătul',
+	false !== get_transient( CCS_LACAT ),
+	'lacătul s-a deschis în mijlocul lucrului'
+);
+
+ccs_lacat_lasa();
+verifica( 'eliberarea exterioară coboară la zero', 0, ccs_lacat_adancime() );
+verifica_ca(
+	'eliberarea exterioară deschide lacătul',
+	false === get_transient( CCS_LACAT ),
+	'lacătul a rămas închis după ce toți l-au lăsat'
+);
+
+// Altcineva îl ține: cererea trebuie refuzată, cu un mesaj care spune ce rulează.
+set_transient( CCS_LACAT, array( 'ce' => 'jobul de noapte', 'de_la' => 1 ), 60 );
+$respins = ccs_lacat_ia( 'o comandă dată de om' );
+verifica_ca( 'un alt proces e refuzat', is_wp_error( $respins ) );
+verifica_ca(
+	'refuzul spune ce rulează deja',
+	is_wp_error( $respins ) && false !== strpos( $respins->message, 'jobul de noapte' ),
+	is_wp_error( $respins ) ? $respins->message : 'n-a fost refuzat deloc'
+);
+verifica( 'un refuz nu urcă adâncimea', 0, ccs_lacat_adancime() );
+
+// Eliberări în plus nu trebuie să ducă adâncimea sub zero: altfel următoarea luare ar crede că deja îl avem.
+ccs_lacat_lasa();
+ccs_lacat_lasa();
+verifica( 'adâncimea nu coboară sub zero', 0, ccs_lacat_adancime() );
+
+$GLOBALS['ccs_tranziente'] = array();
+$dupa = ccs_lacat_ia( 'după eliberări în plus' );
+verifica_ca( 'lacătul se mai poate lua după eliberări în plus', true === $dupa );
+ccs_lacat_lasa();
 
 /* ------------------------------------------------------------------------------------------------ rezultatul */
 

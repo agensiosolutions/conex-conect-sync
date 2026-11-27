@@ -629,6 +629,57 @@ function ccs_ui_mai_sunt_pasi() {
 }
 
 /**
+ * Cardul cu presupunerile care nu mai țin.
+ *
+ * Stă sus, înaintea pașilor și a cifrelor, fiindcă o cifră citită sub o presupunere greșită e mai rea decât
+ * nicio cifră. Când nu e nimic de spus, cardul nu există: un panou care anunță zilnic că totul e în regulă
+ * învață omul să nu se mai uite la el.
+ *
+ * Problemele operaționale (sincronizarea s-a oprit, tokenul a fost refuzat) nu intră aici: panoul le arată deja
+ * în linia de stare și în cardul joburilor, iar a doua oară n-ar fi informație, ar fi zgomot.
+ *
+ * @return void
+ */
+function ccs_ui_card_sanatate() {
+	if ( ! function_exists( 'ccs_sanatate_configurare' ) ) {
+		return;
+	}
+
+	$probleme = ccs_sanatate_configurare();
+	if ( ! $probleme ) {
+		return;
+	}
+
+	ccs_ui_eticheta_sectiune( __( 'De verificat', 'conex-conect-sync' ) );
+	ccs_ui_card(
+		__( 'Lucruri schimbate în magazin care ating sincronizarea', 'conex-conect-sync' ),
+		__( 'Niciunul nu dă eroare, de aceea le scriem aici.', 'conex-conect-sync' )
+	);
+
+	foreach ( $probleme as $cheie => $p ) {
+		// Textul e scris pentru email, unde rândurile goale despart ideile. Aici le facem paragrafe: un șir de
+		// `<br>`-uri ar da aceeași înălțime cu jumătate din lizibilitate.
+		$corp = '';
+		foreach ( preg_split( '/\n\s*\n/', (string) $p[1] ) as $paragraf ) {
+			$paragraf = trim( $paragraf );
+			if ( '' !== $paragraf ) {
+				$corp .= '<p>' . nl2br( esc_html( $paragraf ) ) . '</p>';
+			}
+		}
+
+		printf(
+			'<div class="ccs-nota ccs-nota--atentie" id="ccs-sanatate-%1$s"><span class="ccs-nota__icon">%2$s</span><span class="ccs-nota__text"><strong>%3$s</strong>%4$s</span></div>',
+			esc_attr( $cheie ),
+			ccs_icon( 'warning', 18 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG al nostru.
+			esc_html( $p[0] ),
+			$corp // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit mai sus din bucăți escapate.
+		);
+	}
+
+	ccs_ui_card_sfarsit();
+}
+
+/**
  * Cardul cu pașii de pus la punct.
  *
  * Dispare singur când totul e gata, fiindcă un card bifat în întregime devine mobilier. Se poate și închide, iar
@@ -1211,6 +1262,10 @@ function ccs_admin_tab_panou() {
 	// Întâi „merge?”, apoi „cât?”. O cifră citită fără să știi dacă sincronizarea mai rulează poate fi veche de
 	// nouă luni, exact ce s-a întâmplat cu feed-ul vechi.
 	ccs_ui_linie_stare( ccs_ui_fapte_sistem() );
+
+	// Înaintea oricărei cifre: dacă o presupunere a pluginului nu mai ține, cifrele de dedesubt nu înseamnă ce
+	// par că înseamnă.
+	ccs_ui_card_sanatate();
 
 	// Ghidul stă primul cât timp mai e ceva de pus la punct, fiindcă atunci e singurul lucru care contează.
 	ccs_ui_card_pasi();

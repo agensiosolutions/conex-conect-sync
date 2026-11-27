@@ -98,12 +98,33 @@ function ccs_aplica_produs( $rand, $tipuri ) {
 }
 
 /**
+ * Ia lacătul de scriere, apoi aplică.
+ *
+ * Două operații care schimbă produse nu pot rula în paralel: jobul de noapte și o comandă dată de om ar scrie
+ * una peste alta. Proba nu cere lacătul, fiindcă nu scrie nimic.
+ *
+ * @param array $opt Vezi `ccs_aplica_lucreaza()`.
+ * @return array|WP_Error
+ */
+function ccs_aplica( $opt = array() ) {
+	if ( ! empty( $opt['proba'] ) ) {
+		return ccs_aplica_lucreaza( $opt );
+	}
+	return ccs_cu_lacat(
+		__( 'aplicarea prețurilor și a stocurilor', 'conex-conect-sync' ),
+		function () use ( $opt ) {
+			return ccs_aplica_lucreaza( $opt );
+		}
+	);
+}
+
+/**
  * Aplică planul în WooCommerce.
  *
  * @param array $opt tip ('tot', 'pret', 'stoc'), limita, proba, forteaza.
  * @return array|WP_Error Rezumatul, sau eroare.
  */
-function ccs_aplica( $opt = array() ) {
+function ccs_aplica_lucreaza( $opt = array() ) {
 	global $wpdb;
 	$opt = wp_parse_args(
 		$opt,

@@ -294,6 +294,63 @@ function ccs_categorii_reguli( $sursa = '' ) {
 }
 
 /**
+ * Dintre niște term_id, care mai există în `product_cat`.
+ *
+ * O regulă ține un `term_id`, iar categoriile de pe site se șterg și se comasează fără ca cineva să se uite la
+ * regulile noastre. WooCommerce nu dă eroare când primește o categorie inexistentă: pune produsul în categoria
+ * implicită a magazinului, care la Cez Auto e „Accesorii auto”, o categorie reală din meniu. Importul ar raporta
+ * succes, iar produsele ar ajunge tăcut pe raftul greșit.
+ *
+ * O singură interogare pentru toate regulile, nu `term_exists()` pe fiecare produs: funcția care alege categoria
+ * e chemată o dată pe produs, iar catalogul are peste douăzeci de mii.
+ *
+ * @param array $term_ids Id-urile de verificat.
+ * @return array Id-urile care există, ca valori întregi.
+ */
+function ccs_categorii_termeni_vii( $term_ids ) {
+	$term_ids = array_values( array_unique( array_filter( array_map( 'intval', (array) $term_ids ) ) ) );
+	if ( ! $term_ids ) {
+		return array();
+	}
+
+	$vii = get_terms(
+		array(
+			'taxonomy'   => 'product_cat',
+			'include'    => $term_ids,
+			'fields'     => 'ids',
+			'hide_empty' => false,
+		)
+	);
+
+	return is_wp_error( $vii ) ? array() : array_map( 'intval', (array) $vii );
+}
+
+/**
+ * Regulile care arată spre o categorie ștearsă.
+ *
+ * Verificarea de sănătate le numără, ca să se repare din panou în loc să se descopere după ce o sută de produse
+ * au intrat în categoria implicită.
+ *
+ * @return array Regulile moarte, ca în `ccs_categorii_reguli()`.
+ */
+function ccs_categorii_reguli_moarte() {
+	$reguli = ccs_categorii_reguli();
+	if ( ! $reguli ) {
+		return array();
+	}
+
+	$vii = ccs_categorii_termeni_vii( wp_list_pluck( $reguli, 'term_id' ) );
+
+	$moarte = array();
+	foreach ( $reguli as $cheie => $r ) {
+		if ( ! in_array( (int) $r['term_id'], $vii, true ) ) {
+			$moarte[ $cheie ] = $r;
+		}
+	}
+	return $moarte;
+}
+
+/**
  * Categoria de pe site pentru un produs al furnizorului.
  *
  * Regulile pe cuvânt bat regula pe cale, pentru că sunt mai precise. Între regulile puse de om și cele învățate,
@@ -309,7 +366,15 @@ function ccs_categorie_pentru( $produs ) {
 		$min_n   = (int) $setari['categorie_min_produse'];
 		$min_inc = (int) $setari['categorie_min_incredere'];
 		$reguli  = array();
-		foreach ( ccs_categorii_reguli() as $r ) {
+		$toate   = ccs_categorii_reguli();
+		// Categoriile se șterg de pe site fără să știe nimeni de regulile noastre. O regulă rămasă fără categorie
+		// nu e o regulă neutră: ar trimite produsul în categoria implicită a magazinului. Mai bine n-o avem, și
+		// atunci produsul așteaptă o categorie, acolo unde se vede.
+		$vii = ccs_categorii_termeni_vii( wp_list_pluck( $toate, 'term_id' ) );
+		foreach ( $toate as $r ) {
+			if ( ! in_array( (int) $r['term_id'], $vii, true ) ) {
+				continue;
+			}
 			// O regulă învățată dintr-un singur produs nu e o regulă, e o coincidență. Cele puse de om trec oricum.
 			if ( 'om' !== $r['sursa'] && ( (int) $r['produse'] < $min_n || (int) $r['incredere'] < $min_inc ) ) {
 				continue;

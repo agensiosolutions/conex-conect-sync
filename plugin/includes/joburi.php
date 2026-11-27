@@ -146,17 +146,103 @@ function ccs_joburi_urmatoarea_noapte( $minut = 10 ) {
 }
 
 /**
+ * Adâncimea la care suntem în lacăt, în procesul ăsta.
+ *
+ * Lacătul trebuie să fie reintrant: jobul de catalog îl ia pentru toată rularea, iar înăuntru cheamă
+ * `ccs_aplica()`, care și-l cere și ea. Fără un contor, fie a doua cerere ar refuza rularea propriului job, fie
+ * prima eliberare ar debloca în mijlocul lucrului.
+ *
+ * @param int $delta +1 la luare, -1 la eliberare, 0 ca să întrebi.
+ * @return int Adâncimea de după.
+ */
+function ccs_lacat_adancime( $delta = 0 ) {
+	static $n = 0;
+	$n = max( 0, $n + (int) $delta );
+	return $n;
+}
+
+/**
+ * Ia lacătul de scriere.
+ *
+ * Până acum lacătul era luat doar de jobul de catalog, deci o rulare manuală din linia de comandă sau un import
+ * pornit din panou treceau pe lângă el și puteau să scrie peste jobul de noapte. Acum îl iau toate operațiile
+ * care schimbă produse.
+ *
+ * Expiră singur, ca o rulare căzută să nu blocheze magazinul până vine cineva. O jumătate de oră e peste cea mai
+ * lungă operație măsurată (aplicarea pe 3.900 de produse ia în jur de șase minute).
+ *
+ * @param string $ce Ce se face, ca mesajul celui respins să spună de ce.
+ * @return true|WP_Error
+ */
+function ccs_lacat_ia( $ce ) {
+	if ( ccs_lacat_adancime() > 0 ) {
+		ccs_lacat_adancime( 1 );
+		return true;
+	}
+
+	$acum = get_transient( CCS_LACAT );
+	if ( $acum ) {
+		return new WP_Error(
+			'ccs_ocupat',
+			sprintf(
+				/* translators: %s: ce rulează deja. */
+				__( 'Rulează deja altceva: %s. Încearcă după ce se termină.', 'conex-conect-sync' ),
+				is_array( $acum ) ? (string) ( $acum['ce'] ?? '' ) : (string) $acum
+			)
+		);
+	}
+
+	set_transient( CCS_LACAT, array( 'ce' => (string) $ce, 'de_la' => time() ), 30 * MINUTE_IN_SECONDS );
+	ccs_lacat_adancime( 1 );
+	return true;
+}
+
+/**
+ * Lasă lacătul.
+ *
+ * Se cheamă din `finally`, ca o excepție să nu lase magazinul blocat.
+ *
+ * @return void
+ */
+function ccs_lacat_lasa() {
+	if ( 0 === ccs_lacat_adancime( -1 ) ) {
+		delete_transient( CCS_LACAT );
+	}
+}
+
+/**
+ * Rulează ceva ținând lacătul, și îl lasă orice s-ar întâmpla.
+ *
+ * `finally`, nu o eliberare la final: o excepție în mijlocul unei aplicări ar lăsa altfel magazinul blocat o
+ * jumătate de oră.
+ *
+ * @param string   $ce    Ce se face.
+ * @param callable $munca Munca propriu-zisă.
+ * @return mixed Ce întoarce `$munca`, sau WP_Error dacă lacătul e luat.
+ */
+function ccs_cu_lacat( $ce, $munca ) {
+	$lacat = ccs_lacat_ia( $ce );
+	if ( is_wp_error( $lacat ) ) {
+		return $lacat;
+	}
+	try {
+		return $munca();
+	} finally {
+		ccs_lacat_lasa();
+	}
+}
+
+/**
  * Jobul de catalog.
  *
  * @return void
  */
 function ccs_job_catalog() {
-	// Două rulări simultane ar scrie una peste alta. Lacătul expiră singur, ca o rulare căzută să nu blocheze totul.
-	if ( get_transient( CCS_LACAT ) ) {
+	$lacat = ccs_lacat_ia( __( 'preluarea catalogului', 'conex-conect-sync' ) );
+	if ( is_wp_error( $lacat ) ) {
 		ccs_jurnal( 'avertisment', 'O rulare e deja în lucru. O sar pe asta.' );
 		return;
 	}
-	set_transient( CCS_LACAT, time(), 15 * MINUTE_IN_SECONDS );
 
 	try {
 		$catalog = ccs_catalog_preia();
@@ -199,7 +285,7 @@ function ccs_job_catalog() {
 			sprintf( 'Aplicat: %d produse, %d prețuri, %d stocuri.', $aplicare['atinse'], $aplicare['pret'], $aplicare['stoc'] )
 		);
 	} finally {
-		delete_transient( CCS_LACAT );
+		ccs_lacat_lasa();
 	}
 }
 add_action( 'ccs_job_catalog', 'ccs_job_catalog' );
