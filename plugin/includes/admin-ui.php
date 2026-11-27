@@ -659,20 +659,34 @@ function ccs_ui_card_sanatate() {
 	foreach ( $probleme as $cheie => $p ) {
 		// Textul e scris pentru email, unde rândurile goale despart ideile. Aici le facem paragrafe: un șir de
 		// `<br>`-uri ar da aceeași înălțime cu jumătate din lizibilitate.
-		$corp = '';
+		$paragrafe = array();
 		foreach ( preg_split( '/\n\s*\n/', (string) $p[1] ) as $paragraf ) {
 			$paragraf = trim( $paragraf );
 			if ( '' !== $paragraf ) {
-				$corp .= '<p>' . nl2br( esc_html( $paragraf ) ) . '</p>';
+				$paragrafe[] = '<p>' . nl2br( esc_html( $paragraf ) ) . '</p>';
 			}
 		}
 
+		// Strângem fiecare problemă la titlu plus primul paragraf, nu cardul întreg: titlurile sunt exact ce
+		// trebuie văzut dintr-o privire, fiindcă ele spun câte probleme sunt și ce fel. Explicația lungă e
+		// scrisă pentru cineva care tocmai a aflat că are o problemă, deci poate aștepta un clic.
+		$se_strange = count( $paragrafe ) > 1;
+
 		printf(
-			'<div class="ccs-nota ccs-nota--atentie" id="ccs-sanatate-%1$s"><span class="ccs-nota__icon">%2$s</span><span class="ccs-nota__text"><strong>%3$s</strong>%4$s</span></div>',
+			'<div class="ccs-nota ccs-nota--atentie%1$s" id="ccs-sanatate-%2$s"><span class="ccs-nota__icon">%3$s</span><div class="ccs-nota__text"><strong>%4$s</strong><div class="ccs-nota__corp" id="ccs-sanatate-corp-%2$s">%5$s</div>%6$s</div></div>',
+			$se_strange ? ' ccs-nota--strans' : '',
 			esc_attr( $cheie ),
 			ccs_icon( 'warning', 18 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG al nostru.
 			esc_html( $p[0] ),
-			$corp // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit mai sus din bucăți escapate.
+			implode( '', $paragrafe ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- bucăți escapate.
+			$se_strange
+				? sprintf(
+					'<button type="button" class="ccs-nota__mai" aria-expanded="false" aria-controls="ccs-sanatate-corp-%1$s" data-inchis="%2$s" data-deschis="%3$s">%2$s</button>',
+					esc_attr( $cheie ),
+					esc_attr__( 'Vezi tot', 'conex-conect-sync' ),
+					esc_attr__( 'Ascunde', 'conex-conect-sync' )
+				)
+				: '' // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit mai sus, escapat.
 		);
 	}
 

@@ -484,6 +484,51 @@
 			} );
 	} );
 
+	/* Desfacerea unei probleme de sanatate. Textul e intreg in pagina de la inceput, doar taiat vizual: asa
+	   ramane gasibil cu Ctrl+F si citibil de un cititor de ecran, fara sa cerem nimic serverului. */
+	document.addEventListener( 'click', function ( ev ) {
+		var buton = ev.target.closest( '.ccs-nota__mai' );
+		if ( ! buton ) {
+			return;
+		}
+		var nota = buton.closest( '.ccs-nota' );
+		if ( ! nota ) {
+			return;
+		}
+		var corp = nota.querySelector( '.ccs-nota__corp' );
+		var deschis = nota.classList.toggle( 'ccs-nota--deschis' );
+		buton.setAttribute( 'aria-expanded', deschis ? 'true' : 'false' );
+		buton.textContent = deschis ? buton.dataset.deschis : buton.dataset.inchis;
+
+		if ( ! corp ) {
+			return;
+		}
+
+		var fara_animatie = '0s' === getComputedStyle( corp ).transitionDuration;
+
+		if ( deschis ) {
+			corp.style.maxHeight = corp.scrollHeight + 'px';
+			if ( fara_animatie ) {
+				corp.style.maxHeight = 'none';
+				return;
+			}
+			/* Dupa ce s-a deschis scoatem plafonul: altfel un text care se reaseaza, de pilda la ingustarea
+			   ferestrei, ar fi taiat la inaltimea masurata acum. */
+			corp.addEventListener( 'transitionend', function laCapat( ev2 ) {
+				if ( 'max-height' === ev2.propertyName ) {
+					corp.style.maxHeight = 'none';
+					corp.removeEventListener( 'transitionend', laCapat );
+				}
+			} );
+			return;
+		}
+
+		/* La inchidere pornim de la inaltimea reala, nu de la `none`: dintr-o valoare automata nu se anima nimic. */
+		corp.style.maxHeight = corp.scrollHeight + 'px';
+		void corp.offsetHeight;
+		corp.style.maxHeight = '';
+	} );
+
 	/* Readucerea ghidului. Mergem pe Panou, nu reincarcam tabul curent: cardul cu pasi se randeaza numai
 	   acolo, iar un buton care pare sa nu faca nimic e mai rau decat lipsa butonului. */
 	document.addEventListener( 'click', function ( ev ) {

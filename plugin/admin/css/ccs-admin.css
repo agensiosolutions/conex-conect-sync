@@ -672,6 +672,40 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-nota__text p { margin: 0 0 6px; }
 .ccs-nota__text p:last-child { margin-bottom: 0; }
 
+/* O problemă strânsă arată titlul și primul paragraf. Înălțimea e pusă pe corp, nu pe notă, ca titlul și
+   butonul să rămână întregi: un titlu tăiat la jumătate de rând ar fi exact informația pe care o vrem citită.
+   Plafonul deschis nu e o valoare fixă, îl pune JS-ul din înălțimea reală a textului. O valoare generoasă de
+   tipul `2000px` se animează urât la închidere: primii o mie și ceva de pixeli nu se văd, deci pare că nota
+   atârnă o clipă înainte să se miște. Fără JS, nota rămâne strânsă și butonul tot o deschide, doar fără
+   animație. */
+.ccs-nota__corp {
+  position: relative; overflow: hidden;
+  transition: max-height .28s ease;
+}
+.ccs-nota--strans .ccs-nota__corp { max-height: 40px; }
+
+/* Fade-ul: ultimul rând se stinge în fundalul notei, ca tăietura să nu arate ca un text rupt. Culoarea e
+   chiar fundalul notei, nu alb, altfel s-ar vedea o dungă deschisă peste portocaliul palid. */
+.ccs-nota--strans .ccs-nota__corp::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 26px;
+  background: linear-gradient(to bottom, rgba(255, 247, 237, 0), var(--c-atentie-fundal));
+  pointer-events: none; opacity: 1; transition: opacity .2s ease;
+}
+.ccs-nota--strans.ccs-nota--deschis .ccs-nota__corp::after { opacity: 0; }
+
+.ccs-nota__mai {
+  margin-top: 6px; padding: 0; border: 0; background: none;
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--c-atentie);
+  cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+}
+.ccs-nota__mai:hover { text-decoration: none; }
+.ccs-nota__mai:focus-visible { outline: none; box-shadow: var(--c-inel); border-radius: 4px; }
+
+/* Cine a cerut mai puțină mișcare o primește: strângerea rămâne, animația dispare. */
+@media (prefers-reduced-motion: reduce) {
+  .ccs-nota__corp, .ccs-nota--strans .ccs-nota__corp::after { transition: none; }
+}
+
 /* ---------------------------------------------------------------- pasii de pus la punct */
 /* Pasii se bifeaza singuri din starea reala. Cel curent e singurul cu text si cu buton: sapte lucruri deodata
    nu spun de unde incepi. */
