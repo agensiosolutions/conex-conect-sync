@@ -2,6 +2,59 @@
 
 ## 27 noiembrie 2026
 
+**Un audit cerut înainte de 1.0, și trei apărări construite din el.** Iulian a întrebat dacă pluginul e sigur,
+ce precauții mai putem lua și ce situații neprevăzute pot apărea. Am citit codul în loc să răspund din memorie,
+iar ce nu se putea deduce din citit am probat pe local.
+
+Partea de securitate e în regulă, și se poate spune cu dovezi: toate cele unsprezece endpointuri AJAX trec prin
+aceeași poartă cu nonce și capabilitate, singura acțiune pe GET e verificată, datele utilizatorului ajung în SQL
+numai prin `prepare()` cu `esc_like()`, iar cele treizeci și șase de interogări fără `prepare` conțin doar nume
+de tabele din prefixul WordPress. Extensia pozelor trece printr-o listă albă de cinci tipuri, deci un URL care
+se termină în `.php` ajunge pe disc ca `.jpg`. Mesajele de eroare sunt texte fixe, iar corpul răspunsului de la
+furnizor stă doar în datele erorii, filtrat de token.
+
+Interesant e ce a ieșit din proba pe local, nu din citit.
+
+**O categorie ștearsă de pe site nu dă eroare, varsă produsele în categoria implicită.** Regulile de mapare țin
+`term_id` și nimeni nu verifica dacă termenul mai există. Am probat: WooCommerce înlocuiește tăcut categoria
+moartă cu cea implicită a magazinului. Pe cezauto.ro implicita nu e „Necategorizat", e **Accesorii auto**, o
+categorie reală din meniu, verificat și pe live. Importul ar fi raportat succes.
+
+**Un atribut al furnizorului cu același nume intră peste atributul magazinului.** Harta noastră se ferea de
+ciocniri între numele furnizorului, dar nu se uita la atributele pe care și le-a făcut magazinul. Am probat:
+am încercat să creez „Material" pe local, WooCommerce a refuzat fiindcă există deja, iar funcția noastră a
+întors senin `pa_material`. Pe datele de probă sunt cinci astfel de nume, dintre care „Material", „Culoare" și
+„Tip montare" sunt chiar ale magazinului.
+
+**Capcana de TVA, cea mai serioasă și cea mai tăcută.** Pluginul scrie prețuri cu TVA inclus și nu se uita
+niciodată la setările de taxe ale WooCommerce. Azi e consistent, fiindcă pe live taxele sunt oprite de tot. Dar
+dacă cineva le pornește vreodată fără să bifeze „prețurile sunt introduse cu TVA", WooCommerce mai adaugă o
+dată 21% la casă, pe tot magazinul, iar pluginul n-ar afla: el a scris exact ce trebuia.
+
+Au ieșit și două lucruri de scară mai mică: lacătul era luat doar de jobul de catalog, deci o comandă dată de om
+sau importul automat de la 19:40 treceau pe lângă el, iar politica de preț acceptă orice număr fără margini.
+
+Din toate astea am construit trei: verificarea termenului înainte de folosire, un fișier de verificări de
+configurare arătat în panou și trimis pe email, și lacătul mutat în toate cele patru operații care schimbă
+produse. Lacătul e reintrant, fiindcă jobul îl ține pentru toată rularea și cheamă înăuntru `ccs_aplica()`.
+
+`Lecție:` Întreabă baza de date ce face framework-ul, nu documentația. „WooCommerce ignoră o categorie
+inexistentă" părea evident din citit. Probat, se dovedește că o înlocuiește cu categoria implicită a
+magazinului, care rareori e „Necategorizat" pe un magazin adevărat. Simptomul: o operație în masă care
+raportează succes și produse care apar unde nu le-a pus nimeni.
+
+`Lecție:` Un plugin care calculează prețuri își leagă soarta de setările de taxe ale platformei, chiar dacă nu
+le citește niciodată. Tocmai pentru că nu le citește. Caută presupunerile tăcute întrebându-te ce setare din
+afara pluginului, schimbată de altcineva, i-ar face rezultatul greșit fără să dea eroare.
+
+`Lecție:` Un lacăt pus pe job, nu pe operație, apără doar calea pe care te-ai uitat. Pune-l pe lucrul care nu
+suportă concurență, iar atunci fă-l reintrant: altfel prima cale care îl ia își refuză singură pașii următori.
+
+`Lecție:` Când o verificare și creatorul calculează același lucru în două locuri, verificarea minte mai devreme
+sau mai târziu. Am extras `ccs_atribut_slug()` din funcția care creează atributul, ca amândouă să întrebe
+aceeași funcție. O verificare nu trebuie nici să schimbe starea pe care o verifică: de-aia are un parametru care
+îi spune să nu scrie în hartă.
+
 **Panoul, corectat bucată cu bucată după ce Iulian s-a uitat pe live.** Nu o listă de dorințe, ci lucruri
 văzute pe ecran: butoanele din „Aplică aceeași alegere pentru toate” arătau inactive deși erau active, rândurile
 din tabele aveau un hover rămas de la altă stilizare, iar Catalogul furnizorului afișa zero fără să spună de ce.

@@ -31,6 +31,20 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Urmează
 
+- [ ] Două precauții ieftine, rămase din audit @iulian
+      Le-am semnalat, nu le-am construit, fiindcă acordul a fost pe celelalte trei.
+      - [ ] Margini pe politica de preț: azi acceptă orice număr. Un adaos pus din greșeală la 0,9 ar scrie
+            prețuri sub cost pe tot magazinul, iar frâna de scădere (50%) nu l-ar prinde.
+      - [ ] Limită de mărime la descărcarea unei poze: `download_url()` n-are niciuna.
+
+- [ ] De confirmat unde ține live-ul tokenul API @iulian
+      În `wp-config.php` sau în opțiunea din baza de date. N-am putut verifica: `wp-config.php` e pe lista de
+      fișiere pe care nu le citesc. Dacă e în baza de date, intră în orice export și în orice backup.
+
+- [ ] Produsele variabile nu sunt tratate separat @claude
+      Azi nu contează, toate cele 6.849 de produse de pe live sunt simple. Un singur produs variabil creat mai
+      târziu ar primi `set_regular_price()` pe părinte, unde prețul vine din variații. O gardă de o linie.
+
 - [ ] Cele 14 compresoare din catalogul Conex, de importat în „Compresor auto” @iulian
   Categoria e în meniul principal al site-ului și e goală. Conex are 21 de compresoare, 7 sunt deja pe site dar în
   alte categorii, 14 nu sunt deloc. Intră în etapa 4, odată cu importul.
@@ -120,6 +134,21 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Auditul de securitate și robustețe, înainte de 1.0 (27.11.2026)
+      Securitatea e în regulă, cu dovezi: 11 din 11 endpointuri AJAX cu nonce și capabilitate, o singură acțiune
+      pe GET și aia verificată, datele utilizatorului în SQL numai prin `prepare()`, extensia pozelor pe listă
+      albă, tokenul niciodată în mesajele de eroare.
+- [x] Regulile de categorie se verifică înainte de folosire (27.11.2026)
+      O categorie ștearsă de pe site nu dă eroare: WooCommerce pune produsul în categoria implicită, care pe
+      cezauto.ro e „Accesorii auto”. Acum regula moartă e ignorată și produsul așteaptă o categorie.
+- [x] Verificarea de configurare, în panou și pe email (27.11.2026)
+      `sanatate.php`: TVA-ul, moneda, regulile de categorie moarte, atributele furnizorului care ar intra peste
+      atribute ale magazinului. Patru presupuneri care, dacă pică, pică fără zgomot.
+- [x] Lacătul de scriere, în toate cele patru operații care schimbă produse (27.11.2026)
+      Până acum îl lua doar jobul de catalog. Reintrant, fiindcă jobul îl ține pentru toată rularea. 14 teste
+      noi, probate cu două mutații.
+- [x] Fontul panoului, de la 14px la 15px (27.11.2026)
+      Cifrele mari și plăcuțele de iconițe au rămas cum erau.
 - [x] Iconițele panoului, de la Dashicons la Lucide (27.11.2026)
       25 de iconițe lipite ca SVG în `includes/iconite.php`, generat cu `tools/adu-iconite.py`, nu luate de pe un
       CDN. Cheile au rămas numele vechi, fiindcă descriu rolul, nu desenul: alt pachet se schimbă rescriind numai
