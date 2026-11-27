@@ -2,6 +2,53 @@
 
 ## 27 noiembrie 2026
 
+**Prima noapte adevărată: toate joburile au mers, iar verificarea de după a găsit ce nu se vedea.** Pozele la
+19:12 (30.405 adrese pentru 11.052 produse), catalogul la 19:20, atributele la 19:25 (30.372 perechi, 367
+nume distincte), importul automat a trecut la 19:41 fără să creeze nimic, corect, fiindcă e oprit din setare.
+Nicio eroare, toate reprogramate.
+
+**Pozele se preiau ca adrese, nu ca fișiere.** Merită spus fiindcă se înțelege greșit ușor: tabela ține
+`product_id`, `pozitie`, `url`, `vazut_la`. Descărcarea, conversia în WebP și intrarea în biblioteca media se
+întâmplă o singură dată, la import. De-aia jobul a durat secunde, nu ore, iar în `uploads` n-a apărut niciun
+fișier. La primul import adevărat, cele 303 produse gata au în jur de 800 de poze de adus; abia atunci
+contează discul.
+
+**Jurnalul nu scria nimic, de la bun început.** Tabela `ccs_log` avea zero rânduri după o noapte în care
+trecuseră zece rulări. `ccs_jurnal()` scria numai în `error_log`, și numai cu `WP_DEBUG` pornit, plus în
+ieșirea WP-CLI. Pe live `WP_DEBUG` e `false`, iar joburile merg prin Action Scheduler. Tabela fusese creată de
+schemă și uitată acolo; docblocul vechi chiar spunea „tabelul vine la etapa 1”, iar etapa venise fără el.
+
+Reparat cap-coadă, cu `wp ccs jurnal` ca fereastră de citire, fiindcă un jurnal pe care nu-l poate citi nimeni
+e tot o jumătate de reparație. Probat forțând o poză să cadă la import: cele patru linii apar legate de
+rularea lor, inclusiv „Niciuna dintre pozele produsului 07775 nu s-a putut descărca. L-am trimis la coșul de
+gunoi”. Înainte, operatorul ar fi văzut doar „eșuate 1”, fără motiv.
+
+**Avertismentul pe atribute a fost refăcut de două ori, amândouă pe observația lui Iulian.** Prima versiune
+compara numele și scria „Material -> Material”, ceea ce nu spune nimic. Riscul nu stă în nume, stă în valori:
+„Tip montare” la magazin înseamnă cum se prinde un portbagaj, la Conex înseamnă tipul unei bucșe de suspensie,
+iar la „Material” peste 16 valori alese cu mâna ar veni 33, printre care „Steel”, „otel” și „metalic - otel”.
+A doua oară, textul era corect dar era un perete: acum verificarea întoarce și datele nedesfăcute, iar panoul
+le desenează pe bucăți, cu ce are magazinul în neutru și ce aduce furnizorul în tonul de atenție.
+
+**Cifra care contează pentru Iulian:** din 16.785 de produse nelegate, 303 sunt gata de import. Restul sunt
+oprite de lipsa pozei la furnizor (9.375), de stoc (3.234) sau de categorie (3.873). Cele blocate de categorie
+nu stau risipite: opt căi țin 2.265 dintre ele, iar toate opt sunt categorii grase, plăcuțe și discuri de
+frână, amortizoare, planetare, uleiuri de motor.
+
+`Lecție:` Un jurnal care scrie doar sub `WP_DEBUG` nu scrie niciodată acolo unde contează. Pe producție
+depanarea e oprită, iar joburile rulează fără terminal: exact combinația în care ai nevoie de urmă și exact
+cea în care n-o ai. Simptomul: o tabelă de log creată de schemă și goală după săptămâni de rulare.
+
+`Lecție:` Când repari un jurnal, repară și citirea lui în aceeași mișcare. Altfel rămâne o tabelă pe care o
+poate deschide doar cine știe SQL, adică nimeni în ziua în care chiar s-a stricat ceva.
+
+`Lecție:` O avertizare care compară nume, nu conținut, e zgomot. Numele se potrivesc tocmai fiindcă oamenii
+aleg aceleași cuvinte; diferența care doare e între valorile de dedesubt. Simptomul: avertismentul citit cu
+voce tare sună ca o tautologie.
+
+`Lecție:` O pastilă colorată pe un fundal de aceeași culoare dispare. Când muți o componentă într-o suprafață
+tonată, verifică contrastul ei cu noua suprafață, nu cu cea pentru care a fost desenată.
+
 **0.11.0 pe live**, cu backup de 133 MB verificat la ultima linie. Pe live nu e nicio problemă de configurare,
 exact cum trebuie: taxele sunt oprite, moneda e leul, nicio regulă de categorie nu e moartă, iar tabela de
 atribute se umple abia diseară.
