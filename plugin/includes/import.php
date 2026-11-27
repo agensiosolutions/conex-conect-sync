@@ -250,6 +250,139 @@ function ccs_import_motiv_categorie( $p, $term ) {
 }
 
 /**
+ * Catalogul furnizorului, răsfoibil: filtrat, căutat și paginat.
+ *
+ * Oferta promite „filtrezi după categorie, brand și stoc, vezi ce nu ai pe site și imporți cu un click”, și o
+ * repetă ca Decizia 3. Până acum panoul arăta numai cifre și o previzualizare a primelor produse, deci omul nu
+ * avea de unde alege.
+ *
+ * Interogarea se uită numai la produsele furnizorului **care nu sunt legate de niciun produs de pe site**: alea
+ * sunt singurele care se pot importa. Numărul de poze vine dintr-un subselect, nu dintr-un `JOIN` cu `GROUP BY`,
+ * ca paginarea să rămână corectă: un produs cu patru poze ar fi apărut de patru ori.
+ *
+ * @param array $arg cautare, brand, cale, doar_importabile, pagina, pe_pagina.
+ * @return array randuri, total, pagini, branduri, cai.
+ */
+function ccs_catalog_rasfoire( $arg = array() ) {
+	global $wpdb;
+
+	$arg = wp_parse_args(
+		$arg,
+		array(
+			'cautare'          => '',
+			'brand'            => '',
+			'cale'             => '',
+			'doar_importabile' => false,
+			'pagina'           => 1,
+			'pe_pagina'        => 24,
+		)
+	);
+
+	$tp = ccs_tabel( 'products' );
+	$tl = ccs_tabel( 'links' );
+	$ti = ccs_tabel( 'imagini' );
+
+	$unde   = array( 'l.product_id IS NULL' );
+	$valori = array();
+
+	if ( '' !== trim( (string) $arg['cautare'] ) ) {
+		$cauta    = '%' . $wpdb->esc_like( trim( (string) $arg['cautare'] ) ) . '%';
+		$unde[]   = '( c.nume LIKE %s OR c.cod LIKE %s OR c.mpn LIKE %s )';
+		$valori[] = $cauta;
+		$valori[] = $cauta;
+		$valori[] = $cauta;
+	}
+	if ( '' !== (string) $arg['brand'] ) {
+		$unde[]   = 'c.brand = %s';
+		$valori[] = (string) $arg['brand'];
+	}
+	if ( '' !== (string) $arg['cale'] ) {
+		// Calea e „cat1 / cat2 / cat3”, construită la fel ca în `ccs_categorie_cale()`.
+		$unde[]   = "TRIM(BOTH ' / ' FROM CONCAT_WS(' / ', c.cat1, c.cat2, c.cat3)) = %s";
+		$valori[] = (string) $arg['cale'];
+	}
+	if ( $arg['doar_importabile'] ) {
+		$unde[] = 'c.cost > 0 AND c.stoc > 0';
+		$unde[] = "EXISTS ( SELECT 1 FROM $ti i WHERE i.product_id = c.product_id )";
+	}
+
+	$filtru = implode( ' AND ', $unde );
+	$baza   = "FROM $tp c LEFT JOIN $tl l ON l.product_id = c.product_id WHERE $filtru";
+
+	$total = (int) ( $valori
+		// phpcs:ignore WordPress.DB.PreparedSQL
+		? $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) $baza", $valori ) )
+		// phpcs:ignore WordPress.DB.PreparedSQL
+		: $wpdb->get_var( "SELECT COUNT(*) $baza" ) );
+
+	$pe_pagina = max( 1, (int) $arg['pe_pagina'] );
+	$pagini    = max( 1, (int) ceil( $total / $pe_pagina ) );
+	$pagina    = min( max( 1, (int) $arg['pagina'] ), $pagini );
+	$sari      = ( $pagina - 1 ) * $pe_pagina;
+
+	$select = "SELECT c.product_id, c.cod, c.mpn, c.nume, c.brand, c.cat1, c.cat2, c.cat3, c.cost, c.taxa_eco, c.stoc,
+		( SELECT COUNT(*) FROM $ti i WHERE i.product_id = c.product_id ) AS poze
+		$baza ORDER BY c.stoc DESC, c.nume LIMIT %d OFFSET %d";
+
+	$randuri = $wpdb->get_results(
+		// phpcs:ignore WordPress.DB.PreparedSQL
+		$wpdb->prepare( $select, array_merge( $valori, array( $pe_pagina, $sari ) ) )
+	);
+
+	return array(
+		'randuri'   => (array) $randuri,
+		'total'     => $total,
+		'pagina'    => $pagina,
+		'pagini'    => $pagini,
+		'pe_pagina' => $pe_pagina,
+	);
+}
+
+/**
+ * Brandurile și căile pe care le are furnizorul printre produsele nelegate.
+ *
+ * Separat de răsfoire, și păstrat într-un transient: listele astea se schimbă o dată la o preluare de catalog,
+ * nu la fiecare apăsare de filtru, iar `GROUP BY` peste douăzeci de mii de rânduri la fiecare încărcare de pagină
+ * se simte.
+ *
+ * @return array branduri, cai.
+ */
+function ccs_catalog_filtre() {
+	global $wpdb;
+
+	$pastrat = get_transient( 'ccs_catalog_filtre' );
+	if ( is_array( $pastrat ) ) {
+		return $pastrat;
+	}
+
+	$tp = ccs_tabel( 'products' );
+	$tl = ccs_tabel( 'links' );
+
+	$branduri = $wpdb->get_results(
+		"SELECT c.brand AS nume, COUNT(*) AS n
+		 FROM $tp c LEFT JOIN $tl l ON l.product_id = c.product_id
+		 WHERE l.product_id IS NULL AND c.brand != ''
+		 GROUP BY c.brand ORDER BY n DESC LIMIT 60" // phpcs:ignore WordPress.DB.PreparedSQL
+	);
+
+	$cai = $wpdb->get_results(
+		"SELECT TRIM(BOTH ' / ' FROM CONCAT_WS(' / ', c.cat1, c.cat2, c.cat3)) AS nume, COUNT(*) AS n
+		 FROM $tp c LEFT JOIN $tl l ON l.product_id = c.product_id
+		 WHERE l.product_id IS NULL
+		 GROUP BY nume HAVING nume != '' ORDER BY n DESC LIMIT 60" // phpcs:ignore WordPress.DB.PreparedSQL
+	);
+
+	$iesire = array(
+		'branduri' => (array) $branduri,
+		'cai'      => (array) $cai,
+	);
+
+	set_transient( 'ccs_catalog_filtre', $iesire, HOUR_IN_SECONDS );
+
+	return $iesire;
+}
+
+/**
  * Creează pe site produsele pe care furnizorul le are și magazinul nu.
  *
  * Singurul loc din plugin care creează produse. Totul trece prin CRUD-ul WooCommerce, din același motiv pentru care

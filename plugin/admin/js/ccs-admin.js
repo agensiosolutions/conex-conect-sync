@@ -366,6 +366,87 @@
 			} );
 	} );
 
+	/* Selectia din catalogul furnizorului. Cand ai bifat ceva, bara de filtre e inlocuita de bara de selectie:
+	   tiparul Polaris, si singurul moment in care actiunile in masa au rost. */
+	function bifateleCatalog() {
+		return Array.prototype.slice.call( document.querySelectorAll( '.ccs-bifa-produs:checked' ) );
+	}
+
+	function aratSelectia() {
+		var filtre = document.querySelector( '[data-zona-filtre]' );
+		var selectie = document.querySelector( '[data-zona-selectie]' );
+		if ( ! filtre || ! selectie ) {
+			return;
+		}
+		var bifate = bifateleCatalog();
+		filtre.hidden = bifate.length > 0;
+		selectie.hidden = bifate.length === 0;
+		var cate = selectie.querySelector( '.ccs-selectie__cate' );
+		if ( cate ) {
+			cate.textContent = texte.selectate.replace( '%d', nr( bifate.length ) );
+		}
+	}
+
+	document.addEventListener( 'change', function ( ev ) {
+		if ( ev.target.classList.contains( 'ccs-bifa-produs' ) ) {
+			aratSelectia();
+		}
+	} );
+
+	document.addEventListener( 'click', function ( ev ) {
+		if ( ! ev.target.closest( '.ccs-sterge-selectia' ) ) {
+			return;
+		}
+		ev.preventDefault();
+		bifateleCatalog().forEach( function ( b ) {
+			b.checked = false;
+		} );
+		aratSelectia();
+	} );
+
+	document.addEventListener( 'click', function ( ev ) {
+		var buton = ev.target.closest( '.ccs-importa-selectate' );
+		if ( ! buton ) {
+			return;
+		}
+		ev.preventDefault();
+
+		var bifate = bifateleCatalog();
+		if ( ! bifate.length ) {
+			return;
+		}
+		var stare = buton.parentNode.querySelector( '.ccs-stare-text' );
+
+		buton.disabled = true;
+		arataStare( stare, texte.lucrez, false );
+
+		trimite( 'ccs_importa', {
+			coduri: bifate.map( function ( b ) {
+				return b.value;
+			} ).join( ',' )
+		} )
+			.then( function ( raspuns ) {
+				buton.disabled = false;
+				if ( ! raspuns || ! raspuns.success ) {
+					arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || texte.eroare, true );
+					return;
+				}
+				arataStare( stare, raspuns.data.efect, false );
+				// Produsele aduse nu mai pot fi aduse a doua oara: le scoatem din grila.
+				bifate.forEach( function ( b ) {
+					var card = b.closest( '.ccs-produs-card' );
+					if ( card ) {
+						card.remove();
+					}
+				} );
+				aratSelectia();
+			} )
+			.catch( function () {
+				buton.disabled = false;
+				arataStare( stare, texte.eroare, true );
+			} );
+	} );
+
 	/* ---------------------------------------------------------------- simulatorul de preț */
 
 	if ( ! document.getElementById( 'ccs-adaos' ) || ! sim.cost || ! sim.cost.length ) {

@@ -557,6 +557,63 @@ function ccs_admin_ajax_retrage() {
 add_action( 'wp_ajax_ccs_retrage', 'ccs_admin_ajax_retrage' );
 
 /**
+ * Aduce pe site produsele bifate în catalog.
+ *
+ * Produsele intră ca ciorne, deci nimic nu ajunge în magazin fără ca un om să publice. Plafonul e aici ca o
+ * apăsare pe „bifează tot” să nu pornească o rulare de o mie de produse dintr-un clic: fiecare produs înseamnă
+ * poze descărcate și convertite, deci o rulare mare ține minute bune, iar o cerere web nu trebuie să țină atât.
+ *
+ * @return void
+ */
+function ccs_admin_ajax_importa() {
+	ccs_admin_ajax_poarta();
+
+	$brut   = isset( $_POST['coduri'] ) ? sanitize_text_field( wp_unslash( $_POST['coduri'] ) ) : '';
+	$coduri = array_filter( array_map( 'trim', explode( ',', $brut ) ) );
+
+	if ( ! $coduri ) {
+		wp_send_json_error( array( 'mesaj' => __( 'Nu ai bifat niciun produs.', 'conex-conect-sync' ) ) );
+	}
+
+	$plafon = (int) apply_filters( 'ccs_import_din_panou_plafon', 40 );
+	if ( count( $coduri ) > $plafon ) {
+		wp_send_json_error(
+			array(
+				'mesaj' => sprintf(
+					/* translators: 1: câte au fost bifate, 2: plafonul. */
+					__( 'Ai bifat %1$d produse, iar dintr-o apăsare se aduc cel mult %2$d. Fiecare produs înseamnă poze descărcate, deci se face pe bucăți.', 'conex-conect-sync' ),
+					count( $coduri ),
+					$plafon
+				),
+			)
+		);
+	}
+
+	$r = ccs_import_executa( array( 'coduri' => $coduri ) );
+	if ( is_wp_error( $r ) ) {
+		wp_send_json_error( array( 'mesaj' => $r->get_error_message() ) );
+	}
+
+	$spus = sprintf(
+		/* translators: 1: câte produse, 2: câte poze. */
+		__( '%1$d produse aduse ca ciorne, cu %2$d poze.', 'conex-conect-sync' ),
+		$r['create'],
+		$r['poze']
+	);
+	if ( $r['sarite'] ) {
+		/* translators: %d: câte au fost sărite. */
+		$spus .= ' ' . sprintf( __( '%d sărite.', 'conex-conect-sync' ), $r['sarite'] );
+	}
+	if ( $r['esuate'] ) {
+		/* translators: %d: câte au eșuat. */
+		$spus .= ' ' . sprintf( __( '%d eșuate, scrise în jurnal.', 'conex-conect-sync' ), $r['esuate'] );
+	}
+
+	wp_send_json_success( array( 'efect' => $spus ) );
+}
+add_action( 'wp_ajax_ccs_importa', 'ccs_admin_ajax_importa' );
+
+/**
  * Dă înapoi o rulare, din panou.
  *
  * Până acum revenirea exista doar ca `wp ccs revino`, adică numai pentru cineva cu acces la terminal. Pentru

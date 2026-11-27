@@ -256,7 +256,7 @@ function ccs_ui_ultima_rulare() {
 
 	if ( $de_dat ) {
 		printf(
-			'<p class="ccs-rulare__verbe"><button type="button" class="ccs-buton ccs-buton--atentie ccs-revino" data-rulare="%1$d" data-cate="%2$d">%3$s</button> <span class="ccs-stare-text"></span></p>',
+			'<p class="ccs-rulare__verbe"><button type="button" class="ccs-btn ccs-btn--principal ccs-revino" data-rulare="%1$d" data-cate="%2$d">%3$s</button> <span class="ccs-stare-text"></span></p>',
 			(int) $r['id'],
 			(int) $de_dat,
 			esc_html(
@@ -675,6 +675,7 @@ function ccs_admin_pagina() {
 					'lucrez'   => __( 'Salvez...', 'conex-conect-sync' ),
 					'confirma' => __( 'Apasă din nou ca să confirmi', 'conex-conect-sync' ),
 					'confirmaRevenirea' => __( 'Sigur? Apasă din nou ca să dai înapoi', 'conex-conect-sync' ),
+					'selectate' => __( '%d produse selectate', 'conex-conect-sync' ),
 					'nimic'    => __( 'Nu mai sunt produse de hotărât.', 'conex-conect-sync' ),
 				),
 			)
@@ -1540,12 +1541,24 @@ function ccs_admin_tab_catalog() {
 		__( 'Starea celor două cataloage și operațiunile rămase de făcut.', 'conex-conect-sync' )
 	);
 
+	// Ordinea e după ce poate face omul, nu după cât de interesant e. Distribuția celor douăzeci de mii de
+	// produse stătea înaintea celor 96 de căi nemapate, adică informația pe care n-o poate folosi stătea
+	// înaintea singurului loc unde o alegere mută trei sute de produse.
+	ccs_ui_eticheta_sectiune( __( 'Ce poți face acum', 'conex-conect-sync' ) );
 	ccs_ui_catalog_actiuni( $c, $grupuri, $m );
-	ccs_ui_catalog_bare( $c, $grupuri, $pot, $m );
-	ccs_ui_catalog_miscare( $m );
+
+	ccs_ui_eticheta_sectiune( __( 'Categoriile de asociat', 'conex-conect-sync' ) );
 	ccs_ui_catalog_mapare();
 	ccs_ui_catalog_de_mapat( $c );
-	ccs_ui_catalog_produse_noi( $c );
+
+	ccs_ui_eticheta_sectiune( __( 'Produsele furnizorului', 'conex-conect-sync' ) );
+	// Înlocuiește previzualizarea fixă a primelor produse: `ccs_ui_catalog_produse_noi()` rămâne scrisă, dar nu
+	// se mai cheamă de nicăieri, fiindcă răsfoirea arată același lucru și lasă omul să aleagă.
+	ccs_ui_catalog_rasfoire();
+
+	ccs_ui_eticheta_sectiune( __( 'Starea celor două cataloage', 'conex-conect-sync' ) );
+	ccs_ui_catalog_bare( $c, $grupuri, $pot, $m );
+	ccs_ui_catalog_miscare( $m );
 	ccs_ui_catalog_dispare( $grupuri );
 }
 
@@ -1918,6 +1931,266 @@ function ccs_ui_catalog_de_mapat( $c ) {
 	}
 
 	ccs_ui_card_sfarsit();
+}
+
+/**
+ * Răsfoirea catalogului furnizorului, cu filtre și import pe selecție.
+ *
+ * Asta e Decizia 3 din ofertă: „te uiți peste catalogul Conex din panou, filtrat după categorie, brand și stoc,
+ * și bifezi”. Forma e luată din AliNext, singurul plugin dintre cele comparate care rezolvă aceeași problemă:
+ * carduri cu poză, fiindcă un produs fără poză nu se recunoaște, plus o bară de selecție care înlocuiește
+ * filtrele când ai bifat ceva.
+ *
+ * Produsele intră ca ciorne, deci lista de import a lui AliNext nu ne trebuie ca ecran separat: ciornele din
+ * WooCommerce sunt deja zona intermediară în care omul verifică înainte să publice.
+ *
+ * @return void
+ */
+function ccs_ui_catalog_rasfoire() {
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- filtre de citire, fără efect.
+	$cautare = isset( $_GET['ccs_caut'] ) ? sanitize_text_field( wp_unslash( $_GET['ccs_caut'] ) ) : '';
+	$brand   = isset( $_GET['ccs_brand'] ) ? sanitize_text_field( wp_unslash( $_GET['ccs_brand'] ) ) : '';
+	$cale    = isset( $_GET['ccs_cale'] ) ? sanitize_text_field( wp_unslash( $_GET['ccs_cale'] ) ) : '';
+	$pagina  = isset( $_GET['ccs_pag'] ) ? max( 1, (int) $_GET['ccs_pag'] ) : 1;
+	$toate   = isset( $_GET['ccs_toate'] );
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+	$r = ccs_catalog_rasfoire(
+		array(
+			'cautare'          => $cautare,
+			'brand'            => $brand,
+			'cale'             => $cale,
+			'doar_importabile' => ! $toate,
+			'pagina'           => $pagina,
+		)
+	);
+
+	// Filtrul din interogare verifică poza, costul și stocul. Categoria se calculează în PHP, deci nu se poate
+	// pune în SQL; de aceea cifra din pastilă e mai mare decât câte se pot aduce chiar acum, iar subtitlul o
+	// spune pe șleau în loc să lase omul să descopere singur că jumătate din carduri nu se pot bifa.
+	$gata = ccs_admin_candidati();
+
+	ccs_ui_card(
+		__( 'Catalogul furnizorului', 'conex-conect-sync' ),
+		sprintf(
+			/* translators: 1: câte au poză, cost și stoc, 2: câte se pot aduce acum. */
+			__( 'Produsele pe care Conex le are și magazinul nu. %1$s au poză, cost și stoc; dintre ele %2$s au și o categorie asociată, deci se pot aduce acum. Restul așteaptă o asociere de categorie, mai sus.', 'conex-conect-sync' ),
+			ccs_nr( $r['total'] ),
+			ccs_nr( $gata['gata'] ?? 0 )
+		),
+		ccs_ui_pastila(
+			sprintf(
+				/* translators: %s: câte produse se pot aduce. */
+				__( '%s se pot aduce', 'conex-conect-sync' ),
+				ccs_nr( $gata['gata'] ?? 0 )
+			),
+			'info'
+		)
+	);
+
+	ccs_ui_catalog_filtre_bara( $cautare, $brand, $cale, $toate );
+
+	if ( ! $r['randuri'] ) {
+		ccs_ui_gol(
+			__( 'Niciun produs nu se potrivește.', 'conex-conect-sync' ),
+			__( 'Încearcă fără filtre, sau bifează „arată și produsele incomplete”.', 'conex-conect-sync' )
+		);
+		ccs_ui_card_sfarsit();
+		return;
+	}
+
+	echo '<div class="ccs-grila-produse">';
+	foreach ( $r['randuri'] as $p ) {
+		ccs_ui_card_produs( $p );
+	}
+	echo '</div>';
+
+	ccs_ui_paginare( $r['pagina'], $r['pagini'] );
+	ccs_ui_card_sfarsit();
+}
+
+/**
+ * Bara de filtre, plus bara de selecție care o înlocuiește când ai bifat ceva.
+ *
+ * Filtrele trec prin URL, nu prin JavaScript: așa butonul Înapoi funcționează, iar o căutare se poate pune la
+ * favorite sau trimite cuiva.
+ *
+ * @param string $cautare Căutarea curentă.
+ * @param string $brand   Brandul ales.
+ * @param string $cale    Calea aleasă.
+ * @param bool   $toate   Dacă se arată și produsele incomplete.
+ * @return void
+ */
+function ccs_ui_catalog_filtre_bara( $cautare, $brand, $cale, $toate ) {
+	$filtre = ccs_catalog_filtre();
+	?>
+	<div class="ccs-filtre" data-zona-filtre>
+		<form method="get" class="ccs-filtre__form">
+			<input type="hidden" name="page" value="ccs-decizii">
+			<input type="hidden" name="tab" value="catalog">
+
+			<input type="search" class="ccs-intrare ccs-filtre__cauta" name="ccs_caut"
+				value="<?php echo esc_attr( $cautare ); ?>"
+				placeholder="<?php esc_attr_e( 'Caută după denumire sau cod', 'conex-conect-sync' ); ?>">
+
+			<select class="ccs-intrare" name="ccs_brand">
+				<option value=""><?php esc_html_e( 'Toate brandurile', 'conex-conect-sync' ); ?></option>
+				<?php foreach ( $filtre['branduri'] as $b ) : ?>
+					<option value="<?php echo esc_attr( $b->nume ); ?>" <?php selected( $brand, $b->nume ); ?>>
+						<?php echo esc_html( $b->nume . ' (' . ccs_nr( $b->n ) . ')' ); ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+
+			<select class="ccs-intrare" name="ccs_cale">
+				<option value=""><?php esc_html_e( 'Toate categoriile furnizorului', 'conex-conect-sync' ); ?></option>
+				<?php foreach ( $filtre['cai'] as $c ) : ?>
+					<option value="<?php echo esc_attr( $c->nume ); ?>" <?php selected( $cale, $c->nume ); ?>>
+						<?php echo esc_html( mb_strimwidth( $c->nume, 0, 58, '...' ) . ' (' . ccs_nr( $c->n ) . ')' ); ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+
+			<label class="ccs-filtre__bifa">
+				<input type="checkbox" name="ccs_toate" value="1" <?php checked( $toate ); ?>>
+				<?php esc_html_e( 'arată și produsele incomplete', 'conex-conect-sync' ); ?>
+			</label>
+
+			<button type="submit" class="ccs-btn"><?php esc_html_e( 'Filtrează', 'conex-conect-sync' ); ?></button>
+		</form>
+	</div>
+
+	<div class="ccs-selectie" data-zona-selectie hidden>
+		<span class="ccs-selectie__cate"></span>
+		<button type="button" class="ccs-btn ccs-btn--principal ccs-importa-selectate">
+			<?php esc_html_e( 'Adu pe site ca ciorne', 'conex-conect-sync' ); ?>
+		</button>
+		<button type="button" class="ccs-btn ccs-sterge-selectia"><?php esc_html_e( 'Renunță', 'conex-conect-sync' ); ?></button>
+		<span class="ccs-stare-text"></span>
+	</div>
+	<?php
+}
+
+/**
+ * Un card de produs din catalogul furnizorului.
+ *
+ * @param object $p Produsul.
+ * @return void
+ */
+function ccs_ui_card_produs( $p ) {
+	$poze       = ccs_imagini_produs( (int) $p->product_id, 1 );
+	$pret       = ccs_pret(
+		(float) $p->cost,
+		(float) $p->taxa_eco,
+		array(
+			'brand' => $p->brand,
+			'cat1'  => $p->cat1,
+			'cat2'  => $p->cat2,
+			'cat3'  => $p->cat3,
+		)
+	);
+	$categorie  = ccs_categorie_pentru( (array) $p );
+	$se_importa = $poze && (float) $p->cost > 0 && (int) $p->stoc > 0 && $categorie;
+	?>
+	<label class="ccs-produs-card<?php echo $se_importa ? '' : ' ccs-produs-card--blocat'; ?>">
+		<input type="checkbox" class="ccs-bifa-produs" value="<?php echo esc_attr( $p->cod ); ?>"
+			<?php disabled( ! $se_importa ); ?>>
+
+		<span class="ccs-produs-card__poza">
+			<?php if ( $poze ) : ?>
+				<img src="<?php echo esc_url( $poze[0] ); ?>" alt="" loading="lazy">
+			<?php endif; ?>
+		</span>
+
+		<span class="ccs-produs-card__nume"><?php echo esc_html( $p->nume ); ?></span>
+		<span class="ccs-produs-card__cod"><?php echo esc_html( $p->cod ); ?><?php echo $p->brand ? ' · ' . esc_html( $p->brand ) : ''; ?></span>
+
+		<span class="ccs-produs-card__jos">
+			<span class="ccs-produs-card__pret"><?php echo esc_html( ccs_lei( $pret ) ); ?> lei</span>
+			<?php
+			if ( $se_importa ) {
+				echo wp_kses_post(
+					ccs_ui_pastila(
+						sprintf(
+							/* translators: %d: stocul la furnizor. */
+							__( 'stoc %d', 'conex-conect-sync' ),
+							(int) $p->stoc
+						),
+						'bine'
+					)
+				);
+			} else {
+				echo wp_kses_post( ccs_ui_pastila( ccs_ui_de_ce_blocat( $p, $poze, $categorie ), 'atentie' ) );
+			}
+			?>
+		</span>
+	</label>
+	<?php
+}
+
+/**
+ * De ce nu se poate importa un produs, în două cuvinte.
+ *
+ * @param object $p         Produsul.
+ * @param array  $poze      Pozele lui.
+ * @param int    $categorie Categoria găsită.
+ * @return string Motivul.
+ */
+function ccs_ui_de_ce_blocat( $p, $poze, $categorie ) {
+	if ( ! $poze ) {
+		return __( 'fără poză', 'conex-conect-sync' );
+	}
+	if ( (float) $p->cost <= 0 ) {
+		return __( 'fără cost', 'conex-conect-sync' );
+	}
+	if ( (int) $p->stoc <= 0 ) {
+		return __( 'fără stoc', 'conex-conect-sync' );
+	}
+	if ( ! $categorie ) {
+		return __( 'fără categorie', 'conex-conect-sync' );
+	}
+	return __( 'nu se poate', 'conex-conect-sync' );
+}
+
+/**
+ * Paginarea, cu starea păstrată în URL.
+ *
+ * @param int $pagina Pagina curentă.
+ * @param int $pagini Câte pagini sunt.
+ * @return void
+ */
+function ccs_ui_paginare( $pagina, $pagini ) {
+	if ( $pagini < 2 ) {
+		return;
+	}
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$acum = $_GET;
+	unset( $acum['ccs_pag'] );
+
+	$leg = function ( $p ) use ( $acum ) {
+		$acum['ccs_pag'] = $p;
+		return admin_url( 'admin.php?' . http_build_query( $acum ) );
+	};
+	?>
+	<nav class="ccs-paginare">
+		<?php if ( $pagina > 1 ) : ?>
+			<a class="ccs-btn" href="<?php echo esc_url( $leg( $pagina - 1 ) ); ?>"><?php esc_html_e( 'Înapoi', 'conex-conect-sync' ); ?></a>
+		<?php endif; ?>
+		<span class="ccs-paginare__unde">
+			<?php
+			printf(
+				/* translators: 1: pagina curentă, 2: câte pagini. */
+				esc_html__( 'pagina %1$s din %2$s', 'conex-conect-sync' ),
+				esc_html( ccs_nr( $pagina ) ),
+				esc_html( ccs_nr( $pagini ) )
+			);
+			?>
+		</span>
+		<?php if ( $pagina < $pagini ) : ?>
+			<a class="ccs-btn" href="<?php echo esc_url( $leg( $pagina + 1 ) ); ?>"><?php esc_html_e( 'Înainte', 'conex-conect-sync' ); ?></a>
+		<?php endif; ?>
+	</nav>
+	<?php
 }
 
 /**
