@@ -184,6 +184,102 @@ function ccs_setari_pret( $context = array() ) {
 }
 
 /**
+ * Marginile fiecărei setări numerice.
+ *
+ * Panoul și linia de comandă scriau amândouă setările fără nicio margine. Un adaos pus din greșeală la 0,9 ar
+ * fi scris prețuri sub cost pe tot magazinul, iar frâna de scădere, care se uită la cât coboară un preț față
+ * de cel de pe site, n-ar fi prins-o: o scădere de 10% e cuminte, doar că aplicată peste tot.
+ *
+ * Marginile sunt largi intenționat. Nu încearcă să ghicească ce politică de preț e bună, ci doar să prindă
+ * greșeala de tastare: o virgulă pusă aiurea, un zero în plus, un minus.
+ *
+ * @return array cheie => array( minim, maxim, explicație ).
+ */
+function ccs_setari_margini() {
+	return array(
+		'adaos'                   => array( 1.0, 10.0, __( 'Adaosul e un înmulțitor: 1,35 înseamnă +35%. Sub 1 ai vinde sub cost.', 'conex-conect-sync' ) ),
+		'cota_tva'                => array( 1.0, 2.0, __( 'Cota de TVA e tot un înmulțitor: 1,21 înseamnă 21%.', 'conex-conect-sync' ) ),
+		'marja_minima_lei'        => array( 0.0, 1000.0, '' ),
+		'pret_minim_lei'          => array( 0.0, 100000.0, '' ),
+		'scadere_pret_maxima'     => array( 0.0, 1.0, __( 'E o fracție din prețul de acum: 0,5 înseamnă „nu lăsa prețul să scadă sub jumătate”.', 'conex-conect-sync' ) ),
+		'prag_schimbari'          => array( 0.0, 1.0, __( 'E o fracție din produsele legate: 0,25 înseamnă un sfert.', 'conex-conect-sync' ) ),
+		'prag_nume'               => array( 0.0, 1.0, '' ),
+		'webp_calitate'           => array( 1, 100, '' ),
+		'poze_per_produs'         => array( 1, 20, '' ),
+		'stoc_absent_runde'       => array( 1, 100, '' ),
+		'interval_catalog'        => array( 5, 1440, __( 'Minute între două preluări. Sub cinci minute ai bate furnizorul degeaba.', 'conex-conect-sync' ) ),
+		'import_automat_limita'   => array( 1, 1000, '' ),
+		'alerta_pauza_ore'        => array( 1, 720, '' ),
+		'ore_fara_sincronizare'   => array( 1, 720, '' ),
+		'atribut_min_produse'     => array( 1, 100000, '' ),
+		'atribut_max_raport'      => array( 0.0, 1.0, '' ),
+		'atribut_plafon_valori'   => array( 1, 10000, '' ),
+		'categorie_min_produse'   => array( 1, 10000, '' ),
+		'categorie_min_incredere' => array( 0, 100, '' ),
+		'lot_aplicare'            => array( 1, 5000, '' ),
+	);
+}
+
+/**
+ * Verifică o valoare de setare înainte să fie scrisă.
+ *
+ * Aceeași funcție pentru panou și pentru linia de comandă: două căi care scriu aceeași setare trebuie să o
+ * verifice la fel, altfel margina pusă într-una se ocolește prin cealaltă.
+ *
+ * @param string $cheie   Setarea.
+ * @param mixed  $valoare Valoarea propusă.
+ * @return mixed|WP_Error Valoarea, sau eroare cu un mesaj pentru om.
+ */
+function ccs_setare_valideaza( $cheie, $valoare ) {
+	$margini = ccs_setari_margini();
+	if ( ! isset( $margini[ $cheie ] ) ) {
+		return $valoare;
+	}
+
+	list( $minim, $maxim, $explicatie ) = $margini[ $cheie ];
+
+	if ( ! is_numeric( $valoare ) ) {
+		return new WP_Error(
+			'ccs_setare_nenumerica',
+			sprintf(
+				/* translators: %s: numele setării. */
+				__( '„%s” cere un număr.', 'conex-conect-sync' ),
+				$cheie
+			)
+		);
+	}
+
+	$valoare = (float) $valoare;
+	if ( $valoare < $minim || $valoare > $maxim ) {
+		return new WP_Error(
+			'ccs_setare_in_afara',
+			trim(
+				sprintf(
+					/* translators: 1: setarea, 2: valoarea dată, 3: minimul, 4: maximul. */
+					__( '„%1$s” trebuie să fie între %3$s și %4$s. Ai dat %2$s.', 'conex-conect-sync' ),
+					$cheie,
+					ccs_nr_setare( $valoare ),
+					ccs_nr_setare( $minim ),
+					ccs_nr_setare( $maxim )
+				) . ' ' . $explicatie
+			)
+		);
+	}
+
+	return $valoare;
+}
+
+/**
+ * Un număr de setare, scris scurt.
+ *
+ * @param float $n Numărul.
+ * @return string
+ */
+function ccs_nr_setare( $n ) {
+	return rtrim( rtrim( number_format( (float) $n, 2, ',', '' ), '0' ), ',' );
+}
+
+/**
  * Prețul de vânzare pentru un cost de achiziție.
  *
  * `max()` între trei reguli, nu doar adaosul: adaosul procentual, marja minimă în lei și un preț minim absolut.

@@ -431,6 +431,12 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-mesaj--problema { background: var(--c-rosu-fundal); border-color: var(--c-rosu); color: var(--c-rosu); }
 
 .ccs-stare-text { font-size: 12px; line-height: 16px; color: var(--c-verde); }
+/* Aceeași linie de stare spune și „a mers”, și „n-a mers”: fără asta, un refuz s-ar citi verde. */
+.ccs-stare-text--problema { color: var(--c-rosu); }
+
+/* Câmpul de token. Lat cât un token adevărat, ca să nu se citească pe bucăți. */
+.ccs-token__camp { max-width: 440px; font-family: var(--c-mono); }
+.ccs-token p { display: flex; align-items: center; gap: 10px; margin: 12px 0 0; }
 .ccs-stare-text.ccs-eroare { color: var(--c-rosu); }
 
 /* ---------------------------------------------------------------- semnătura: acum → nou */

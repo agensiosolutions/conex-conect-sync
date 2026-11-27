@@ -692,75 +692,132 @@ verifica( 'durată negativă, nu număr negativ pe ecran', '0 secunde', ccs_dura
 sectiune( 'ccs_import_nume_fisier(), numele pozelor importate' );
 
 verifica(
-	'prima poză: denumire plus cod',
-	'laveta-piele-sintetica-chamois-43x32cm-07222.jpg',
-	ccs_import_nume_fisier( 'LAVETA PIELE SINTETICA CHAMOIS 43x32CM', '07222', 0, 'https://x.ro/4e668598-bda0-4478.jpg' )
+	'prima poză: marcă, denumire, cod de producător',
+	'philips-bec-proiector-h3-12v-vision-12336prb1.jpg',
+	ccs_import_nume_fisier(
+		array( 'nume' => 'BEC PROIECTOR H3 12V VISION', 'brand' => 'PHILIPS', 'mpn' => '12336PRB1', 'sku' => '78123' ),
+		0,
+		'https://x.ro/4e668598-bda0-4478.jpg'
+	)
+);
+
+// Codul intern al furnizorului nu spune nimic nimănui din afara lui. La 82% dintre produsele Conex e diferit
+// de codul de producător, iar ăla e cel pe care îl caută oamenii.
+verifica(
+	'codul de producător bate codul intern al furnizorului',
+	'meyle-pompa-spalator-parbriz-014-870-0003.jpg',
+	ccs_import_nume_fisier(
+		array( 'nume' => 'POMPA SPALATOR PARBRIZ', 'brand' => 'MEYLE', 'mpn' => '014 870 0003', 'sku' => '111822' ),
+		0,
+		'https://x.ro/a.jpg'
+	)
+);
+
+verifica(
+	'fără cod de producător, cade pe SKU',
+	'umbrella-covor-portbagaj-119106.jpg',
+	ccs_import_nume_fisier(
+		array( 'nume' => 'COVOR PORTBAGAJ', 'brand' => 'UMBRELLA', 'mpn' => '', 'sku' => '119106' ),
+		0,
+		'https://x.ro/a.jpg'
+	)
 );
 
 verifica(
 	'a doua poză primește număr, nu suprascrie prima',
-	'set-bare-portbagaj-aluminiu-brio-120cm-07775-2.jpg',
-	ccs_import_nume_fisier( 'SET BARE PORTBAGAJ ALUMINIU BRIO 120CM', '07775', 1, 'https://x.ro/a.jpg' )
+	'menabo-set-bare-portbagaj-aluminiu-brio-120cm-07775-2.jpg',
+	ccs_import_nume_fisier(
+		array( 'nume' => 'SET BARE PORTBAGAJ ALUMINIU BRIO 120CM', 'brand' => 'MENABO', 'mpn' => '07775', 'sku' => '07775' ),
+		1,
+		'https://x.ro/a.jpg'
+	)
 );
 
 verifica(
 	'diacriticele nu ajung în numele fișierului',
-	'stergatoare-parbriz-cz1.jpg',
-	ccs_import_nume_fisier( 'Ștergătoare parbriz', 'CZ1', 0, 'https://x.ro/a.jpg' )
+	'bosch-stergatoare-parbriz-cz1.jpg',
+	ccs_import_nume_fisier(
+		array( 'nume' => 'Ștergătoare parbriz', 'brand' => 'BOSCH', 'mpn' => 'CZ1' ),
+		0,
+		'https://x.ro/a.jpg'
+	)
 );
 
-// O denumire de 120 de caractere ar da un fișier pe care unele sisteme de fișiere îl taie, iar WordPress adaugă
-// peste el și sufixele de dimensiune („-1000x1000”). Tăiem la 60 înainte, nu după.
+// O denumire lungă ar da un fișier pe care unele sisteme de fișiere îl taie, iar WordPress mai adaugă peste el
+// sufixele de dimensiune („-1000x1000”). Tăiem înainte, nu după.
 verifica_ca(
-	'denumirile lungi se taie la 60 de caractere plus cod',
-	strlen( ccs_import_nume_fisier( str_repeat( 'ABCDEFGHIJ', 12 ), '99999', 0, 'https://x.ro/a.jpg' ) ) <= 72,
-	ccs_import_nume_fisier( str_repeat( 'ABCDEFGHIJ', 12 ), '99999', 0, 'https://x.ro/a.jpg' )
+	'denumirile lungi se taie',
+	strlen(
+		ccs_import_nume_fisier(
+			array( 'nume' => str_repeat( 'ABCDEFGHIJ ', 12 ), 'brand' => 'MANNOL', 'mpn' => '99999' ),
+			0,
+			'https://x.ro/a.jpg'
+		)
+	) <= 96,
+	ccs_import_nume_fisier(
+		array( 'nume' => str_repeat( 'ABCDEFGHIJ ', 12 ), 'brand' => 'MANNOL', 'mpn' => '99999' ),
+		0,
+		'https://x.ro/a.jpg'
+	)
+);
+
+// `substr()` pe un slug taie in mijlocul cuvantului si lasa o cratima la capat. Numele se citeste de om.
+verifica(
+	'tăierea cade la ultimul cuvânt întreg, nu în mijlocul lui',
+	'banda-multifunctionala-pentru-reparatii-si',
+	ccs_slug_scurt( 'BANDA MULTIFUNCTIONALA PENTRU REPARATII SI IZOLARI 5ML', 45 )
+);
+
+verifica(
+	'un singur cuvânt mai lung decât limita se taie oricum',
+	'abcdefghij',
+	ccs_slug_scurt( 'ABCDEFGHIJKLMNOP', 10 )
 );
 
 verifica(
 	'extensia vine din URL când e una așteptată',
-	'spray-cu-silicon-22362.png',
-	ccs_import_nume_fisier( 'SPRAY CU SILICON', '22362', 0, 'https://x.ro/poza.PNG' )
+	'mannol-spray-cu-silicon-22362.png',
+	ccs_import_nume_fisier( array( 'nume' => 'SPRAY CU SILICON', 'brand' => 'MANNOL', 'mpn' => '22362' ), 0, 'https://x.ro/poza.PNG' )
 );
 
 // Un URL fără extensie, sau cu una inventată, ar produce un fișier pe care WordPress îl respinge la încărcare.
 verifica(
 	'URL fără extensie: presupunem jpg',
-	'spray-cu-silicon-22362.jpg',
-	ccs_import_nume_fisier( 'SPRAY CU SILICON', '22362', 0, 'https://x.ro/imagine?id=4' )
+	'mannol-spray-cu-silicon-22362.jpg',
+	ccs_import_nume_fisier( array( 'nume' => 'SPRAY CU SILICON', 'brand' => 'MANNOL', 'mpn' => '22362' ), 0, 'https://x.ro/imagine?id=4' )
 );
 
 verifica(
 	'extensie neașteptată: tot jpg',
-	'spray-cu-silicon-22362.jpg',
-	ccs_import_nume_fisier( 'SPRAY CU SILICON', '22362', 0, 'https://x.ro/poza.exe' )
+	'mannol-spray-cu-silicon-22362.jpg',
+	ccs_import_nume_fisier( array( 'nume' => 'SPRAY CU SILICON', 'brand' => 'MANNOL', 'mpn' => '22362' ), 0, 'https://x.ro/poza.exe' )
 );
 
-// Fără plasa asta, un produs cu denumire goală ar încerca să salveze un fișier numit „.jpg”.
 // După conversia în WebP, numele trebuie să poarte extensia nouă, nu pe cea din URL-ul furnizorului. Fără asta,
 // WordPress ar primi un fișier WebP numit `.jpg` și l-ar servi cu tipul greșit.
 verifica(
 	'extensia forțată bate extensia din URL',
-	'spray-cu-silicon-22362.webp',
-	ccs_import_nume_fisier( 'SPRAY CU SILICON', '22362', 0, 'https://x.ro/poza.jpg', 0, 'webp' )
+	'mannol-spray-cu-silicon-22362.webp',
+	ccs_import_nume_fisier( array( 'nume' => 'SPRAY CU SILICON', 'brand' => 'MANNOL', 'mpn' => '22362' ), 0, 'https://x.ro/poza.jpg', 'webp' )
 );
 
 verifica(
 	'extensia forțată se aplică și pozelor numerotate',
-	'spray-cu-silicon-22362-3.webp',
-	ccs_import_nume_fisier( 'SPRAY CU SILICON', '22362', 2, 'https://x.ro/poza.jpg', 0, 'WEBP' )
+	'mannol-spray-cu-silicon-22362-3.webp',
+	ccs_import_nume_fisier( array( 'nume' => 'SPRAY CU SILICON', 'brand' => 'MANNOL', 'mpn' => '22362' ), 2, 'https://x.ro/poza.jpg', 'WEBP' )
 );
 
+// Fără plasa asta, un produs fără nicio dată ar încerca să salveze un fișier numit „.jpg”.
 verifica(
-	'fără denumire și fără cod, rămâne id-ul produsului',
+	'fără nimic, rămâne id-ul produsului',
 	'produs-4312.jpg',
-	ccs_import_nume_fisier( '', '', 0, 'https://x.ro/a.jpg', 4312 )
+	ccs_import_nume_fisier( array( 'wc_id' => 4312 ), 0, 'https://x.ro/a.jpg' )
 );
 
 verifica(
-	'fără denumire, dar cu cod',
-	'07222.jpg',
-	ccs_import_nume_fisier( '', '07222', 0, 'https://x.ro/a.jpg', 4312 )
+	'fără denumire, dar cu marcă și cod',
+	'mannol-07222.jpg',
+	ccs_import_nume_fisier( array( 'brand' => 'MANNOL', 'mpn' => '07222' ), 0, 'https://x.ro/a.jpg' )
 );
 
 /* ---------------------------------------------------------------------------------------- lacătul de scriere */

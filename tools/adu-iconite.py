@@ -47,6 +47,7 @@ HARTA = {
     # fiindcă am căutat într-un singur fișier.
     'dashboard':      'layout-dashboard',
     'list-view':      'list',
+    'admin-network':  'key-round',
 }
 
 SABLON = '''<?php

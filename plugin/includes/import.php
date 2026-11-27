@@ -129,6 +129,10 @@ function ccs_import_pregateste( $p ) {
 		'date'       => array(
 			'nume'          => $nume,
 			'sku'           => $cod,
+			// Pentru numele pozelor și pentru textul alternativ. Nu ajung pe produs ca atare: marca are
+			// deja un atribut al ei, iar codul de producător stă în datele tehnice.
+			'brand'         => $brand,
+			'mpn'           => $mpn,
 			'pret'          => $pret,
 			'gestiune_stoc' => true,
 			'stoc'          => $stoc,
@@ -646,7 +650,7 @@ function ccs_import_creeaza( $pregatit, $publica = false ) {
 	// Termenii atributelor globale se pun după salvare: `wp_set_object_terms()` are nevoie de un id de produs.
 	ccs_import_atribute_termeni( $wc_id, $d['atribute'] );
 
-	$poze = ccs_import_poze( $wc_id, (array) $d['poze'], $d['nume'], $d['sku'] );
+	$poze = ccs_import_poze( $wc_id, (array) $d['poze'], $d );
 
 	if ( ! $poze ) {
 		wp_trash_post( $wc_id );
@@ -778,14 +782,38 @@ function ccs_import_atribute_termeni( $wc_id, $atribute ) {
  * @param string $fortata  Extensia de folosit în locul celei din URL, după o conversie.
  * @return string Numele fișierului, cu extensie.
  */
-function ccs_import_nume_fisier( $nume, $sku, $pozitia, $url, $rezerva = 0, $fortata = '' ) {
-	// 60 de caractere: destul cât să se citească despre ce produs e vorba, fără nume absurd de lungi.
-	$baza = substr( sanitize_title( (string) $nume ), 0, 60 );
-	if ( '' !== (string) $sku ) {
-		$baza = ( '' !== $baza ? $baza . '-' : '' ) . sanitize_title( (string) $sku );
+function ccs_import_nume_fisier( $date, $pozitia = 0, $url = '', $fortata = '' ) {
+	$date = wp_parse_args(
+		(array) $date,
+		array(
+			'nume'  => '',
+			'brand' => '',
+			'mpn'   => '',
+			'sku'   => '',
+			'wc_id' => 0,
+		)
+	);
+
+	// Brandul în față: așa caută oamenii („meyle pompa spalator”) și așa se grupează fișierele în folder.
+	$bucati = array();
+	if ( '' !== (string) $date['brand'] ) {
+		$bucati[] = ccs_slug_scurt( $date['brand'], 20 );
 	}
+	if ( '' !== (string) $date['nume'] ) {
+		$bucati[] = ccs_slug_scurt( $date['nume'], 60 );
+	}
+	// Codul de producător, nu codul intern al furnizorului. La 82% dintre produsele Conex sunt diferite, iar
+	// cel intern nu înseamnă nimic pentru nimeni din afara furnizorului: nici pentru cumpărător, nici pentru
+	// Google. Când furnizorul nu trimite unul, cade pe SKU, ca fișierul să rămână distinct.
+	$cod = '' !== (string) $date['mpn'] ? $date['mpn'] : $date['sku'];
+	if ( '' !== (string) $cod ) {
+		$bucati[] = ccs_slug_scurt( $cod, 24 );
+	}
+
+	$bucati = array_values( array_filter( $bucati ) );
+	$baza   = implode( '-', $bucati );
 	if ( '' === $baza ) {
-		$baza = 'produs-' . (int) $rezerva;
+		$baza = 'produs-' . (int) $date['wc_id'];
 	}
 
 	$extensie = '' !== (string) $fortata
@@ -795,7 +823,45 @@ function ccs_import_nume_fisier( $nume, $sku, $pozitia, $url, $rezerva = 0, $for
 		$extensie = 'jpg';
 	}
 
-	return $baza . ( $pozitia ? '-' . ( (int) $pozitia + 1 ) : '' ) . '.' . $extensie;
+	$nume_fisier = $baza . ( $pozitia ? '-' . ( (int) $pozitia + 1 ) : '' ) . '.' . $extensie;
+
+	/**
+	 * Numele sub care intră o poză în biblioteca media.
+	 *
+	 * Un alt magazin poate avea altă regulă: fără brand, cu SKU-ul la coadă, altceva. Numele se schimbă de
+	 * aici, fără să umble nimeni în import.
+	 *
+	 * @param string $nume_fisier Numele propus.
+	 * @param array  $date        nume, brand, mpn, sku, wc_id.
+	 * @param int    $pozitia     A câta poză a produsului, de la zero.
+	 */
+	return apply_filters( 'ccs_nume_fisier_poza', $nume_fisier, $date, $pozitia );
+}
+
+/**
+ * Un slug tăiat la ultimul cuvânt întreg.
+ *
+ * `substr()` pe un slug taie în mijlocul cuvântului și lasă adesea o cratimă la capăt:
+ * „banda-multifunctionala-pentru-repara-”. Numele unui fișier se citește de om, deci tăiem la cratima
+ * dinainte de limită.
+ *
+ * @param string $text  Textul.
+ * @param int    $maxim Câte caractere.
+ * @return string Slugul.
+ */
+function ccs_slug_scurt( $text, $maxim ) {
+	$slug = sanitize_title( (string) $text );
+	if ( strlen( $slug ) <= $maxim ) {
+		return $slug;
+	}
+
+	$taiat = substr( $slug, 0, $maxim );
+	$ultim = strrpos( $taiat, '-' );
+	// Dacă primul cuvânt singur e mai lung decât limita, n-avem ce tăia frumos: rămâne tăietura brută.
+	if ( false !== $ultim && $ultim > 0 ) {
+		$taiat = substr( $taiat, 0, $ultim );
+	}
+	return rtrim( $taiat, '-' );
 }
 
 /**
@@ -874,20 +940,63 @@ function ccs_import_webp( $cale, $calitate ) {
  * @param string $sku    Codul, lipit la numele fișierului ca să rămână de urmărit de unde vine poza.
  * @return int Câte poze au intrat.
  */
-function ccs_import_poze( $wc_id, $urluri, $nume = '', $sku = '' ) {
+function ccs_import_poze( $wc_id, $urluri, $d = array() ) {
 	if ( ! function_exists( 'wp_handle_sideload' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 	}
 
-	$nume     = '' !== $nume ? $nume : get_the_title( $wc_id );
+	$d = wp_parse_args(
+		(array) $d,
+		array(
+			'nume'  => '',
+			'brand' => '',
+			'mpn'   => '',
+			'sku'   => '',
+		)
+	);
+	$d['wc_id'] = (int) $wc_id;
+	if ( '' === (string) $d['nume'] ) {
+		$d['nume'] = get_the_title( $wc_id );
+	}
+
+	// Textul alternativ poartă și marca: omul care caută o poză de piesă caută „meyle pompă spălător”, nu
+	// doar „pompă spălător”. Marca stă în față, ca în numele fișierului, ca să fie aceeași poveste.
+	$alt_baza = trim( ( '' !== (string) $d['brand'] ? $d['brand'] . ' ' : '' ) . $d['nume'] );
 	$calitate = (int) ccs_setari()['webp_calitate'];
 	$ids      = array();
 	foreach ( array_values( $urluri ) as $i => $url ) {
 		$temporar = download_url( $url );
 		if ( is_wp_error( $temporar ) ) {
 			ccs_jurnal( 'avertisment', sprintf( 'Poza %s nu s-a descărcat: %s', $url, $temporar->get_error_message() ) );
+			continue;
+		}
+
+		/**
+		 * Cât poate cântări o poză adusă de la furnizor, în octeți.
+		 *
+		 * `download_url()` n-are nicio limită: ce trimite serverul celălalt, aia scrie pe disc. O poză de
+		 * produs stă sub două megaocteți; zece e larg. Verificarea e după descărcare, nu înainte: un `HEAD`
+		 * pe fiecare poză ar însemna încă o cerere pentru fiecare dintre cele opt sute ale unui import, iar
+		 * multe servere nici nu trimit `Content-Length`. Fișierul prea mare se șterge pe loc, deci pe disc
+		 * nu rămâne nimic.
+		 *
+		 * @param int $octeti Limita.
+		 */
+		$maxim = (int) apply_filters( 'ccs_poza_marime_maxima', 10 * MB_IN_BYTES );
+		$cat   = (int) @filesize( $temporar ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+		if ( $maxim > 0 && $cat > $maxim ) {
+			wp_delete_file( $temporar );
+			ccs_jurnal(
+				'avertisment',
+				sprintf(
+					'Poza %s are %s, peste limita de %s. Am sărit-o.',
+					$url,
+					size_format( $cat ),
+					size_format( $maxim )
+				)
+			);
 			continue;
 		}
 
@@ -909,7 +1018,7 @@ function ccs_import_poze( $wc_id, $urluri, $nume = '', $sku = '' ) {
 		// `wp_handle_sideload()` primește primul argument prin referință, deci nu se poate da un array literal:
 		// în PHP 8 e eroare fatală, nu avertisment. Trebuie să fie o variabilă.
 		$fisier = array(
-			'name'     => ccs_import_nume_fisier( $nume, $sku, $i, $url, $wc_id, $fortata ),
+			'name'     => ccs_import_nume_fisier( $d, $i, $url, $fortata ),
 			'tmp_name' => $incarcat,
 		);
 		$asezat = wp_handle_sideload( $fisier, array( 'test_form' => false ) );
@@ -926,7 +1035,7 @@ function ccs_import_poze( $wc_id, $urluri, $nume = '', $sku = '' ) {
 		$id = wp_insert_attachment(
 			array(
 				'post_mime_type' => $asezat['type'],
-				'post_title'     => $nume,
+				'post_title'     => $alt_baza,
 				'post_content'   => '',
 				'post_status'    => 'inherit',
 			),
@@ -939,7 +1048,20 @@ function ccs_import_poze( $wc_id, $urluri, $nume = '', $sku = '' ) {
 		}
 
 		wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $asezat['file'] ) );
-		update_post_meta( $id, '_wp_attachment_image_alt', $nume );
+		// A doua poză a aceluiași produs nu e aceeași poză: un text alternativ identic pe toate spune
+		// cititorului de ecran de patru ori același lucru și nu ajută pe nimeni.
+		update_post_meta(
+			$id,
+			'_wp_attachment_image_alt',
+			$i
+				? sprintf(
+					/* translators: 1: marca și denumirea, 2: a câta poză. */
+					__( '%1$s, imaginea %2$d', 'conex-conect-sync' ),
+					$alt_baza,
+					(int) $i + 1
+				)
+				: $alt_baza
+		);
 
 		$ids[] = (int) $id;
 	}

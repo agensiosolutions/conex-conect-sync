@@ -30,6 +30,7 @@ function ccs_admin_taburi() {
 		'subcost'   => array( __( 'Vândute sub cost', 'conex-conect-sync' ), 'warning', __( 'Preț mai mic decât achiziția', 'conex-conect-sync' ), 'sub_cost' ),
 		'stoc'      => array( __( 'Stocul', 'conex-conect-sync' ), 'archive', __( 'Cantități și produse epuizate', 'conex-conect-sync' ), '' ),
 		'catalog'   => array( __( 'Catalogul', 'conex-conect-sync' ), 'list-view', __( 'Starea celor două cataloage', 'conex-conect-sync' ), '' ),
+		'acces'     => array( __( 'Accesul la furnizor', 'conex-conect-sync' ), 'admin-network', __( 'Tokenul și legătura cu Conex', 'conex-conect-sync' ), '' ),
 	);
 }
 
@@ -199,6 +200,63 @@ function ccs_admin_ajax_arata_ghid() {
 	wp_send_json_success( array( 'efect' => __( 'Gata, pașii sunt la loc.', 'conex-conect-sync' ) ) );
 }
 add_action( 'wp_ajax_ccs_arata_ghid', 'ccs_admin_ajax_arata_ghid' );
+
+/**
+ * Salvează tokenul de acces, apoi probează legătura.
+ *
+ * Tokenul nu se întoarce niciodată către pagină, nici după salvare: câmpul e numai de scris. Ce se arată
+ * înapoi e doar sursa lui și ultimele patru caractere, cât să se poată deosebi două tokenuri între ele.
+ *
+ * @return void
+ */
+function ccs_admin_ajax_token() {
+	ccs_admin_ajax_poarta();
+
+	if ( ccs_api_token_din_cod() ) {
+		wp_send_json_error(
+			array(
+				'mesaj' => __( 'Tokenul vine din `wp-config.php`, prin constanta CCS_API_TOKEN, iar aceea bate setarea. Scoate constanta dacă vrei să-l ții de aici.', 'conex-conect-sync' ),
+			)
+		);
+	}
+
+	$token  = trim( sanitize_text_field( wp_unslash( $_POST['token'] ?? '' ) ) );
+	$setari = (array) get_option( CCS_OPTIUNE_SETARI, array() );
+
+	if ( '' === $token ) {
+		unset( $setari['token'] );
+		update_option( CCS_OPTIUNE_SETARI, $setari );
+		wp_send_json_success( array( 'efect' => __( 'Tokenul a fost șters.', 'conex-conect-sync' ) ) );
+	}
+
+	$setari['token'] = $token;
+	update_option( CCS_OPTIUNE_SETARI, $setari );
+
+	// Probăm pe loc: un token salvat care nu merge e mai rău decât niciunul, fiindcă pare făcut.
+	$proba = ccs_api_proba();
+	if ( is_wp_error( $proba ) ) {
+		wp_send_json_error(
+			array(
+				'mesaj' => sprintf(
+					/* translators: %s: mesajul de la furnizor. */
+					__( 'Tokenul a fost salvat, dar furnizorul l-a refuzat: %s', 'conex-conect-sync' ),
+					$proba->get_error_message()
+				),
+			)
+		);
+	}
+
+	wp_send_json_success(
+		array(
+			'efect' => sprintf(
+				/* translators: %d: câte produse a întors furnizorul. */
+				__( 'Legătura merge. Furnizorul a răspuns cu %d produse.', 'conex-conect-sync' ),
+				(int) $proba
+			),
+		)
+	);
+}
+add_action( 'wp_ajax_ccs_token', 'ccs_admin_ajax_token' );
 
 /**
  * Subsolul paginilor pluginului.
@@ -614,9 +672,16 @@ function ccs_admin_ajax_politica() {
 
 	$setari = (array) get_option( CCS_OPTIUNE_SETARI, array() );
 	foreach ( array( 'adaos', 'cota_tva', 'marja_minima_lei', 'pret_minim_lei' ) as $cheie ) {
-		if ( isset( $_POST[ $cheie ] ) ) {
-			$setari[ $cheie ] = (float) str_replace( ',', '.', sanitize_text_field( wp_unslash( $_POST[ $cheie ] ) ) );
+		if ( ! isset( $_POST[ $cheie ] ) ) {
+			continue;
 		}
+		// Oprim valoarea greșită aici, nu o îndreptăm în tăcere: o politică salvată altfel decât a scris-o
+		// omul e mai rea decât una respinsă, fiindcă el crede că a salvat ce voia.
+		$valoare = ccs_setare_valideaza( $cheie, str_replace( ',', '.', sanitize_text_field( wp_unslash( $_POST[ $cheie ] ) ) ) );
+		if ( is_wp_error( $valoare ) ) {
+			wp_send_json_error( array( 'mesaj' => $valoare->get_error_message() ) );
+		}
+		$setari[ $cheie ] = (float) $valoare;
 	}
 	if ( isset( $_POST['rotunjire'] ) ) {
 		$rot                 = sanitize_key( wp_unslash( $_POST['rotunjire'] ) );

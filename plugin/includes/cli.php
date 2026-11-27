@@ -1258,6 +1258,15 @@ class CCS_CLI {
 			$valoare = (float) str_replace( ',', '.', $valoare );
 		}
 
+		// Aceeași verificare ca în panou: o margine pusă într-un singur loc se ocolește prin celălalt.
+		if ( ! is_bool( $valoare ) ) {
+			$verificat = ccs_setare_valideaza( $cheie, $valoare );
+			if ( is_wp_error( $verificat ) ) {
+				WP_CLI::error( $verificat->get_error_message() );
+			}
+			$valoare = is_int( $implicite[ $cheie ] ) ? (int) $verificat : $verificat;
+		}
+
 		$setari[ $cheie ] = $valoare;
 		update_option( CCS_OPTIUNE_SETARI, $setari );
 		WP_CLI::success( sprintf( '%s = %s', $cheie, is_bool( $valoare ) ? ( $valoare ? 'da' : 'nu' ) : $valoare ) );

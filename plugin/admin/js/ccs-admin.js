@@ -484,6 +484,45 @@
 			} );
 	} );
 
+	/* Salvarea tokenului. Campul nu se umple niciodata inapoi cu valoarea, nici dupa succes: ce a plecat spre
+	   server ramane acolo, iar pagina nu tine un secret in DOM mai mult decat trebuie. */
+	document.addEventListener( 'click', function ( ev ) {
+		var buton = ev.target.closest( '.ccs-token__salveaza' );
+		if ( ! buton ) {
+			return;
+		}
+		var camp = document.querySelector( '.ccs-token__camp' );
+		var stare = document.querySelector( '.ccs-token__stare' );
+		if ( ! camp ) {
+			return;
+		}
+
+		buton.disabled = true;
+		if ( stare ) {
+			stare.className = 'ccs-stare-text';
+			stare.textContent = buton.dataset.lucrez || 'Probez...';
+		}
+
+		trimite( 'ccs_token', { token: camp.value } ).then( function ( r ) {
+			buton.disabled = false;
+			camp.value = '';
+			if ( ! stare ) {
+				return;
+			}
+			var bun = r && r.success;
+			stare.className = 'ccs-stare-text' + ( bun ? '' : ' ccs-stare-text--problema' );
+			stare.textContent = bun
+				? ( r.data && r.data.efect ) || 'Gata.'
+				: ( r && r.data && r.data.mesaj ) || 'Nu a mers.';
+		} ).catch( function () {
+			buton.disabled = false;
+			if ( stare ) {
+				stare.className = 'ccs-stare-text ccs-stare-text--problema';
+				stare.textContent = 'Nu a mers.';
+			}
+		} );
+	} );
+
 	/* Desfacerea unei probleme de sanatate. Textul e intreg in pagina de la inceput, doar taiat vizual: asa
 	   ramane gasibil cu Ctrl+F si citibil de un cititor de ecran, fara sa cerem nimic serverului. */
 	document.addEventListener( 'click', function ( ev ) {

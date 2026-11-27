@@ -122,14 +122,6 @@ function ccs_site_produse() {
 	return $iesire;
 }
 
-/**
- * Doar SKU-urile, pentru codul care nu are nevoie de nume.
- *
- * @return array product_id => sku.
- */
-function ccs_site_skuuri() {
-	return wp_list_pluck( ccs_site_produse(), 'sku' );
-}
 
 /**
  * Leagă produsele de pe site de catalogul furnizorului.

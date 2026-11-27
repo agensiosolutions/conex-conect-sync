@@ -47,6 +47,52 @@ function ccs_api_token() {
 }
 
 /**
+ * Tokenul vine din cod, nu din setări?
+ *
+ * Constanta din `wp-config.php` bate întotdeauna setarea, iar panoul trebuie să spună asta: altfel cineva
+ * schimbă tokenul din interfață, nu se întâmplă nimic, și caută ore întregi de ce.
+ *
+ * @return bool
+ */
+function ccs_api_token_din_cod() {
+	return defined( 'CCS_API_TOKEN' ) && CCS_API_TOKEN;
+}
+
+/**
+ * Tokenul, numai cât să se poată deosebi de altul.
+ *
+ * Niciodată întreg, nicăieri. Ultimele patru caractere ajung ca să recunoști care token e pus, fără ca ecranul
+ * să devină un loc din care se poate fura.
+ *
+ * @return string Masca, sau șir gol dacă nu e configurat niciun token.
+ */
+function ccs_api_token_masca() {
+	$token = ccs_api_token();
+	if ( '' === $token ) {
+		return '';
+	}
+	$coada = strlen( $token ) > 4 ? substr( $token, -4 ) : '';
+	return str_repeat( '•', 12 ) . $coada;
+}
+
+/**
+ * Cere o pagină mică de la furnizor, ca să se vadă dacă tokenul merge.
+ *
+ * O cerere adevărată, nu o presupunere: un token poate fi scris corect și totuși refuzat, iar singurul care
+ * știe asta e furnizorul.
+ *
+ * @return int|WP_Error Câte produse a întors, sau eroarea primită.
+ */
+function ccs_api_proba() {
+	// Aceiași parametri ca `ccs_api_toate()`: o probă care cere altceva decât codul adevărat n-ar proba nimic.
+	$raspuns = ccs_api_cere( '', array( 'page' => 1, 'pageSize' => 1 ), 1 );
+	if ( is_wp_error( $raspuns ) ) {
+		return $raspuns;
+	}
+	return is_array( $raspuns ) ? count( $raspuns ) : 0;
+}
+
+/**
  * Ascunde tokenul dintr-un text, ca să nu ajungă în jurnal sau pe ecran.
  *
  * @param string $text Textul.
