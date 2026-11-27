@@ -520,20 +520,6 @@ function ccs_ui_pasi() {
 			'tab'   => 'pret',
 		),
 		array(
-			'gata'  => $imagini['produse'] > 0,
-			'titlu' => __( 'Pozele produselor sunt preluate', 'conex-conect-sync' ),
-			'text'  => $imagini['produse']
-				? sprintf(
-					/* translators: 1: câte produse au poze, 2: câte poze. */
-					__( '%1$s produse au poze la furnizor, %2$s poze în total.', 'conex-conect-sync' ),
-					ccs_nr( $imagini['produse'] ),
-					ccs_nr( $imagini['poze'] )
-				)
-				: __( 'Pozele se iau noaptea, între 19:00 și 05:00, fiindcă furnizorul le dă doar atunci. Fără ele nu se poate importa niciun produs.', 'conex-conect-sync' ),
-			'buton' => '',
-			'tab'   => '',
-		),
-		array(
 			'gata'  => ! $setari['mod_raport'],
 			'titlu' => __( 'Scrierea pe site e pornită', 'conex-conect-sync' ),
 			'text'  => $setari['mod_raport']
@@ -558,6 +544,20 @@ function ccs_ui_pasi() {
 					ccs_nr( $aplicari )
 				)
 				: __( 'Prețurile și stocurile nu au fost încă scrise pe site nici măcar o dată.', 'conex-conect-sync' ),
+			'buton' => '',
+			'tab'   => '',
+		),
+		array(
+			'gata'  => $imagini['produse'] > 0,
+			'titlu' => __( 'Pozele produselor sunt preluate', 'conex-conect-sync' ),
+			'text'  => $imagini['produse']
+				? sprintf(
+					/* translators: 1: câte produse au poze, 2: câte poze. */
+					__( '%1$s produse au poze la furnizor, %2$s poze în total.', 'conex-conect-sync' ),
+					ccs_nr( $imagini['produse'] ),
+					ccs_nr( $imagini['poze'] )
+				)
+				: __( 'Pozele se iau noaptea, între 19:00 și 05:00, fiindcă furnizorul le dă doar atunci. Fără ele nu se poate importa niciun produs.', 'conex-conect-sync' ),
 			'buton' => '',
 			'tab'   => '',
 		),
@@ -647,7 +647,7 @@ function ccs_ui_card_pasi() {
 	echo '</ol>';
 
 	printf(
-		'<p class="ccs-mic"><button type="button" class="ccs-btn ccs-btn--mic ccs-btn--fantoma ccs-inchide-ghid">%s</button></p>',
+		'<p class="ccs-mic"><button type="button" class="ccs-btn ccs-btn--mic ccs-btn--fantoma ccs-inchide-ghid"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span>%s</button></p>',
 		esc_html__( 'Nu îmi mai arăta pașii', 'conex-conect-sync' )
 	);
 

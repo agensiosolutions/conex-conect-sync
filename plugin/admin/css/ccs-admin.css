@@ -523,6 +523,12 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-lot[data-ton="bine"]:hover { background: var(--c-verde-fundal); }
 .ccs-lot[data-ton="atentie"]:hover { background: var(--c-atentie-fundal); }
 
+/* Butonul care ascunde ghidul: rosu, fiindca e singurul de aici care renunta la ceva, si cu „x”, ca sa se vada
+   ce face fara sa fie citit. Fantoma, nu plin: e o iesire, nu o actiune pe care sa o propunem. */
+.ccs-inchide-ghid { color: var(--c-rosu); }
+.ccs-inchide-ghid:hover { background: var(--c-rosu-fundal); color: var(--c-rosu); }
+.ccs-inchide-ghid .dashicons { width: 14px; height: 14px; font-size: 14px; margin-right: 2px; }
+
 /* Butonul de actiune dintr-un pas al ghidului. */
 .ccs-pas__actiune { display: inline-flex; align-items: center; gap: 10px; margin-top: 4px; }
 
