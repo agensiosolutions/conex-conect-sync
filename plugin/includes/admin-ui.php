@@ -459,25 +459,25 @@ function ccs_ui_jurnal_rulari( $limita = 10 ) {
 }
 
 /**
- * O iconiță de info cu explicația la hover.
+ * O pastilă care își poartă explicația, arătată la hover pe tot textul ei.
  *
- * Explicația stă lângă lucrul pe care îl explică, nu într-o bandă peste toată pagina: o bandă pe care o vezi la
- * fiecare intrare devine mobilier în două zile, iar un semn de întrebare lângă un cuvânt se apasă exact când nu
- * înțelegi cuvântul.
+ * Iconița stă în pastilă, nu lângă ea: un semn de întrebare singur, la câțiva pixeli de cuvânt, pare alt lucru
+ * și cere ochit cu mouse-ul. Tot blocul e ținta, deci ajunge să treci peste text.
  *
- * Fără JavaScript. `tabindex` și `role` sunt acolo ca explicația să se vadă și la navigarea cu tastatura, nu doar
- * cu mouse-ul.
- *
- * @param string $text   Explicația.
- * @param string $unde   'stanga' când iconița e lângă marginea din dreapta a ecranului.
+ * @param string $text       Textul pastilei.
+ * @param string $ton        Tonul.
+ * @param string $explicatie Ce se arată la hover.
+ * @param string $unde       'stanga' când pastila e lângă marginea din dreapta.
  * @return string HTML.
  */
-function ccs_ui_info( $text, $unde = '' ) {
+function ccs_ui_pastila_info( $text, $ton, $explicatie, $unde = '' ) {
 	return sprintf(
-		'<span class="ccs-info%1$s" tabindex="0" role="note" aria-label="%2$s"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><span class="ccs-info__bula">%3$s</span></span>',
+		'<span class="ccs-pastila ccs-pastila--%1$s ccs-info ccs-info--pastila%2$s" tabindex="0" role="note" aria-label="%3$s">%4$s<span class="dashicons dashicons-info-outline" aria-hidden="true"></span><span class="ccs-info__bula">%5$s</span></span>',
+		esc_attr( $ton ),
 		$unde ? ' ccs-info--' . esc_attr( $unde ) : '',
-		esc_attr( wp_strip_all_tags( $text ) ),
-		esc_html( $text )
+		esc_attr( $text . '. ' . wp_strip_all_tags( $explicatie ) ),
+		esc_html( $text ),
+		esc_html( $explicatie )
 	);
 }
 
@@ -817,13 +817,17 @@ function ccs_ui_linie_stare( $fapte ) {
 	}
 	echo '<div class="ccs-linie-stare">';
 	foreach ( $fapte as $f ) {
+		$are_info = ! empty( $f[3] );
 		printf(
-			'<span class="ccs-linie-stare__fapt"><span class="ccs-bulina%1$s"></span>%2$s <b>%3$s</b>%4$s</span>',
+			'<span class="ccs-linie-stare__fapt%1$s"%2$s><span class="ccs-bulina%3$s"></span>%4$s <b>%5$s</b>%6$s</span>',
+			$are_info ? ' ccs-info' : '',
+			$are_info ? ' tabindex="0" role="note" aria-label="' . esc_attr( $f[0] . ' ' . $f[1] . '. ' . wp_strip_all_tags( $f[3] ) ) . '"' : '',
 			! empty( $f[2] ) ? ' ccs-bulina--' . esc_attr( $f[2] ) : '',
 			esc_html( $f[0] ),
 			esc_html( $f[1] ),
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit de noi, escapat.
-			! empty( $f[3] ) ? ccs_ui_info( $f[3] ) : ''
+			$are_info
+				? '<span class="dashicons dashicons-info-outline" aria-hidden="true"></span><span class="ccs-info__bula">' . esc_html( $f[3] ) . '</span>'
+				: ''
 		);
 	}
 	echo '</div>';
@@ -1115,8 +1119,12 @@ function ccs_admin_pagina() {
 				<?php
 				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit de noi, escapat.
 				echo $setari['mod_raport']
-					? ccs_ui_pastila( __( 'Scrierea pe site e oprită', 'conex-conect-sync' ), 'atentie' )
-						. ccs_ui_info( ccs_ui_explica_scrierea(), 'stanga' )
+					? ccs_ui_pastila_info(
+						__( 'Scrierea pe site e oprită', 'conex-conect-sync' ),
+						'atentie',
+						ccs_ui_explica_scrierea(),
+						'stanga'
+					)
 					: ccs_ui_pastila( __( 'Sincronizare pornită', 'conex-conect-sync' ), 'bine' );
 				?>
 				<a class="ccs-btn ccs-btn--fantoma" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=ccs-decizii&tab=' . $tab . '&recalculeaza=1' ), 'ccs-recalculeaza' ) ); ?>">
