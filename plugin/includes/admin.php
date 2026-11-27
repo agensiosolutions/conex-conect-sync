@@ -87,6 +87,21 @@ function ccs_admin_body_class( $clase ) {
 add_filter( 'admin_body_class', 'ccs_admin_body_class' );
 
 /**
+ * Versiunea unui fișier de resurse, pentru cache-ul browserului.
+ *
+ * Versiunea pluginului plus data fișierului. Prima e pentru om, a doua e cea care contează: se schimbă exact
+ * când se schimbă fișierul, deci o corectură de CSS urcată fără ridicarea versiunii ajunge totuși pe ecran.
+ *
+ * @param string $cale Calea relativă în plugin.
+ * @return string Versiunea.
+ */
+function ccs_admin_versiune_fisier( $cale ) {
+	$fisier = CCS_DIR . $cale;
+	$data   = file_exists( $fisier ) ? filemtime( $fisier ) : 0;
+	return CCS_VERSIUNE . ( $data ? '.' . $data : '' );
+}
+
+/**
  * Încarcă stilul și scriptul, doar pe pagina noastră.
  *
  * @param string $hook Pagina curentă.
@@ -96,8 +111,11 @@ function ccs_admin_assets( $hook ) {
 	if ( 'toplevel_page_ccs-decizii' !== $hook ) {
 		return;
 	}
-	wp_enqueue_style( 'ccs-admin', CCS_URL . 'admin/css/ccs-admin.css', array(), CCS_VERSIUNE );
-	wp_enqueue_script( 'ccs-admin', CCS_URL . 'admin/js/ccs-admin.js', array(), CCS_VERSIUNE, true );
+	// Versiunea include data fișierului, nu doar versiunea pluginului. Altfel, o schimbare de CSS urcată fără
+	// să ridicăm versiunea rămâne în cache-ul browserului, iar omul vede codul nou cu stilul vechi. S-a
+	// întâmplat: butoanele reparate au ajuns pe server și au rămas gri pe ecran.
+	wp_enqueue_style( 'ccs-admin', CCS_URL . 'admin/css/ccs-admin.css', array(), ccs_admin_versiune_fisier( 'admin/css/ccs-admin.css' ) );
+	wp_enqueue_script( 'ccs-admin', CCS_URL . 'admin/js/ccs-admin.js', array(), ccs_admin_versiune_fisier( 'admin/js/ccs-admin.js' ), true );
 }
 add_action( 'admin_enqueue_scripts', 'ccs_admin_assets' );
 
