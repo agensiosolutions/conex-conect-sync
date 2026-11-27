@@ -2,6 +2,37 @@
 
 ## 27 noiembrie 2026
 
+**Trei greșeli ale mele în ultima oră, toate din aceeași familie.** Iulian a apăsat „Salvează și probează” ca
+să vadă dacă legătura merge, fără să scrie nimic în câmp, fiindcă tokenul era deja pus. Tokenul s-a șters.
+Pusesem „câmp gol înseamnă șterge”, adică exact gestul cel mai probabil al cuiva care vrea doar să probeze,
+iar masca o afișam ca `placeholder`, deci câmpul arăta plin și era gol. Acum câmpul gol doar probează, iar
+ștergerea are butonul ei, apărut doar când există ce șterge, cu două apăsări.
+
+Uitându-mă la ecranul ăla am găsit a doua: **panoul scria „ultima preluare reușită 28 noiembrie, 00:55”, când
+ultima rulare fusese la 22:55 pe 27.** Toate datele se scriu cu `current_time( 'mysql' )`, în ora site-ului,
+dar se citeau cu `mysql2date( 'U', $x, false )`, care le interpretează ca UTC fiindcă PHP-ul serverului e pe
+UTC. Afișarea era partea vizibilă; sub ea stătea „de câte ore n-a mai rulat sincronizarea”, care dădea *minus
+1,80 ore* în primele două ore după fiecare rulare. Pluginul credea că sincronizarea va rula în viitor, deci
+alerta ar fi plecat la opt ore pe un prag de șase. Șase locuri, toate trecute prin `ccs_ts()`.
+
+A treia: după salvarea tokenului, **starea de sus rămânea pe „Token lipsește”** în timp ce lângă buton scria
+că a mers, fiindcă starea se randează pe server iar JS-ul schimba doar textul de lângă buton. Acum salvarea
+reîncarcă, iar rezultatul trece printr-un tranzient ca să nu se piardă pe drum.
+
+`Lecție:` Când un buton face două lucruri și unul dintre ele distruge, nu alege între ele după ce a lăsat gol
+utilizatorul. Alege după ce a apăsat. Un câmp gol nu e o comandă, e lipsa unei comenzi.
+
+`Lecție:` Un `placeholder` care arată ca o valoare e o minciună a interfeței. Dacă vrei să arăți ce e salvat
+fără să arăți secretul, scrie-o în altă parte, nu în locul în care omul se așteaptă să-și vadă propriul text.
+
+`Lecție:` Scrie și citește timpul prin aceeași funcție. `current_time( 'mysql' )` dă ora site-ului, iar
+`mysql2date( …, false )` o citește ca UTC: două funcții WordPress care par pereche și nu sunt. Simptomul: o
+oră afișată care diferă de realitate exact cu decalajul fusului, și calcule de vechime care ies negative.
+
+`Lecție:` Un ecran în care o parte se randează pe server și alta se actualizează din JS va ajunge să se
+contrazică. Alege: ori reîncarci și lași serverul singur să deseneze, ori muți toată starea în JS. Jumătate
+și jumătate înseamnă două desene ale aceluiași lucru, care se depărtează la prima schimbare.
+
 **Magazinul are ceas.** Până azi, Action Scheduler pornea pe traficul site-ului: `DISABLE_WP_CRON` era
 nedefinit și crontabul contului era gol. Seara joburile păreau punctuale la minut, dar o parte din traficul
 ăla eram eu, cu paginile de admin deschise. La patru dimineața, fără niciun vizitator, o preluare de preț
