@@ -1288,8 +1288,107 @@ function ccs_admin_tab_subcost() {
 		__( 'Ordonate după pierderea pe bucată.', 'conex-conect-sync' )
 	);
 	ccs_ui_bara_lot( 'sub_cost', $optiuni );
-	ccs_ui_tabel_decizii( $randuri, $decizii, 'sub_cost', $optiuni );
+	// Grupate pe gravitate: șaizeci de rânduri devin trei decizii, fără să dispară niciun rând.
+	ccs_ui_tabel_decizii(
+		$randuri,
+		$decizii,
+		'sub_cost',
+		$optiuni,
+		array(
+			'grupuri' => ccs_ui_grupeaza_pe_pierdere( $randuri ),
+			'total'   => true,
+		)
+	);
 	ccs_ui_card_sfarsit();
+}
+
+/**
+ * Grupează rândurile după cât de tare doare fiecare.
+ *
+ * Șaizeci de rânduri sortate după pierdere sunt tot șaizeci de decizii. Aceleași șaizeci, împărțite în „peste 100
+ * lei”, „între 10 și 100” și „sub 10”, sunt trei: omul se uită la primul grup cu atenție și le trece pe celelalte
+ * în bloc. Rândurile rămân toate vizibile, deci nu se ascunde nimic.
+ *
+ * @param array $randuri Rândurile de plan, sortate deja după pierdere.
+ * @return array Listă de array( eticheta, randuri ).
+ */
+function ccs_ui_grupeaza_pe_pierdere( $randuri ) {
+	$praguri = array(
+		array( 100.0, __( 'Pierdere de peste 100 lei la bucată', 'conex-conect-sync' ) ),
+		array( 10.0, __( 'Pierdere între 10 și 100 lei', 'conex-conect-sync' ) ),
+		array( 0.0, __( 'Pierdere sub 10 lei', 'conex-conect-sync' ) ),
+	);
+
+	$grupuri = array();
+	foreach ( $praguri as $p ) {
+		$grupuri[] = array(
+			'eticheta' => $p[1],
+			'randuri'  => array(),
+		);
+	}
+
+	foreach ( $randuri as $r ) {
+		$pierdere = (float) $r['cost_cu_tva'] - (float) $r['pret_site'];
+		foreach ( $praguri as $i => $p ) {
+			if ( $pierdere >= $p[0] ) {
+				$grupuri[ $i ]['randuri'][] = $r;
+				break;
+			}
+		}
+	}
+
+	// Un grup gol n-are ce căuta pe ecran.
+	return array_values(
+		array_filter(
+			$grupuri,
+			static function ( $g ) {
+				return (bool) $g['randuri'];
+			}
+		)
+	);
+}
+
+/**
+ * Miniatura unui produs, pentru un rând de tabel.
+ *
+ * Un patron de magazin de piese recunoaște produsul din poză, nu din `61497`. Fără asta, fiecare rând cere un
+ * clic pe „vezi” într-un tab nou, iar la șaizeci de rânduri nimeni nu face asta.
+ *
+ * @param int $wc_id Produsul.
+ * @return string HTML.
+ */
+function ccs_ui_miniatura( $wc_id ) {
+	$id_poza = get_post_thumbnail_id( $wc_id );
+	if ( ! $id_poza ) {
+		return '<span class="ccs-mini ccs-mini--goala" aria-hidden="true"></span>';
+	}
+	$src = wp_get_attachment_image_url( $id_poza, 'thumbnail' );
+	if ( ! $src ) {
+		return '<span class="ccs-mini ccs-mini--goala" aria-hidden="true"></span>';
+	}
+	return sprintf( '<span class="ccs-mini"><img src="%s" alt="" loading="lazy"></span>', esc_url( $src ) );
+}
+
+/**
+ * Încarcă dintr-o dată tot ce are nevoie o listă de rânduri.
+ *
+ * Fără asta, fiecare miniatură adaugă două interogări pe rând. La șaizeci de rânduri, diferența e între două
+ * interogări și o sută douăzeci.
+ *
+ * @param array $randuri Rândurile.
+ * @return void
+ */
+function ccs_ui_incalzeste( $randuri ) {
+	$ids = array_filter( wp_list_pluck( $randuri, 'wc_id' ) );
+	if ( ! $ids ) {
+		return;
+	}
+	_prime_post_caches( $ids, false, true );
+
+	$poze = array_filter( array_map( 'get_post_thumbnail_id', $ids ) );
+	if ( $poze ) {
+		_prime_post_caches( $poze, false, true );
+	}
 }
 
 /**
@@ -1298,16 +1397,39 @@ function ccs_admin_tab_subcost() {
  * @param array  $randuri Rândurile de plan.
  * @param array  $decizii Deciziile luate.
  * @param string $tip     Tipul deciziei.
- * @param array  $opt     valoare => etichetă.
+ * @param array  $opt     Opțiunile de decizie.
+ * @param array  $setari  grupuri: listă de array( eticheta, randuri ); total: arată rândul de totaluri.
  * @return void
  */
-function ccs_ui_tabel_decizii( $randuri, $decizii, $tip, $opt ) {
+function ccs_ui_tabel_decizii( $randuri, $decizii, $tip, $opt, $setari = array() ) {
+	$setari = wp_parse_args(
+		$setari,
+		array(
+			'grupuri' => null,
+			'total'   => false,
+		)
+	);
+
+	ccs_ui_incalzeste( $randuri );
+
+	$grupuri = $setari['grupuri'];
+	if ( null === $grupuri ) {
+		$grupuri = array( array( 'eticheta' => '', 'randuri' => $randuri ) );
+	}
+
+	$total_pierdere = 0.0;
+	$total_marja    = 0.0;
+	foreach ( $randuri as $r ) {
+		$marja           = (float) $r['pret_tinta'] - (float) $r['cost_cu_tva'];
+		$total_marja    += $marja;
+		$total_pierdere += max( 0.0, (float) $r['cost_cu_tva'] - (float) $r['pret_site'] );
+	}
 	?>
 	<div class="ccs-tabel-cadru">
-		<table class="ccs-tabel">
+		<table class="ccs-tabel ccs-tabel--decizii">
 			<thead>
 				<tr>
-					<th><?php esc_html_e( 'Produs', 'conex-conect-sync' ); ?></th>
+					<th colspan="2"><?php esc_html_e( 'Produs', 'conex-conect-sync' ); ?></th>
 					<th class="num"><?php esc_html_e( 'Cost cu TVA', 'conex-conect-sync' ); ?></th>
 					<th class="num"><?php esc_html_e( 'Preț, acum și propus', 'conex-conect-sync' ); ?></th>
 					<th class="num"><?php esc_html_e( 'Marjă nouă', 'conex-conect-sync' ); ?></th>
@@ -1315,28 +1437,80 @@ function ccs_ui_tabel_decizii( $randuri, $decizii, $tip, $opt ) {
 				</tr>
 			</thead>
 			<tbody>
-			<?php foreach ( $randuri as $r ) : ?>
-				<?php $luata = $decizii[ (string) $r['wc_id'] ] ?? null; ?>
-				<tr data-tip="<?php echo esc_attr( $tip ); ?>" data-referinta="<?php echo esc_attr( $r['wc_id'] ); ?>" class="<?php echo $luata ? 'ccs-rezolvat' : ''; ?>">
-					<td class="ccs-produs">
-						<strong><?php echo esc_html( $r['nume'] ); ?></strong>
-						<span>
-							<?php echo esc_html( $r['sku'] ); ?>
-							<?php if ( $r['brand'] ) : ?>
-								&middot; <?php echo esc_html( $r['brand'] ); ?>
-							<?php endif; ?>
-							&middot; <a href="<?php echo esc_url( get_edit_post_link( $r['wc_id'] ) ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'vezi', 'conex-conect-sync' ); ?></a>
-						</span>
-					</td>
-					<td class="num"><?php echo esc_html( ccs_lei( $r['cost_cu_tva'] ) ); ?></td>
-					<td class="num"><?php echo ccs_ui_delta( $r['pret_site'], $r['pret_tinta'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
-					<td class="num <?php echo $r['pret_tinta'] - $r['cost_cu_tva'] < 0 ? 'ccs-rosu' : ''; ?>">
-						<?php echo esc_html( ccs_lei( $r['pret_tinta'] - $r['cost_cu_tva'] ) ); ?>
-					</td>
-					<td><?php ccs_ui_alegeri( $opt, $luata ); ?></td>
-				</tr>
+			<?php foreach ( $grupuri as $g ) : ?>
+				<?php if ( '' !== $g['eticheta'] ) : ?>
+					<tr class="ccs-rand-grup">
+						<th colspan="6" scope="colgroup">
+							<?php echo esc_html( $g['eticheta'] ); ?>
+							<?php
+							echo wp_kses_post(
+								ccs_ui_pastila(
+									sprintf(
+										/* translators: %s: câte produse. */
+										_n( '%s produs', '%s produse', count( $g['randuri'] ), 'conex-conect-sync' ),
+										ccs_nr( count( $g['randuri'] ) )
+									),
+									'neutru'
+								)
+							);
+							?>
+						</th>
+					</tr>
+				<?php endif; ?>
+				<?php foreach ( $g['randuri'] as $r ) : ?>
+					<?php
+					$luata = $decizii[ (string) $r['wc_id'] ] ?? null;
+					$marja = (float) $r['pret_tinta'] - (float) $r['cost_cu_tva'];
+					?>
+					<tr data-tip="<?php echo esc_attr( $tip ); ?>" data-referinta="<?php echo esc_attr( $r['wc_id'] ); ?>" class="<?php echo $luata ? 'ccs-rezolvat' : ''; ?>">
+						<td class="ccs-celula-mini"><?php echo wp_kses_post( ccs_ui_miniatura( $r['wc_id'] ) ); ?></td>
+						<td class="ccs-produs">
+							<strong><?php echo esc_html( $r['nume'] ); ?></strong>
+							<span>
+								<?php echo esc_html( $r['sku'] ); ?>
+								<?php if ( $r['brand'] ) : ?>
+									&middot; <?php echo esc_html( $r['brand'] ); ?>
+								<?php endif; ?>
+								&middot; <a href="<?php echo esc_url( get_edit_post_link( $r['wc_id'] ) ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'vezi', 'conex-conect-sync' ); ?></a>
+							</span>
+						</td>
+						<td class="num"><?php echo esc_html( ccs_lei( $r['cost_cu_tva'] ) ); ?></td>
+						<td class="num"><?php echo ccs_ui_delta( $r['pret_site'], $r['pret_tinta'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
+						<td class="num">
+							<?php
+							echo wp_kses_post(
+								ccs_ui_pastila( ccs_lei( $marja ) . ' lei', $marja < 0 ? 'problema' : 'bine' )
+							);
+							?>
+						</td>
+						<td><?php ccs_ui_alegeri( $opt, $luata ); ?></td>
+					</tr>
+				<?php endforeach; ?>
 			<?php endforeach; ?>
 			</tbody>
+			<?php if ( $setari['total'] ) : ?>
+				<tfoot>
+					<tr>
+						<td colspan="4"><?php esc_html_e( 'Total', 'conex-conect-sync' ); ?></td>
+						<td class="num">
+							<?php
+							echo wp_kses_post(
+								ccs_ui_pastila( ccs_lei( $total_marja ) . ' lei', $total_marja < 0 ? 'problema' : 'bine' )
+							);
+							?>
+						</td>
+						<td class="ccs-tabel__slab">
+							<?php
+							printf(
+								/* translators: %s: pierderea totală în lei. */
+								esc_html__( 'acum se pierd %s lei la câte o bucată din fiecare', 'conex-conect-sync' ),
+								esc_html( ccs_lei( $total_pierdere ) )
+							);
+							?>
+						</td>
+					</tr>
+				</tfoot>
+			<?php endif; ?>
 		</table>
 	</div>
 	<?php

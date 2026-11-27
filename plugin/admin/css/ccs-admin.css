@@ -189,6 +189,34 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-plac--problema { background: var(--c-rosu-fundal); color: var(--c-rosu); }
 .ccs-plac--info { background: var(--c-accent-fundal); color: var(--c-accent-inchis); }
 
+/* ---------------------------------------------------------------- randuri cu poza */
+/* Miniatura stă pe fundalul gri, nu pe alb: pozele furnizorului sunt pe fundal alb, iar fără contrast conturul
+   produsului se pierde. `contain`, nu `cover`: o piesă tăiată pe margini nu se mai recunoaște. */
+.ccs-mini {
+  display: block; width: 40px; height: 40px; border-radius: 8px;
+  background: var(--c-fundal); border: 1px solid var(--c-linie); overflow: hidden;
+}
+.ccs-mini img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.ccs-mini--goala { background: var(--c-ridicat); }
+.ccs-celula-mini { width: 56px; padding-right: 0 !important; }
+
+/* Antetul unui grup de rânduri. Fără `sticky`: cadrul tabelului are `overflow: hidden`, care îl anulează oricum,
+   iar un antet lipicios care nu se lipește arată ca un bug. */
+.ccs-tabel .ccs-rand-grup th {
+  padding: 10px 16px; background: var(--c-ridicat);
+  border-top: 1px solid var(--c-linie); border-bottom: 1px solid var(--c-linie);
+  color: var(--c-text); font-size: 12px; font-weight: 600;
+  text-transform: none; letter-spacing: 0;
+}
+.ccs-tabel .ccs-rand-grup th .ccs-pastila { margin-left: 8px; }
+
+/* Rândul de totaluri. Răspunde la „cât mă costă în total”, întrebare la care altfel răspundea proza din antet. */
+.ccs-tabel tfoot td {
+  padding: 12px 16px; border-top: 2px solid var(--c-linie-tare);
+  background: var(--c-fundal); font-size: 13px; font-weight: 600; color: var(--c-text);
+}
+.ccs-tabel tfoot td.ccs-tabel__slab { font-weight: 400; }
+
 /* ---------------------------------------------------------------- ultima rulare */
 .ccs-rulare__cand { margin: 0 0 12px; font-size: 13px; color: var(--c-text-3); }
 .ccs-rulare__efect { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
