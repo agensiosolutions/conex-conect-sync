@@ -1,132 +1,5 @@
 # Jurnal conex-conect-sync
 
-## 26 noiembrie 2026
-
-**Corectarea celor 26 nu trebuie făcută, iar previzualizarea a dovedit-o.** Ownerul răspunsese pe WhatsApp că
-produsele nu sunt introduse manual de echipa lui, iar Iulian a concluzionat că atunci se corectează cu datele de la
-Conex. Concluzia părea logică și am scris corectarea. Previzualizarea, rulată înainte de orice scriere, a arătat
-altceva.
-
-Zece din cele 26 ar fi devenit clipsuri de tapițerie: pompa de aer, sprayul de deblocare, adezivul de oglinzi,
-vopseaua spray, odorizantul. Toate, clipsuri. Un asemenea tipar nu e o coincidență, e un mecanism.
-
-Mecanismul: **ROMIX folosește coduri de producător de cinci cifre**, 109 din cele 344 de produse ale lor, iar alea
-nimeresc peste SKU-urile rămase pe site din feed-ul Mega Drive. Codul propriu al produsului Conex e cu totul altul:
-SKU `10000` de pe site duce la produsul Conex `61497`, care doar are `10000` în câmpul de cod de producător. Nu e
-„codul înseamnă acum alt produs”, sunt două sisteme de numerotare care se ciocnesc pe un câmp care nu e
-identificator unic.
-
-Cifrele, dacă s-ar fi aplicat: valoarea celor 26 de anunțuri ar fi scăzut de la 4.113 la 1.465 lei, 20 de prețuri ar
-fi coborât, două produse ar fi ajuns cu stoc zero, iar aspiratorul de geamuri Kärcher ar fi devenit ulei Liqui Moly.
-
-Ce e adevărat din ce a spus ownerul: produsele chiar nu sunt introduse manual. Au venit din feed-ul Mega Drive, sub
-codurile lor. Dar de aici nu rezultă că produsul Conex care poartă acel număr în alt câmp e înlocuitorul lor.
-
-**Un bug găsit pe drum, de protecția pe care o pusesem.** Protecția care caută produsul de pe site sub alt cod la
-furnizor n-a sărit pentru aspiratorul Kärcher, deși cazul era exact ăla. Cauza: `get_the_title()` trece prin
-`wptexturize`, care transformă liniuța în `&#8211;`, iar tokenizarea o rupea în cuvântul „8211”. Asemănarea scădea
-de la 0,86 la 0,75, sub pragul de 0,80. Potrivirea principală citea titlul direct din baza de date, deci curat, iar
-corecțiile prin filtru: două căi de cod, două rezultate, pe aceleași date. Decodarea entităților e acum în
-`ccs_nume_cuvinte()`, deci peste tot, cu două teste în plus. Suita a ajuns la 42.
-
-**Hotărârea, după ce a văzut cifrele:** cele 26 nu se mai vând deocamdată, iar focusul rămâne pe produsele Conex
-plus cele câteva introduse manual de echipă. Am măsurat ce înseamnă fraza asta pentru tot magazinul, nu doar pentru
-cele 26, pentru că tiparul codului spune de unde vine fiecare produs: 292 au SKU `CZ*` și sunt puse de mână de
-echipă, 2.435 au cod numeric scurt și au venit din feed-ul Mega Drive, înghețat din noiembrie 2025. Dintre toate
-orfanele, **2.127 sunt încă afișate ca disponibile**, deși magazinul nu le mai poate aduce.
-
-Am scris retragerea ca operație separată, cu grupuri și cu probă implicită. Nu șterge niciodată nimic: produsul
-rămâne pe site, cu pagina și adresa lui, și trece pe stoc epuizat. O pagină care a stat ani în Google aduce în
-continuare vizitatori, iar „stoc epuizat” îi ține pe site, unde pot cumpăra altceva; o ștergere îi trimite în 404.
-
-Probat pe local, pe cele 26: 19 trecute pe epuizat, 7 erau deja, metadatele și `wc_product_meta_lookup` de acord,
-iar `wp ccs revino` a readus 38 de valori exact cum erau.
-
-Pus pe live ca 0.5.0, cu backup înainte. Cele 26 sunt retrase: 19 trecute pe epuizat, 7 erau deja, 38 de valori
-păstrate pentru revenire. Pagina produsului arată „Stoc epuizat” și rămâne în Google, cum trebuie.
-
-**Tabul „Catalogul”.** Împărțit în două feluri de informație, pentru că răspund la întrebări diferite: mișcarea,
-adică ce s-a schimbat la furnizor de la o rulare la alta, și restanța adunată până acum. Prima rămâne interesantă
-pentru totdeauna, a doua se rezolvă o dată.
-
-Mișcarea n-a cerut date noi: tabelul de catalog are deja `prima_vedere`, `ultima_vedere` și `lipsa_runde`. O
-capcană, văzută imediat la prima rulare: prima preluare a scris tot catalogul deodată, deci toate produsele au
-`prima_vedere` în aceeași zi, iar „produse noi în ultimele șapte zile” arăta 20.760. Pragul e sfârșitul primei
-rulări reușite; după el, cifrele devin 5 noi și 35 ieșite, adică adevărul.
-
-Jos, două coloane. „Ce dispare”, pe grupuri după tiparul codului, fiecare cu explicația de unde vine și cu buton de
-retragere. „Ce vine nou”, ca pâlnie: gata de import, fără poză, fără categorie, fără stoc.
-
-Două hotărâri de structură. Pentru „ce dispare” n-am construit tabel propriu: alea sunt produse WooCommerce reale,
-iar „Vezi lista” duce în lista de produse din WordPress, filtrată pe grup printr-un `pre_get_posts`. Clientul
-lucrează acolo cu filtrele și acțiunile pe care le știe. Pentru „ce vine nou” tabelul propriu e inevitabil, fiindcă
-produsele alea nu există încă în WordPress.
-
-Niciun buton de ștergere, nicăieri, nici pentru produse ieșite din catalog de un an. Singura acțiune e retragerea
-de la vânzare.
-
-**Tabul refăcut, după ce Iulian a spus că e sec.** Avea dreptate și motivul e instructiv: celelalte taburi pun o
-întrebare și primesc un răspuns, deci gri plus o pastilă ajung. Tabul ăsta arată două cataloage de zeci de mii de
-produse, iar acolo gri înseamnă „citește toate cifrele și adună-le singur”.
-
-Ce s-a schimbat: trei carduri de acțiune în culoare plină, cu cifra mare și cu ce e de făcut scris pe ele; două
-bare segmentate, una pentru produsele de pe site și una pentru catalogul Conex, fiecare cu legendă; mișcarea cu un
-plus verde și un minus chihlimbar.
-
-Plus cele două lucruri care lipseau și pe care Iulian le-a numit: **asocierea categoriilor**, ca listă de reguli cu
-calea furnizorului, raionul de pe site, bara de încredere și cuvântul care împarte o cale în două; și **cum arată
-un produs adus**, cinci carduri cu poza reală de la furnizor, numele, prețul calculat și etichetele de raion, stoc
-și număr de poze.
-
-Al doilea a fost cel mai ieftin de făcut și probabil cel mai valoros: adresele pozelor erau deja în tabel, iar un
-`<img>` în admin arată mai bine decât orice descriere a ce s-ar importa.
-
-Două corecturi după ce Iulian s-a uitat: cardurile de acțiune erau prea tari. Trei dreptunghiuri în culoare plină
-unul lângă altul strigă mai tare decât conținutul lor. Acum sunt albe ca restul panoului, cu iconița colorată în
-colț și cifra în culoarea stării, ceea ce păstrează citirea dintr-o privire fără să domine pagina. Iar grupurile
-de produse retrase au primit și ele iconiță, cifră mare și o bară care arată cât s-a făcut deja: fără bară,
-„2.435” și „1.826 încă de vânzare” sunt două numere care cer o scădere în minte.
-
-**Ce ștergem de pe site, hotărât cu date.** Roli a scris că multe produse i se par degeaba pe site și greu de
-găsit, și a propus o regulă: stoc 0 două săptămâni, apoi la coșul de gunoi. Regula are semnalul greșit. Stocul 0
-la Conex e temporar, produsul revine. Am verificat și două lucruri pe serverul lor, în loc să le presupun:
-`EMPTY_TRASH_DAYS` e 30, deci „trash” e o ștergere cu o lună întârziere; și am probat că după trash importul nostru
-vede codul ca liber, deci ar recrea produsul cu alt id. Un produs care revine pe stoc ar fi intrat într-o buclă.
-
-Am măsurat în loc să opinez. Am încrucișat cele 2.773 de produse fără furnizor cu 16 luni de Search Console, prin
-MCP-ul Google. Tot site-ul face 795 de clicuri în 16 luni. Din cele 2.439 rămase din feed-ul Mega Drive oprit,
-**1.827 n-au avut nicio afișare** în tot acest timp, iar celelalte 612 au adus împreună 105 clicuri, adică 6,6 pe
-lună. Deci toată discuția „ștergem 2.439 de produse” se reducea la: merită 6,6 clicuri pe lună ca să ținem 612
-pagini? Celelalte 1.827 nu costă nimic la ștergere. Cele 292 introduse manual de echipă sunt grupul cu cele mai
-multe clicuri de pe site, 162, și nu se ating.
-
-Hotărârea: 1.827 la coșul de gunoi, 612 ascunse din catalog și pe stoc epuizat, cu adresa vie. `wp ccs curata`
-face asta dintr-o listă de id-uri, nu dintr-o regulă, iar `wp ccs revino` dă totul înapoi, inclusiv starea și
-vizibilitatea. Lista se face cu `tools/curatenie-lista.py` și nu se poate face din plugin, fiindcă Search Console
-cere alt cont. Ăsta e și motivul pentru care curățarea rămâne o apăsare de buton, nu un cron.
-
-**A doua jumătate a mesajului era altă problemă.** „Greu de găsit” nu era despre clienți, ci despre el: lucrează
-în `Produse` din wp-admin și cu șase mii de produse în listă nu mai găsește nimic. Asta e o reparație mult mai
-ieftină decât restructurarea categoriilor la care mă gândeam. Lista are acum un filtru după sursă și o coloană
-care spune, pentru fiecare produs, dacă mai e la furnizor, cu ce stoc și ce cost.
-
-`Lecție:` Când clientul propune o regulă automată de ștergere, întreabă ce semnal măsoară de fapt. „Stoc 0 de N
-zile” pare să însemne „nu se mai vinde”, dar într-un magazin care se aprovizionează de la un furnizor înseamnă
-„furnizorul n-are acum”. Semnalul corect era „furnizorul nu-l mai are deloc”, pe care îl aveam deja calculat.
-
-`Lecție:` Înainte să ștergi pagini de pe un magazin, întreabă Search Console cât aduc. Aici 75% din paginile
-candidate n-au avut nicio afișare în 16 luni, iar restul valorau 6,6 clicuri pe lună: două cifre care transformă
-o ceartă de principiu într-o hotărâre de cinci minute. Search Console listează doar paginile cu cel puțin o
-afișare, deci „zero afișări” chiar înseamnă zero, nu lipsă de date.
-
-`Lecție:` „Nu găsesc produsele” poate însemna „clienții nu le găsesc pe site” sau „eu nu le găsesc în wp-admin”.
-Sunt două lucrări complet diferite, una de luni și una de ore. Întreabă care, înainte să propui restructurarea
-categoriilor.
-
-`Lecție:` Când un filtru de admin se apasă des, nu-l pune peste o funcție care face toată munca grea. Grupurile
-din panou vin din potrivirea întreagă, care ia minute pe douăzeci de mii de produse; pentru lista de produse
-aceleași grupuri se calculează cu o interogare pe `_sku` și un `LEFT JOIN`, prin indecși.
-
 ## 27 noiembrie 2026
 
 **Panoul, corectat bucată cu bucată după ce Iulian s-a uitat pe live.** Nu o listă de dorințe, ci lucruri
@@ -243,36 +116,162 @@ lățimea tabelului. Înainte de a inventa un nume de clasă, caută-l.
 **0.9.0 pe live**, cu backup, lint cu PHP-ul serverului și migrarea schemei la v8. Scrierea în WooCommerce e în
 continuare oprită.
 
-**Pozele se convertesc în WebP, la calitate 90, și 0.8.0 e pe live.** Conversia se face la import fiindcă după
-import nu se mai face niciodată: o poză intrată JPEG rămâne JPEG în toate dimensiunile pe care le generează
-WordPress, iar magazinul plătește diferența la fiecare vizitator, nu o dată. Calitatea e peste implicita
-WordPress, care e 82, pentru că la poze de produs omul mărește ca să vadă cusătura husei sau filetul șurubului.
-Măsurat pe produse reale, la 1000x1000: 30 KB coboară la 14, 31 la 11, 61 la 48.
+## 26 noiembrie 2026
 
-Dacă serverul nu poate scrie WebP, poza rămâne cum a venit și se scrie în jurnal: o poză în formatul vechi e mai
-bună decât niciuna. O poză care vine deja WebP nu se recodează. Local conversia merge prin GD, pe live prin
-Imagick, și am probat-o pe amândouă.
+**Corectarea celor 26 nu trebuie făcută, iar previzualizarea a dovedit-o.** Ownerul răspunsese pe WhatsApp că
+produsele nu sunt introduse manual de echipa lui, iar Iulian a concluzionat că atunci se corectează cu datele de la
+Conex. Concluzia părea logică și am scris corectarea. Previzualizarea, rulată înainte de orice scriere, a arătat
+altceva.
 
-Produsele noi rămân ciorne, cum a cerut Iulian. Publicarea cere `--publica`, pe care nu o dau.
+Zece din cele 26 ar fi devenit clipsuri de tapițerie: pompa de aer, sprayul de deblocare, adezivul de oglinzi,
+vopseaua spray, odorizantul. Toate, clipsuri. Un asemenea tipar nu e o coincidență, e un mecanism.
 
-**Un bug prins de probă, nu de teste.** Regexul care tăia extensia ca să pună `.webp` avea clasa de caractere
-neînchisă. `preg_replace` întorcea null, deci ținta ieșea `.webp`, o cale relativă, iar fișierul se scria în
-directorul curent al procesului, nu lângă sursă. Nimic nu se plângea: imaginea ajungea până la urmă în bibliotecă,
-fiindcă `wp_handle_sideload` o muta de oriunde ar fi fost. S-a văzut doar fiindcă am pus proba să tipărească
-numele rezultatului, care a ieșit `.webp.webp`. Acum ținta se face din `dirname` plus `PATHINFO_FILENAME`, fără
-regex.
+Mecanismul: **ROMIX folosește coduri de producător de cinci cifre**, 109 din cele 344 de produse ale lor, iar alea
+nimeresc peste SKU-urile rămase pe site din feed-ul Mega Drive. Codul propriu al produsului Conex e cu totul altul:
+SKU `10000` de pe site duce la produsul Conex `61497`, care doar are `10000` în câmpul de cod de producător. Nu e
+„codul înseamnă acum alt produs”, sunt două sisteme de numerotare care se ciocnesc pe un câmp care nu e
+identificator unic.
 
-`Lecție:` Un regex cu clasă de caractere neînchisă nu dă eroare în PHP, dă null. Lipit de un șir cu punct, null
-devine un nume de fișier relativ, iar fișierul aterizează în directorul curent al procesului. Simptomul: un
-fișier cu nume ciudat apare în rădăcina site-ului sau în directorul din care s-a dat comanda. Verifică
-`preg_last_error_msg()` când un `preg_replace` pare să nu facă nimic.
+Cifrele, dacă s-ar fi aplicat: valoarea celor 26 de anunțuri ar fi scăzut de la 4.113 la 1.465 lei, 20 de prețuri ar
+fi coborât, două produse ar fi ajuns cu stoc zero, iar aspiratorul de geamuri Kärcher ar fi devenit ulei Liqui Moly.
 
-`Lecție:` Când construiești o cale schimbând extensia, lucrează pe bucăți, cu `dirname()` și `PATHINFO_FILENAME`,
-nu cu un regex peste tot drumul. O cale ca `/tmp/dosar.vechi/poza` are punctul în dosar, nu în fișier, iar o
-tăiere pe ultimul punct scrie în alt loc decât crezi.
+Ce e adevărat din ce a spus ownerul: produsele chiar nu sunt introduse manual. Au venit din feed-ul Mega Drive, sub
+codurile lor. Dar de aici nu rezultă că produsul Conex care poartă acel număr în alt câmp e înlocuitorul lor.
 
-`Lecție:` Pune proba să tipărească rezultatul, nu doar să spună că a reușit. Conversia „mergea”: întorcea un
-fișier WebP valid, de dimensiunea potrivită. Numai numele tipărit a arătat că fișierul se scria unde nu trebuie.
+**Un bug găsit pe drum, de protecția pe care o pusesem.** Protecția care caută produsul de pe site sub alt cod la
+furnizor n-a sărit pentru aspiratorul Kärcher, deși cazul era exact ăla. Cauza: `get_the_title()` trece prin
+`wptexturize`, care transformă liniuța în `&#8211;`, iar tokenizarea o rupea în cuvântul „8211”. Asemănarea scădea
+de la 0,86 la 0,75, sub pragul de 0,80. Potrivirea principală citea titlul direct din baza de date, deci curat, iar
+corecțiile prin filtru: două căi de cod, două rezultate, pe aceleași date. Decodarea entităților e acum în
+`ccs_nume_cuvinte()`, deci peste tot, cu două teste în plus. Suita a ajuns la 42.
+
+**Hotărârea, după ce a văzut cifrele:** cele 26 nu se mai vând deocamdată, iar focusul rămâne pe produsele Conex
+plus cele câteva introduse manual de echipă. Am măsurat ce înseamnă fraza asta pentru tot magazinul, nu doar pentru
+cele 26, pentru că tiparul codului spune de unde vine fiecare produs: 292 au SKU `CZ*` și sunt puse de mână de
+echipă, 2.435 au cod numeric scurt și au venit din feed-ul Mega Drive, înghețat din noiembrie 2025. Dintre toate
+orfanele, **2.127 sunt încă afișate ca disponibile**, deși magazinul nu le mai poate aduce.
+
+Am scris retragerea ca operație separată, cu grupuri și cu probă implicită. Nu șterge niciodată nimic: produsul
+rămâne pe site, cu pagina și adresa lui, și trece pe stoc epuizat. O pagină care a stat ani în Google aduce în
+continuare vizitatori, iar „stoc epuizat” îi ține pe site, unde pot cumpăra altceva; o ștergere îi trimite în 404.
+
+Probat pe local, pe cele 26: 19 trecute pe epuizat, 7 erau deja, metadatele și `wc_product_meta_lookup` de acord,
+iar `wp ccs revino` a readus 38 de valori exact cum erau.
+
+Pus pe live ca 0.5.0, cu backup înainte. Cele 26 sunt retrase: 19 trecute pe epuizat, 7 erau deja, 38 de valori
+păstrate pentru revenire. Pagina produsului arată „Stoc epuizat” și rămâne în Google, cum trebuie.
+
+**Tabul „Catalogul”.** Împărțit în două feluri de informație, pentru că răspund la întrebări diferite: mișcarea,
+adică ce s-a schimbat la furnizor de la o rulare la alta, și restanța adunată până acum. Prima rămâne interesantă
+pentru totdeauna, a doua se rezolvă o dată.
+
+Mișcarea n-a cerut date noi: tabelul de catalog are deja `prima_vedere`, `ultima_vedere` și `lipsa_runde`. O
+capcană, văzută imediat la prima rulare: prima preluare a scris tot catalogul deodată, deci toate produsele au
+`prima_vedere` în aceeași zi, iar „produse noi în ultimele șapte zile” arăta 20.760. Pragul e sfârșitul primei
+rulări reușite; după el, cifrele devin 5 noi și 35 ieșite, adică adevărul.
+
+Jos, două coloane. „Ce dispare”, pe grupuri după tiparul codului, fiecare cu explicația de unde vine și cu buton de
+retragere. „Ce vine nou”, ca pâlnie: gata de import, fără poză, fără categorie, fără stoc.
+
+Două hotărâri de structură. Pentru „ce dispare” n-am construit tabel propriu: alea sunt produse WooCommerce reale,
+iar „Vezi lista” duce în lista de produse din WordPress, filtrată pe grup printr-un `pre_get_posts`. Clientul
+lucrează acolo cu filtrele și acțiunile pe care le știe. Pentru „ce vine nou” tabelul propriu e inevitabil, fiindcă
+produsele alea nu există încă în WordPress.
+
+Niciun buton de ștergere, nicăieri, nici pentru produse ieșite din catalog de un an. Singura acțiune e retragerea
+de la vânzare.
+
+**Tabul refăcut, după ce Iulian a spus că e sec.** Avea dreptate și motivul e instructiv: celelalte taburi pun o
+întrebare și primesc un răspuns, deci gri plus o pastilă ajung. Tabul ăsta arată două cataloage de zeci de mii de
+produse, iar acolo gri înseamnă „citește toate cifrele și adună-le singur”.
+
+Ce s-a schimbat: trei carduri de acțiune în culoare plină, cu cifra mare și cu ce e de făcut scris pe ele; două
+bare segmentate, una pentru produsele de pe site și una pentru catalogul Conex, fiecare cu legendă; mișcarea cu un
+plus verde și un minus chihlimbar.
+
+Plus cele două lucruri care lipseau și pe care Iulian le-a numit: **asocierea categoriilor**, ca listă de reguli cu
+calea furnizorului, raionul de pe site, bara de încredere și cuvântul care împarte o cale în două; și **cum arată
+un produs adus**, cinci carduri cu poza reală de la furnizor, numele, prețul calculat și etichetele de raion, stoc
+și număr de poze.
+
+Al doilea a fost cel mai ieftin de făcut și probabil cel mai valoros: adresele pozelor erau deja în tabel, iar un
+`<img>` în admin arată mai bine decât orice descriere a ce s-ar importa.
+
+Două corecturi după ce Iulian s-a uitat: cardurile de acțiune erau prea tari. Trei dreptunghiuri în culoare plină
+unul lângă altul strigă mai tare decât conținutul lor. Acum sunt albe ca restul panoului, cu iconița colorată în
+colț și cifra în culoarea stării, ceea ce păstrează citirea dintr-o privire fără să domine pagina. Iar grupurile
+de produse retrase au primit și ele iconiță, cifră mare și o bară care arată cât s-a făcut deja: fără bară,
+„2.435” și „1.826 încă de vânzare” sunt două numere care cer o scădere în minte.
+
+**Maparea manuală, pornită de o întrebare.** Iulian a întrebat ce înseamnă „5.522 așteaptă o categorie”, iar
+răspunsul a scos la iveală trei lucruri.
+
+Întâi, eticheta era înșelătoare: 5.522 sunt produsele oprite **numai** de categorie, pentru că pâlnia numără fiecare
+produs o singură dată, la primul lucru care îl oprește. În total 13.332 n-au categorie, dar restul sunt oprite
+oricum de lipsa pozei sau a stocului.
+
+Apoi, printre căile nemapate nu erau numai piese OE. „Uleiuri, lichide si chimice / Lubrifianti auto / Uleiuri
+pentru motor” are 644 de produse, 528 cu stoc, iar magazinul **are deja raionul potrivit**: „Ulei motor”, cu
+cincizeci de uleiuri Castrol puse de echipă. Regula n-a fost învățată dintr-un motiv de proiectare: învățarea se
+uită doar la produsele legate de Conex, iar uleiurile echipei au cod propriu, deci sunt orfane. Omul vede
+corespondența din prima; mașinăria n-avea de unde.
+
+De aici a treia: lipsea un loc din care omul să mapeze o cale. Acum cele 98 de căi apar sortate după câte produse
+ar debloca fiecare, cu un selector de raion alături. Probat pe uleiuri: o alegere a mutat **307 produse** din
+„așteaptă” în „gata de adus”, iar regula a supraviețuit reînvățării.
+
+**Două bug-uri găsite de testul ăla.** `ccs_decizii.referinta` era `VARCHAR(64)`, dar o cale de categorie ajunge la
+105 caractere, deci decizia nu se scria. Mai rău: `ccs_decizie_scrie()` nu verifica rezultatul lui `$wpdb->insert()`
+și raporta „ok” oricum, iar interfața ar fi spus „Salvat” peste o scriere căzută. Amândouă reparate.
+
+`Lecție:` Verifică întotdeauna valoarea întoarsă de `$wpdb->insert()`. Fără asta, o coloană prea scurtă, o
+constrângere sau un mod strict fac scrierea să cadă în tăcere, iar interfața spune „Salvat”. Simptomul: clientul
+jură că a apăsat, iar în baza de date nu e nimic.
+
+`Lecție:` Când dimensionezi o coloană pentru o cheie compusă din text, măsoară cel mai lung caz real, nu cel pe care
+îl ai în față. Căile de categorie ale furnizorului ajungeau la 105 caractere, iar coloana avea 64, pentru că
+primele valori puse acolo erau id-uri de produs de cinci cifre.
+
+**Textele din panou, trecute prin regulile de redactare.** Iulian a dat două exemple: „Aceleași cifre pe care
+le-ai vedea într-un tabel, dar pe lungime” și „alege raionul”. Amândouă greșesc în feluri diferite, și amândouă
+sunt greșeli pe care le-am făcut eu, nu moșteniri.
+
+Prima descrie forma, nu conținutul: un subtitlu trebuie să spună ce arată secțiunea, nu cum arată. A doua e mai
+gravă: „raion” e un termen pe care l-am inventat. Ownerul citește „categorie” peste tot în WordPress și în
+WooCommerce, deci fiecare „raion” îl punea să traducă în minte.
+
+Am luat regulile din `agensio-creare-oferte/REGULI-REDACTARE.md` și am trecut tot panoul prin ele: 74 de texte
+schimbate în trei fișiere, plus încă zece în celelalte. Verbele colocviale au dispărut: un produs **se importă**,
+nu „urcă pe site”; rămâne **neschimbat**, nu „nu se atinge”; valorile **se modifică**, nu „se trage de ele”. Regula
+e acum în `CLAUDE.md`, cu cele două greșeli scrise explicit.
+
+`Lecție:` Nu inventa termeni pentru lucruri care au deja un nume pe ecranul clientului. Am scris „raion” pentru
+categoria de produs, într-un panou care stă în WordPress, unde scrie „categorie” în meniu, în lista de produse și
+în ecranul de editare. Un sinonim mai prietenos nu ajută: obligă omul să traducă. Folosește cuvintele pe care
+platforma i le-a băgat deja în cap.
+
+`Lecție:` Un subtitlu explică ce conține secțiunea, nu cum arată ea. „Aceleași cifre, dar pe lungime” vorbește
+despre forma graficului; „Cum se împart cele două cataloage, după starea fiecărui produs” spune ce poți afla din
+el. Simptomul: subtitlul ar rămâne adevărat dacă ai schimba datele cu totul.
+
+**0.7.0 pe live.** Backup întâi (16 MB, cu `-- Dump completed on` verificat), apoi fișierele într-un director de
+probă, unde au trecut toate de `php -l` rulat cu PHP-ul serverului, 8.1.34, nu cu al meu. Abia după aia mutate
+peste. Migrarea schemei la v7 a trecut, deci `ccs_decizii.referinta` e acum `varchar(255)` și pe live: căile de
+categorie care depășesc 64 de caractere se pot salva. Scrierea în WooCommerce e în continuare oprită,
+`mod_raport` e tot pe `true`.
+
+Pe live au ieșit la iveală două texte pe care previzualizarea locală nu le arătase, fiindcă apar doar în stări
+goale: „Niciun produs pot fi importate”, un dezacord dintr-o etichetă de plural refolosită, și starea goală a
+regulilor de categorie, care îi spunea ownerului să ruleze `wp ccs categorii`. Amândouă corectate și reurcate.
+
+`Lecție:` Stările goale scapă de la verificare tocmai pentru că pe mediul de lucru sunt pline cu date. Mediul
+local avea 1.059 de produse gata de import, deci ramura „niciunul” nu s-a randat niciodată; pe live, unde pozele
+nu fuseseră încă preluate, s-a văzut din prima. Când treci textele unei interfețe printr-o revizuire, caută
+explicit ramurile goale în cod, nu te baza pe ce apare pe ecran.
+
+`Lecție:` O stare goală care spune „rulează comanda X” e scrisă pentru dezvoltator, nu pentru client. Simptomul:
+textul cere o acțiune pe care omul care îl citește n-are cum să o facă. Spune în schimb ce se întâmplă de la sine
+și când.
 
 **Importul scrie, în sfârșit.** Până acum `ccs_import_pregateste()` doar spunea ce s-ar crea. Acum există și
 partea care creează: produs prin CRUD-ul WooCommerce, ca ciornă, cu preț, stoc, categorie, atribute și poze, legat
@@ -312,75 +311,76 @@ care să spună cine le-a creat.
 fișierului și textul alternativ sunt singura descriere pe care o are imaginea, și de multe ori furnizorul nu
 trimite descrieri deloc. Redenumește la import, din denumirea produsului; după import nu se mai face niciodată.
 
-**0.7.0 pe live.** Backup întâi (16 MB, cu `-- Dump completed on` verificat), apoi fișierele într-un director de
-probă, unde au trecut toate de `php -l` rulat cu PHP-ul serverului, 8.1.34, nu cu al meu. Abia după aia mutate
-peste. Migrarea schemei la v7 a trecut, deci `ccs_decizii.referinta` e acum `varchar(255)` și pe live: căile de
-categorie care depășesc 64 de caractere se pot salva. Scrierea în WooCommerce e în continuare oprită,
-`mod_raport` e tot pe `true`.
+**Pozele se convertesc în WebP, la calitate 90, și 0.8.0 e pe live.** Conversia se face la import fiindcă după
+import nu se mai face niciodată: o poză intrată JPEG rămâne JPEG în toate dimensiunile pe care le generează
+WordPress, iar magazinul plătește diferența la fiecare vizitator, nu o dată. Calitatea e peste implicita
+WordPress, care e 82, pentru că la poze de produs omul mărește ca să vadă cusătura husei sau filetul șurubului.
+Măsurat pe produse reale, la 1000x1000: 30 KB coboară la 14, 31 la 11, 61 la 48.
 
-Pe live au ieșit la iveală două texte pe care previzualizarea locală nu le arătase, fiindcă apar doar în stări
-goale: „Niciun produs pot fi importate”, un dezacord dintr-o etichetă de plural refolosită, și starea goală a
-regulilor de categorie, care îi spunea ownerului să ruleze `wp ccs categorii`. Amândouă corectate și reurcate.
+Dacă serverul nu poate scrie WebP, poza rămâne cum a venit și se scrie în jurnal: o poză în formatul vechi e mai
+bună decât niciuna. O poză care vine deja WebP nu se recodează. Local conversia merge prin GD, pe live prin
+Imagick, și am probat-o pe amândouă.
 
-`Lecție:` Stările goale scapă de la verificare tocmai pentru că pe mediul de lucru sunt pline cu date. Mediul
-local avea 1.059 de produse gata de import, deci ramura „niciunul” nu s-a randat niciodată; pe live, unde pozele
-nu fuseseră încă preluate, s-a văzut din prima. Când treci textele unei interfețe printr-o revizuire, caută
-explicit ramurile goale în cod, nu te baza pe ce apare pe ecran.
+Produsele noi rămân ciorne, cum a cerut Iulian. Publicarea cere `--publica`, pe care nu o dau.
 
-`Lecție:` O stare goală care spune „rulează comanda X” e scrisă pentru dezvoltator, nu pentru client. Simptomul:
-textul cere o acțiune pe care omul care îl citește n-are cum să o facă. Spune în schimb ce se întâmplă de la sine
-și când.
+**Un bug prins de probă, nu de teste.** Regexul care tăia extensia ca să pună `.webp` avea clasa de caractere
+neînchisă. `preg_replace` întorcea null, deci ținta ieșea `.webp`, o cale relativă, iar fișierul se scria în
+directorul curent al procesului, nu lângă sursă. Nimic nu se plângea: imaginea ajungea până la urmă în bibliotecă,
+fiindcă `wp_handle_sideload` o muta de oriunde ar fi fost. S-a văzut doar fiindcă am pus proba să tipărească
+numele rezultatului, care a ieșit `.webp.webp`. Acum ținta se face din `dirname` plus `PATHINFO_FILENAME`, fără
+regex.
 
-**Textele din panou, trecute prin regulile de redactare.** Iulian a dat două exemple: „Aceleași cifre pe care
-le-ai vedea într-un tabel, dar pe lungime” și „alege raionul”. Amândouă greșesc în feluri diferite, și amândouă
-sunt greșeli pe care le-am făcut eu, nu moșteniri.
+`Lecție:` Un regex cu clasă de caractere neînchisă nu dă eroare în PHP, dă null. Lipit de un șir cu punct, null
+devine un nume de fișier relativ, iar fișierul aterizează în directorul curent al procesului. Simptomul: un
+fișier cu nume ciudat apare în rădăcina site-ului sau în directorul din care s-a dat comanda. Verifică
+`preg_last_error_msg()` când un `preg_replace` pare să nu facă nimic.
 
-Prima descrie forma, nu conținutul: un subtitlu trebuie să spună ce arată secțiunea, nu cum arată. A doua e mai
-gravă: „raion” e un termen pe care l-am inventat. Ownerul citește „categorie” peste tot în WordPress și în
-WooCommerce, deci fiecare „raion” îl punea să traducă în minte.
+`Lecție:` Când construiești o cale schimbând extensia, lucrează pe bucăți, cu `dirname()` și `PATHINFO_FILENAME`,
+nu cu un regex peste tot drumul. O cale ca `/tmp/dosar.vechi/poza` are punctul în dosar, nu în fișier, iar o
+tăiere pe ultimul punct scrie în alt loc decât crezi.
 
-Am luat regulile din `agensio-creare-oferte/REGULI-REDACTARE.md` și am trecut tot panoul prin ele: 74 de texte
-schimbate în trei fișiere, plus încă zece în celelalte. Verbele colocviale au dispărut: un produs **se importă**,
-nu „urcă pe site”; rămâne **neschimbat**, nu „nu se atinge”; valorile **se modifică**, nu „se trage de ele”. Regula
-e acum în `CLAUDE.md`, cu cele două greșeli scrise explicit.
+`Lecție:` Pune proba să tipărească rezultatul, nu doar să spună că a reușit. Conversia „mergea”: întorcea un
+fișier WebP valid, de dimensiunea potrivită. Numai numele tipărit a arătat că fișierul se scria unde nu trebuie.
 
-`Lecție:` Nu inventa termeni pentru lucruri care au deja un nume pe ecranul clientului. Am scris „raion” pentru
-categoria de produs, într-un panou care stă în WordPress, unde scrie „categorie” în meniu, în lista de produse și
-în ecranul de editare. Un sinonim mai prietenos nu ajută: obligă omul să traducă. Folosește cuvintele pe care
-platforma i le-a băgat deja în cap.
+**Ce ștergem de pe site, hotărât cu date.** Roli a scris că multe produse i se par degeaba pe site și greu de
+găsit, și a propus o regulă: stoc 0 două săptămâni, apoi la coșul de gunoi. Regula are semnalul greșit. Stocul 0
+la Conex e temporar, produsul revine. Am verificat și două lucruri pe serverul lor, în loc să le presupun:
+`EMPTY_TRASH_DAYS` e 30, deci „trash” e o ștergere cu o lună întârziere; și am probat că după trash importul nostru
+vede codul ca liber, deci ar recrea produsul cu alt id. Un produs care revine pe stoc ar fi intrat într-o buclă.
 
-`Lecție:` Un subtitlu explică ce conține secțiunea, nu cum arată ea. „Aceleași cifre, dar pe lungime” vorbește
-despre forma graficului; „Cum se împart cele două cataloage, după starea fiecărui produs” spune ce poți afla din
-el. Simptomul: subtitlul ar rămâne adevărat dacă ai schimba datele cu totul.
+Am măsurat în loc să opinez. Am încrucișat cele 2.773 de produse fără furnizor cu 16 luni de Search Console, prin
+MCP-ul Google. Tot site-ul face 795 de clicuri în 16 luni. Din cele 2.439 rămase din feed-ul Mega Drive oprit,
+**1.827 n-au avut nicio afișare** în tot acest timp, iar celelalte 612 au adus împreună 105 clicuri, adică 6,6 pe
+lună. Deci toată discuția „ștergem 2.439 de produse” se reducea la: merită 6,6 clicuri pe lună ca să ținem 612
+pagini? Celelalte 1.827 nu costă nimic la ștergere. Cele 292 introduse manual de echipă sunt grupul cu cele mai
+multe clicuri de pe site, 162, și nu se ating.
 
-**Maparea manuală, pornită de o întrebare.** Iulian a întrebat ce înseamnă „5.522 așteaptă o categorie”, iar
-răspunsul a scos la iveală trei lucruri.
+Hotărârea: 1.827 la coșul de gunoi, 612 ascunse din catalog și pe stoc epuizat, cu adresa vie. `wp ccs curata`
+face asta dintr-o listă de id-uri, nu dintr-o regulă, iar `wp ccs revino` dă totul înapoi, inclusiv starea și
+vizibilitatea. Lista se face cu `tools/curatenie-lista.py` și nu se poate face din plugin, fiindcă Search Console
+cere alt cont. Ăsta e și motivul pentru care curățarea rămâne o apăsare de buton, nu un cron.
 
-Întâi, eticheta era înșelătoare: 5.522 sunt produsele oprite **numai** de categorie, pentru că pâlnia numără fiecare
-produs o singură dată, la primul lucru care îl oprește. În total 13.332 n-au categorie, dar restul sunt oprite
-oricum de lipsa pozei sau a stocului.
+**A doua jumătate a mesajului era altă problemă.** „Greu de găsit” nu era despre clienți, ci despre el: lucrează
+în `Produse` din wp-admin și cu șase mii de produse în listă nu mai găsește nimic. Asta e o reparație mult mai
+ieftină decât restructurarea categoriilor la care mă gândeam. Lista are acum un filtru după sursă și o coloană
+care spune, pentru fiecare produs, dacă mai e la furnizor, cu ce stoc și ce cost.
 
-Apoi, printre căile nemapate nu erau numai piese OE. „Uleiuri, lichide si chimice / Lubrifianti auto / Uleiuri
-pentru motor” are 644 de produse, 528 cu stoc, iar magazinul **are deja raionul potrivit**: „Ulei motor”, cu
-cincizeci de uleiuri Castrol puse de echipă. Regula n-a fost învățată dintr-un motiv de proiectare: învățarea se
-uită doar la produsele legate de Conex, iar uleiurile echipei au cod propriu, deci sunt orfane. Omul vede
-corespondența din prima; mașinăria n-avea de unde.
+`Lecție:` Când clientul propune o regulă automată de ștergere, întreabă ce semnal măsoară de fapt. „Stoc 0 de N
+zile” pare să însemne „nu se mai vinde”, dar într-un magazin care se aprovizionează de la un furnizor înseamnă
+„furnizorul n-are acum”. Semnalul corect era „furnizorul nu-l mai are deloc”, pe care îl aveam deja calculat.
 
-De aici a treia: lipsea un loc din care omul să mapeze o cale. Acum cele 98 de căi apar sortate după câte produse
-ar debloca fiecare, cu un selector de raion alături. Probat pe uleiuri: o alegere a mutat **307 produse** din
-„așteaptă” în „gata de adus”, iar regula a supraviețuit reînvățării.
+`Lecție:` Înainte să ștergi pagini de pe un magazin, întreabă Search Console cât aduc. Aici 75% din paginile
+candidate n-au avut nicio afișare în 16 luni, iar restul valorau 6,6 clicuri pe lună: două cifre care transformă
+o ceartă de principiu într-o hotărâre de cinci minute. Search Console listează doar paginile cu cel puțin o
+afișare, deci „zero afișări” chiar înseamnă zero, nu lipsă de date.
 
-**Două bug-uri găsite de testul ăla.** `ccs_decizii.referinta` era `VARCHAR(64)`, dar o cale de categorie ajunge la
-105 caractere, deci decizia nu se scria. Mai rău: `ccs_decizie_scrie()` nu verifica rezultatul lui `$wpdb->insert()`
-și raporta „ok” oricum, iar interfața ar fi spus „Salvat” peste o scriere căzută. Amândouă reparate.
+`Lecție:` „Nu găsesc produsele” poate însemna „clienții nu le găsesc pe site” sau „eu nu le găsesc în wp-admin”.
+Sunt două lucrări complet diferite, una de luni și una de ore. Întreabă care, înainte să propui restructurarea
+categoriilor.
 
-`Lecție:` Verifică întotdeauna valoarea întoarsă de `$wpdb->insert()`. Fără asta, o coloană prea scurtă, o
-constrângere sau un mod strict fac scrierea să cadă în tăcere, iar interfața spune „Salvat”. Simptomul: clientul
-jură că a apăsat, iar în baza de date nu e nimic.
-
-`Lecție:` Când dimensionezi o coloană pentru o cheie compusă din text, măsoară cel mai lung caz real, nu cel pe care
-îl ai în față. Căile de categorie ale furnizorului ajungeau la 105 caractere, iar coloana avea 64, pentru că
-primele valori puse acolo erau id-uri de produs de cinci cifre.
+`Lecție:` Când un filtru de admin se apasă des, nu-l pune peste o funcție care face toată munca grea. Grupurile
+din panou vin din potrivirea întreagă, care ia minute pe douăzeci de mii de produse; pentru lista de produse
+aceleași grupuri se calculează cu o interogare pe `_sku` și un `LEFT JOIN`, prin indecși.
 
 `Lecție:` O învățare din date nu vede decât datele legate. La Cez Auto, regula „uleiurile de motor merg în raionul
 Ulei motor” era evidentă pentru orice om, dar invizibilă pentru mașinărie, pentru că uleiurile magazinului nu erau
