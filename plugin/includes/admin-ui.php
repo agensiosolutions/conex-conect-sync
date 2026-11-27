@@ -109,6 +109,53 @@ function ccs_ui_cifra( $eticheta, $valoare, $ton = '', $optiuni = array() ) {
 }
 
 /**
+ * O dată scrisă în română.
+ *
+ * Aceeași problemă ca la durate: `mysql2date()` și `wp_date()` urmează limba adminului, care pe cezauto.ro e
+ * engleza, deci ieșea „26 November, 11:46” într-un panou în rest românesc. Lunile sunt scrise aici, fiindcă sunt
+ * douăsprezece și nu se schimbă niciodată.
+ *
+ * @param int|string $cand Timestamp sau dată din baza de date.
+ * @param bool       $cu_an Dacă să scrie și anul.
+ * @return string Data.
+ */
+function ccs_data( $cand, $cu_an = false ) {
+	if ( ! $cand ) {
+		return '?';
+	}
+
+	$ts = is_numeric( $cand ) ? (int) $cand : (int) mysql2date( 'U', (string) $cand, false );
+	if ( ! $ts ) {
+		return '?';
+	}
+
+	$luni = array(
+		1  => __( 'ianuarie', 'conex-conect-sync' ),
+		2  => __( 'februarie', 'conex-conect-sync' ),
+		3  => __( 'martie', 'conex-conect-sync' ),
+		4  => __( 'aprilie', 'conex-conect-sync' ),
+		5  => __( 'mai', 'conex-conect-sync' ),
+		6  => __( 'iunie', 'conex-conect-sync' ),
+		7  => __( 'iulie', 'conex-conect-sync' ),
+		8  => __( 'august', 'conex-conect-sync' ),
+		9  => __( 'septembrie', 'conex-conect-sync' ),
+		10 => __( 'octombrie', 'conex-conect-sync' ),
+		11 => __( 'noiembrie', 'conex-conect-sync' ),
+		12 => __( 'decembrie', 'conex-conect-sync' ),
+	);
+
+	// Formatele numerice le lăsăm pe seama WordPress, ca ora să respecte fusul site-ului.
+	$zi   = (int) wp_date( 'j', $ts );
+	$luna = (int) wp_date( 'n', $ts );
+	$an   = wp_date( 'Y', $ts );
+	$ora  = wp_date( 'H:i', $ts );
+
+	return $cu_an
+		? sprintf( '%d %s %s, %s', $zi, $luni[ $luna ], $an, $ora )
+		: sprintf( '%d %s, %s', $zi, $luni[ $luna ], $ora );
+}
+
+/**
  * O durată scrisă în română.
  *
  * `human_time_diff()` urmează limba adminului WordPress, iar pe cezauto.ro adminul e în engleză. Rezultatul era
@@ -959,7 +1006,7 @@ function ccs_ui_text_decizie( $luata ) {
 		__( '%1$s, de %2$s pe %3$s', 'conex-conect-sync' ),
 		$etichete[ $luata['valoare'] ] ?? $luata['valoare'],
 		$cine ? $cine->display_name : __( 'cineva', 'conex-conect-sync' ),
-		mysql2date( 'j F Y, H:i', $luata['creat_la'] )
+		ccs_data( $luata['creat_la'], true )
 	);
 }
 
@@ -1202,7 +1249,7 @@ function ccs_admin_tab_panou() {
 					/* translators: 1: câte produse, 2: când. */
 					__( '%1$s produse, preluate %2$s', 'conex-conect-sync' ),
 					ccs_nr( $produse ),
-					$ultima ? mysql2date( 'j F, H:i', $ultima->inceput ) : __( 'nu se știe când', 'conex-conect-sync' )
+					$ultima ? ccs_data( $ultima->inceput ) : __( 'nu se știe când', 'conex-conect-sync' )
 				)
 				: __( 'Nu a fost preluat încă', 'conex-conect-sync' ),
 		),
@@ -1287,7 +1334,7 @@ function ccs_ui_card_joburi() {
 			/* translators: 1: la câte minute, 2: când e următoarea rulare. */
 			esc_html__( 'Catalogul furnizorului se preia la fiecare %1$d minute. Următoarea rulare: %2$s.', 'conex-conect-sync' ),
 			(int) ( $job['interval'] / MINUTE_IN_SECONDS ),
-			esc_html( $job['urmatoarea'] ? wp_date( 'j F, H:i', $job['urmatoarea'] ) : '-' )
+			esc_html( $job['urmatoarea'] ? ccs_data( $job['urmatoarea'] ) : '-' )
 		);
 	} else {
 		esc_html_e( 'Sincronizarea nu rulează automat. Catalogul se preia doar la apăsarea butonului „Recalculează”, iar datele de mai jos rămân cele de la ultima preluare.', 'conex-conect-sync' );
@@ -2079,7 +2126,7 @@ function ccs_ui_catalog_miscare( $m ) {
 			? sprintf(
 				/* translators: %s: data ultimei preluări. */
 				__( 'Ultima preluare: %s.', 'conex-conect-sync' ),
-				mysql2date( 'j F, H:i', $m['ultima_rulare'] )
+				ccs_data( $m['ultima_rulare'] )
 			)
 			: __( 'Catalogul n-a fost preluat încă.', 'conex-conect-sync' )
 	);

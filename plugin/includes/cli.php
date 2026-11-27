@@ -1121,7 +1121,7 @@ class CCS_CLI {
 				sprintf(
 					'    %-20s %s',
 					'următoarea rulare',
-					$j['urmatoarea'] ? wp_date( 'j F Y, H:i', $j['urmatoarea'] ) : 'neprogramat'
+					$j['urmatoarea'] ? ccs_data( $j['urmatoarea'], true ) : 'neprogramat'
 				)
 			);
 		}
