@@ -480,37 +480,6 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 
 /* Grupurile de produse retrase: iconita colorata la stanga, cifra mare, si o bara care arata cat s-a facut deja.
    Fara bara, „2.435” si „1.826 inca de vanzare” sunt doua numere care cer o scadere in minte. */
-.ccs-grup {
-  display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 16px;
-  padding: 16px; margin-bottom: 8px;
-  border: 1px solid var(--c-linie); border-radius: 10px; background: var(--c-card);
-}
-.ccs-grup:last-of-type { margin-bottom: 0; }
-.ccs-grup__icon {
-  display: grid !important; place-items: center;
-  width: 40px !important; height: 40px !important;
-  border-radius: 10px; font-size: 20px !important; color: #fff;
-}
-.ccs-grup--atentie .ccs-grup__icon { background: var(--c-atentie-plin); }
-.ccs-grup--albastru .ccs-grup__icon { background: var(--c-albastru-plin); }
-.ccs-grup--gri .ccs-grup__icon { background: var(--c-gri-plin); }
-.ccs-grup--verde .ccs-grup__icon { background: var(--c-verde-plin); }
-.ccs-grup__cap { display: flex; align-items: baseline; gap: 10px; margin: 0 0 2px; }
-.ccs-grup__cap strong { font-size: 14px; font-weight: 500; color: var(--c-text); }
-.ccs-grup__n { font-size: 18px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; margin-left: auto; }
-.ccs-grup .ccs-mic { margin: 0; max-width: 60ch; }
-
-/* Cat din grup e deja retras. */
-.ccs-grup__progres { display: flex; align-items: center; gap: 10px; margin: 12px 0 0; }
-.ccs-grup__pista { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--c-atentie-moale); overflow: hidden; }
-.ccs-grup__pista span { display: block; height: 100%; background: var(--c-verde-plin); }
-.ccs-grup__stare { font-size: 12px; color: var(--c-text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.ccs-grup .ccs-butoane { margin: 12px 0 0; }
-
-/* Cele doua carduri din josul tabului Catalogul stau pe coloane egale. */
-.ccs-doua--egale { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.ccs-doua--egale > .ccs-card { margin-bottom: 0; }
-
 /* ---------------------------------------------------------------- tabele */
 .ccs-tabel-cadru { border: 1px solid var(--c-linie); border-radius: 8px; overflow: hidden; }
 .ccs-tabel { width: 100%; border-collapse: collapse; }
@@ -655,6 +624,15 @@ a.ccs-tile:focus-visible { box-shadow: var(--c-inel); outline: none; }
 .ccs-tile__desc { font-size: 13px; line-height: 18px; color: var(--c-text-3); }
 .ccs-tile__jos { display: flex; align-items: center; gap: 12px; margin-top: auto; padding-top: 8px; }
 .ccs-tile__verb { font-size: 13px; font-weight: 500; color: var(--c-accent); }
+
+/* Un card poate avea sub el si un progres, si butoane: grupurile de retragere au nevoie de amandoua. */
+.ccs-tile-grila--larg { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.ccs-tile__jos { flex-direction: column; align-items: stretch; gap: 10px; }
+.ccs-tile__progres { display: flex; align-items: center; gap: 10px; }
+.ccs-tile__pista { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--c-ridicat); overflow: hidden; }
+.ccs-tile__pista span { display: block; height: 100%; background: var(--c-verde); }
+.ccs-tile__stare { font-size: 12px; color: var(--c-text-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ccs-tile__butoane { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 a.ccs-tile:hover .ccs-tile__verb { color: var(--c-accent-inchis); }
 
 /* ---------------------------------------------------------------- mișcarea */

@@ -2315,34 +2315,34 @@ function ccs_ui_catalog_produse_noi( $c ) {
  * @return void
  */
 function ccs_ui_catalog_dispare( $grupuri ) {
-	// Fiecare grup: iconiță, culoare, explicația de unde vine, și dacă se poate retrage.
+	// Fiecare grup: iconiță, ton, explicația de unde vine, și dacă se poate retrage.
 	$etichete = array(
 		'din_feed' => array(
 			'titlu'   => __( 'Rămase din feed-ul vechi', 'conex-conect-sync' ),
 			'desc'    => __( 'Provin din importul Mega Drive, oprit în noiembrie 2025. Nu mai există în catalogul Conex.', 'conex-conect-sync' ),
 			'icon'    => 'archive',
-			'culoare' => 'atentie',
+			'ton'     => 'atentie',
 			'retrage' => true,
 		),
 		'excluse'  => array(
 			'titlu'   => __( 'Scoase din potrivire', 'conex-conect-sync' ),
 			'desc'    => __( 'Produse marcate ca fiind diferite de cele pe care Conex le are pe același cod.', 'conex-conect-sync' ),
 			'icon'    => 'hidden',
-			'culoare' => 'gri',
+			'ton'     => '',
 			'retrage' => true,
 		),
 		'altele'   => array(
 			'titlu'   => __( 'Alt tipar de cod', 'conex-conect-sync' ),
 			'desc'    => __( 'Codul nu corespunde niciunui tipar cunoscut. Necesită o verificare înainte de orice operațiune.', 'conex-conect-sync' ),
 			'icon'    => 'editor-help',
-			'culoare' => 'gri',
+			'ton'     => '',
 			'retrage' => true,
 		),
 		'manuale'  => array(
 			'titlu'   => __( 'Introduse manual de echipă', 'conex-conect-sync' ),
 			'desc'    => __( 'Codurile încep cu două litere. Aparțin magazinului, nu furnizorului, și nu sunt modificate de sincronizare.', 'conex-conect-sync' ),
 			'icon'    => 'admin-users',
-			'culoare' => 'albastru',
+			'ton'     => 'info',
 			'retrage' => false,
 		),
 	);
@@ -2352,6 +2352,8 @@ function ccs_ui_catalog_dispare( $grupuri ) {
 		__( 'Produsele nu se șterg. Trec pe stoc epuizat și rămân pe site, cu pagina și poziția lor în Google.', 'conex-conect-sync' )
 	);
 
+	echo '<div class="ccs-tile-grila ccs-tile-grila--larg">';
+
 	foreach ( $etichete as $grup => $e ) {
 		$ids = isset( $grupuri[ $grup ] ) ? array_keys( $grupuri[ $grup ] ) : array();
 		if ( ! $ids ) {
@@ -2360,51 +2362,62 @@ function ccs_ui_catalog_dispare( $grupuri ) {
 		$total    = count( $ids );
 		$de_atins = ccs_retragere_de_atins( $ids );
 		$retrase  = $total - $de_atins;
-		$eticheta = sprintf( /* translators: %s: câte produse. */ __( 'Retrage %s de la vânzare', 'conex-conect-sync' ), ccs_nr( $de_atins ) );
-		?>
-		<div class="ccs-grup ccs-grup--<?php echo esc_attr( $e['culoare'] ); ?>" data-grup="<?php echo esc_attr( $grup ); ?>">
-			<span class="ccs-grup__icon dashicons dashicons-<?php echo esc_attr( $e['icon'] ); ?>" aria-hidden="true"></span>
-			<div>
-				<p class="ccs-grup__cap">
-					<strong><?php echo esc_html( $e['titlu'] ); ?></strong>
-					<span class="ccs-grup__n"><?php echo esc_html( ccs_nr( $total ) ); ?></span>
-				</p>
-				<p class="ccs-mic"><?php echo esc_html( $e['desc'] ); ?></p>
 
-				<?php if ( $e['retrage'] ) : ?>
-					<p class="ccs-grup__progres">
-						<span class="ccs-grup__pista"><span style="width:<?php echo esc_attr( $total ? (int) round( 100 * $retrase / $total ) : 100 ); ?>%"></span></span>
-						<span class="ccs-grup__stare">
-							<?php
-							printf(
-								/* translators: 1: câte sunt retrase, 2: câte se mai vând. */
-								esc_html__( '%1$s retrase, %2$s încă de vânzare', 'conex-conect-sync' ),
-								esc_html( ccs_nr( $retrase ) ),
-								esc_html( ccs_nr( $de_atins ) )
-							);
-							?>
-						</span>
-					</p>
-				<?php endif; ?>
+		$jos = '';
 
-				<div class="ccs-butoane">
-					<?php if ( $e['retrage'] && $de_atins ) : ?>
-						<button type="button" class="ccs-btn ccs-btn--mic ccs-retrage" data-ton="atentie"
-							data-grup="<?php echo esc_attr( $grup ); ?>" data-eticheta="<?php echo esc_attr( $eticheta ); ?>">
-							<?php echo esc_html( $eticheta ); ?>
-						</button>
-					<?php elseif ( $e['retrage'] ) : ?>
-						<?php echo ccs_ui_pastila( __( 'toate retrase', 'conex-conect-sync' ), 'bine' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-					<?php endif; ?>
-					<a class="ccs-btn ccs-btn--mic ccs-btn--fantoma" href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&ccs_grup=' . $grup ) ); ?>">
-						<?php esc_html_e( 'Vezi lista', 'conex-conect-sync' ); ?>
-					</a>
-					<span class="ccs-stare-text"></span>
-				</div>
-			</div>
-		</div>
-		<?php
+		if ( $e['retrage'] ) {
+			$jos .= sprintf(
+				'<span class="ccs-tile__progres"><span class="ccs-tile__pista"><span style="width:%1$s%%"></span></span><span class="ccs-tile__stare">%2$s</span></span>',
+				esc_attr( $total ? (int) round( 100 * $retrase / $total ) : 100 ),
+				esc_html(
+					sprintf(
+						/* translators: 1: câte sunt retrase, 2: câte se mai vând. */
+						__( '%1$s retrase, %2$s încă de vânzare', 'conex-conect-sync' ),
+						ccs_nr( $retrase ),
+						ccs_nr( $de_atins )
+					)
+				)
+			);
+		}
+
+		$butoane = '';
+		if ( $e['retrage'] && $de_atins ) {
+			$eticheta = sprintf(
+				/* translators: %s: câte produse. */
+				__( 'Retrage %s de la vânzare', 'conex-conect-sync' ),
+				ccs_nr( $de_atins )
+			);
+			$butoane .= sprintf(
+				'<button type="button" class="ccs-btn ccs-btn--mic ccs-retrage" data-ton="atentie" data-grup="%1$s" data-eticheta="%2$s">%2$s</button>',
+				esc_attr( $grup ),
+				esc_attr( $eticheta )
+			);
+		} elseif ( $e['retrage'] ) {
+			$butoane .= ccs_ui_pastila( __( 'toate retrase', 'conex-conect-sync' ), 'bine' );
+		}
+		$butoane .= sprintf(
+			'<a class="ccs-btn ccs-btn--mic ccs-btn--fantoma" href="%s">%s</a>',
+			esc_url( admin_url( 'edit.php?post_type=product&ccs_grup=' . $grup ) ),
+			esc_html__( 'Vezi lista', 'conex-conect-sync' )
+		);
+		$butoane .= '<span class="ccs-stare-text"></span>';
+
+		$jos .= '<span class="ccs-tile__butoane">' . $butoane . '</span>';
+
+		ccs_ui_tile(
+			array(
+				'cifra'    => ccs_nr( $total ),
+				'titlu'    => $e['titlu'],
+				'desc'     => $e['desc'],
+				'icon'     => $e['icon'],
+				'ton'      => $e['ton'],
+				'atribute' => 'data-grup="' . esc_attr( $grup ) . '"',
+				'jos'      => $jos,
+			)
+		);
 	}
+
+	echo '</div>';
 	ccs_ui_card_sfarsit();
 }
 
