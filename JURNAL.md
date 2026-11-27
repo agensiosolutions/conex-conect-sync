@@ -2,6 +2,32 @@
 
 ## 27 noiembrie 2026
 
+**Patru decizii puse în cod, și un scop nou care le-a schimbat pe două.** Iulian a spus, la mijlocul lucrului,
+că pluginul trebuie să poată fi instalat ușor în alte magazine WooCommerce. Asta a mutat două judecăți pe loc.
+Tokenul în setări nu mai e o comoditate, e primul ecran al unei instalări noi: patronul altui magazin n-are
+nici SSH, nici habar ce e `wp-config.php`. Iar regula de denumire a pozelor a primit un filtru, fiindcă alt
+magazin poate vrea altceva.
+
+**Numele pozelor poartă acum marca și codul de producător**, nu codul intern al furnizorului. Cifra care a
+hotărât: la 82,3% dintre produse cele două coduri diferă, deci în patru cazuri din cinci puneam în numele
+fișierului un număr care nu înseamnă nimic pentru nimeni din afara Conexului.
+
+**Marginile setărilor** stau într-un singur loc și sunt folosite de amândouă căile de scriere. Nu încearcă să
+ghicească ce politică de preț e bună, doar să prindă greșeala de tastare, iar valoarea greșită se respinge în
+loc să fie îndreptată în tăcere: o politică salvată altfel decât a scris-o omul e mai rea decât una respinsă.
+
+**Tokenul de pe live stă în `wp-config.php`**, nu în baza de date. Întrebarea stătea din audit și acum are
+răspuns: nu intră în exporturi.
+
+`Lecție:` Când scopul unui produs se lărgește, recitește deciziile deja luate, nu doar pe cele care urmează.
+„Tokenul se pune în wp-config” era răspunsul corect pentru un singur magazin al nostru și răspunsul greșit
+pentru zece magazine străine, fără ca nimic din cod să se fi schimbat între timp.
+
+`Lecție:` Nu șterge un task fără să te uiți ce atârnă sub el. Am scos din listă întrebarea despre cron, care
+era hotărâtă, și odată cu ea au plecat cele șapte întrebări pentru client, cuibărite dedesubt. Prinse de
+verificatorul de format, care a observat că a dispărut și un titlu de secțiune. Simptomul: după o curățare,
+numărătoarea scade mai mult decât ai șters.
+
 **Prima noapte adevărată: toate joburile au mers, iar verificarea de după a găsit ce nu se vedea.** Pozele la
 19:12 (30.405 adrese pentru 11.052 produse), catalogul la 19:20, atributele la 19:25 (30.372 perechi, 367
 nume distincte), importul automat a trecut la 19:41 fără să creeze nimic, corect, fiindcă e oprit din setare.

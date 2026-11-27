@@ -13,11 +13,6 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
   `Sincronizare Conex` în meniul de admin. Ownerul are cont de administrator (`cezauto`). Pagina are date reale:
   3.950 de produse legate, 88 de întrebări fără răspuns (26 potriviri, 2 scăderi de preț, 60 sub cost).
   Modul raport e pornit, deci orice ar apăsa ownerul nu schimbă niciun preț pe site: se înregistrează doar decizia.
-- [ ] De hotărât dacă punem catalogul pe cron zilnic, până la prima aplicare @iulian
-  Ar ține cifrele din pagină proaspete dacă ownerul o deschide peste câteva zile. Scrie doar în tabelele noastre,
-  niciodată în WooCommerce, deci e fără risc. N-am pus-o singur: e o schimbare pe live care n-a fost cerută.
-  3.696 de prețuri s-ar schimba: 3.178 în sus (în medie +18,35 lei), 521 în jos (în medie -13,24 lei). Marja brută
-  pe bucată crește cu 44,5%. Întrebările, în ordinea în care contează:
   - [ ] Adaosul de 35% și cota de 21% rămân? @client
   - [ ] Marja minimă de 4 lei: pune un clips de caroserie la 5-6 lei. Prea scump? @client
   - [ ] Cele 521 de scăderi de preț vin din produsele cu adaos acum foarte mare (88 între 60 și 100%, 26 peste
@@ -31,28 +26,10 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Urmează
 
-- [ ] Regula de denumire a pozelor, de ales @iulian
-      Azi numele poartă codul intern Conex, iar la 82,3% dintre produse codul de producător e altul. Propus:
-      `brand-nume-codproducator.webp`, deci `meyle-pompa-spalator-parbriz-014-870-0003.webp` în loc de
-      `pompa-spalator-parbriz-111822.webp`. De ales dacă păstrăm și codul Conex la coadă, pentru legătura cu
-      SKU-ul. Odată cu ea: text alternativ cu brand și diferit pe fiecare poză, și trunchiere la cuvânt întreg.
-- [ ] Numele produselor sunt scrise integral cu majuscule la furnizor @iulian
-      20.079 din 20.735. Ajunge și în titlul produsului pe site, nu doar în textul alternativ. E o decizie de
-      tipografie pentru tot magazinul, nu una de import.
 - [ ] Cele opt căi de categorie care deblochează 2.265 de produse @iulian
       Din 3.873 de produse oprite de lipsa categoriei, opt căi țin 2.265: plăcuțe de frână 383, amortizoare
       331, discuri de frână 309, planetare 272, uleiuri de motor 230, etrieri 227, brațe 224, arcuri 189.
       Cel mai mare efect pentru cel mai puțin lucru, dar e o alegere de-a ta, din panou.
-
-- [ ] Două precauții ieftine, rămase din audit @iulian
-      Le-am semnalat, nu le-am construit, fiindcă acordul a fost pe celelalte trei.
-      - [ ] Margini pe politica de preț: azi acceptă orice număr. Un adaos pus din greșeală la 0,9 ar scrie
-            prețuri sub cost pe tot magazinul, iar frâna de scădere (50%) nu l-ar prinde.
-      - [ ] Limită de mărime la descărcarea unei poze: `download_url()` n-are niciuna.
-
-- [ ] De confirmat unde ține live-ul tokenul API @iulian
-      În `wp-config.php` sau în opțiunea din baza de date. N-am putut verifica: `wp-config.php` e pe lista de
-      fișiere pe care nu le citesc. Dacă e în baza de date, intră în orice export și în orice backup.
 
 - [ ] Produsele variabile nu sunt tratate separat @claude
       Azi nu contează, toate cele 6.849 de produse de pe live sunt simple. Un singur produs variabil creat mai
@@ -61,10 +38,6 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 - [ ] Cele 14 compresoare din catalogul Conex, de importat în „Compresor auto” @iulian
   Categoria e în meniul principal al site-ului și e goală. Conex are 21 de compresoare, 7 sunt deja pe site dar în
   alte categorii, 14 nu sunt deloc. Intră în etapa 4, odată cu importul.
-
-- [ ] De hotărât ce facem cu `ccs_site_skuuri()` din `plugin/includes/potrivire.php` @iulian
-  Nu mai e chemată de nicăieri: a rămas ca punte de compatibilitate când am rescris potrivirea pe 19 nov. Ori o
-  ștergem, ori o păstrăm declarat, ca funcție publică pentru alte pluginuri. Semnalată, nu ștearsă.
 
 ### Etapa 2: preț și stoc
 - [ ] Prima aplicare pe live, după deciziile ownerului @claude
@@ -147,6 +120,29 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Numele pozelor: marcă, denumire, cod de producător (27.11.2026)
+      `meyle-pompa-spalator-parbriz-014-870-0003.webp` în loc de `pompa-spalator-parbriz-111822.webp`. La 82,3%
+      dintre produse codul de producător diferă de cel intern al furnizorului. Tăiere la cuvânt întreg, text
+      alternativ cu marca și diferit pe fiecare poză, filtru `ccs_nume_fisier_poza` pentru alte magazine.
+- [x] Margini pe setări și limită de mărime la poze (27.11.2026)
+      `ccs_setari_margini()` plus `ccs_setare_valideaza()`, folosite și de panou, și de linia de comandă: o
+      margine pusă într-un singur loc se ocolește prin celălalt. Valoarea greșită se respinge, nu se îndreaptă
+      în tăcere. Pozele: 10 MB, filtrabil; una reală de la Conex are 42 Ko.
+- [x] Tabul „Accesul la furnizor”, cu tokenul (27.11.2026)
+      Primul ecran al unei instalări noi: fără token pluginul nu face nimic, iar patronul altui magazin n-are
+      SSH. Tokenul nu se arată niciodată întreg, câmpul e numai de scris, constanta din cod bate setarea și
+      scrie de ce. La salvare se probează cu o cerere adevărată către furnizor.
+- [x] Tokenul de pe live stă în `wp-config.php`, nu în baza de date (27.11.2026)
+      Deci nu intră în exporturi și în copii de siguranță.
+- [x] `ccs_site_skuuri()` șters (27.11.2026)
+      Înveliș de o linie peste `ccs_site_produse()`, fără apelanți, nedocumentat ca API. Pentru reutilizare
+      contează filtrele declarate, nu rămășițele.
+- [x] Numele produselor rămân cu majuscule (27.11.2026)
+      Decizia lui Iulian. Ar fi schimbat titlul a mii de produse deja indexate, pentru un câștig estetic.
+- [x] Catalogul rămâne la 30 de minute (27.11.2026)
+- [x] Versiunea 0.13.0 pe live (27.11.2026)
+      Backup de 139 MB înainte, verificat la ultima linie. 12 fișiere, lint curat cu PHP-ul serverului, toate
+      setările de acum trec marginile noi, tabul nou se randează.
 - [x] Joburile de noapte, prima rulare adevărată (27.11.2026)
       Poze 19:12 (30.405 adrese, 11.052 produse), catalog 19:20, atribute 19:25 (30.372 perechi, 367 nume),
       import automat 19:41 fără să creeze nimic, corect, fiindcă e oprit. Nicio eroare.
