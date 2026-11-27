@@ -565,8 +565,15 @@ function ccs_admin_ajax_joburi() {
 	$pornit = ! empty( $_POST['pornit'] ) && 'false' !== $_POST['pornit'];
 	$setari = (array) get_option( CCS_OPTIUNE_SETARI, array() );
 	$setari['joburi_pornite'] = $pornit;
-	// `update_option` declanșează `ccs_joburi_la_setari()`, care programează sau scoate joburile din coadă.
 	update_option( CCS_OPTIUNE_SETARI, $setari );
+
+	// Explicit, nu prin hook-ul de setări: dacă setarea era deja pornită, `update_option()` nu schimbă nimic și
+	// hook-ul nu se declanșează, iar butonul ar raporta „pornită” peste o coadă goală.
+	if ( $pornit ) {
+		ccs_joburi_porneste();
+	} else {
+		ccs_joburi_opreste();
+	}
 
 	wp_send_json_success(
 		array(

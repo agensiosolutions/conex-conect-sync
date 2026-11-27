@@ -1088,6 +1088,15 @@ class CCS_CLI {
 			$setari = (array) get_option( CCS_OPTIUNE_SETARI, array() );
 			$setari['joburi_pornite'] = $pornit;
 			update_option( CCS_OPTIUNE_SETARI, $setari );
+
+			// Explicit, nu prin hook-ul de setări: dacă setarea era deja pornită, `update_option()` nu schimbă
+			// nimic și hook-ul nu se declanșează, iar coada rămâne goală fără ca cineva să afle.
+			if ( $pornit ) {
+				ccs_joburi_porneste();
+			} else {
+				ccs_joburi_opreste();
+			}
+
 			WP_CLI::success( $pornit ? 'Joburile sunt pornite.' : 'Joburile sunt oprite.' );
 		}
 

@@ -224,6 +224,37 @@ function ccs_joburi_stare() {
 }
 
 /**
+ * Repune joburile în coadă dacă setarea spune că trebuie să ruleze, dar coada e goală.
+ *
+ * Programarea se făcea doar la schimbarea setării. Asta lasă o gaură: dacă setarea e deja pornită și acțiunile
+ * dispar din alt motiv, nimic nu le mai aduce înapoi, iar panoul arată „rularea automată pornită” în timp ce nu
+ * rulează nimic. Se întâmplă după orice dezactivare și reactivare a pluginului, fiindcă dezactivarea golește
+ * coada iar reactivarea nu o reface. Exact tiparul care a ținut feed-ul vechi oprit nouă luni: un sistem care
+ * spune că merge și nu merge.
+ *
+ * Verificarea costă un singur `as_next_scheduled_action()` pe oră, păzită de un transient.
+ *
+ * @return void
+ */
+function ccs_joburi_verifica() {
+	if ( ! ccs_setari()['joburi_pornite'] || ! function_exists( 'as_next_scheduled_action' ) ) {
+		return;
+	}
+	if ( get_transient( 'ccs_joburi_verificate' ) ) {
+		return;
+	}
+	set_transient( 'ccs_joburi_verificate', 1, HOUR_IN_SECONDS );
+
+	if ( as_next_scheduled_action( 'ccs_job_catalog', null, CCS_GRUP_JOBURI ) ) {
+		return;
+	}
+
+	ccs_jurnal( 'avertisment', 'Rularea automată era pornită, dar joburile lipseau din coadă. Le-am repus.' );
+	ccs_joburi_porneste();
+}
+add_action( 'admin_init', 'ccs_joburi_verifica' );
+
+/**
  * Pornește sau oprește joburile când se schimbă setarea.
  *
  * @param mixed $vechi Setările de dinainte.
