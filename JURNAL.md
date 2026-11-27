@@ -2,6 +2,24 @@
 
 ## 27 noiembrie 2026
 
+**0.11.0 pe live**, cu backup de 133 MB verificat la ultima linie. Pe live nu e nicio problemă de configurare,
+exact cum trebuie: taxele sunt oprite, moneda e leul, nicio regulă de categorie nu e moartă, iar tabela de
+atribute se umple abia diseară.
+
+Cardul de sănătate se strânge acum pe fiecare problemă, nu pe card întreg. Cu patru probleme deodată lua tot
+primul ecran. Alegerea dintre „strânge cardul" și „strânge fiecare problemă" nu e de gust: titlurile sunt exact
+ce trebuie văzut dintr-o privire, fiindcă ele spun câte probleme sunt și ce fel, deci un „vezi toate
+problemele" ar fi ascuns tocmai informația.
+
+`Lecție:` Nu anima `max-height` către o valoare fixă generoasă. Cu `2000px` pe un text de 120, închiderea pare
+că atârnă: primii o mie și ceva de pixeli nu se văd. Măsoară `scrollHeight` și animează spre el, apoi scoate
+plafonul de tot, ca un text care se reașază să nu fie tăiat la înălțimea de atunci.
+
+`Lecție:` Un docblock care descrie un tablou asociativ ca pe o listă pozițională păcălește pe oricine, inclusiv
+pe cel care l-a scris. `ccs_joburi_stare()` întoarce chei, nu poziții; citit pe poziții, mi-a raportat toate
+joburile oprite, deși Action Scheduler le avea programate pe toate cinci. Simptomul: o verificare rapidă care
+contrazice spectaculos ce arată interfața. Întreabă sursa adevărată înainte să crezi că ai stricat ceva.
+
 **Un audit cerut înainte de 1.0, și trei apărări construite din el.** Iulian a întrebat dacă pluginul e sigur,
 ce precauții mai putem lua și ce situații neprevăzute pot apărea. Am citit codul în loc să răspund din memorie,
 iar ce nu se putea deduce din citit am probat pe local.

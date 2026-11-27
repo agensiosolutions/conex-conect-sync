@@ -134,6 +134,14 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Problemele de sănătate se strâng, cu fade și „Vezi tot” (27.11.2026)
+      Strângerea e pe fiecare problemă, nu pe card: titlurile spun câte sunt și ce fel, deci ele rămân vizibile.
+      Plafonul deschis vine din înălțimea reală, măsurată în JS; o valoare fixă generoasă se animează urât la
+      închidere. Textul e întreg în pagină, doar tăiat vizual, deci rămâne găsibil cu Ctrl+F.
+- [x] Versiunea 0.11.0 pe live (27.11.2026)
+      Backup de 133 MB înainte, cu `-- Dump completed on` verificat. 13 fișiere, lint curat cu PHP-ul serverului.
+      Pe live: zero probleme de configurare (taxele oprite, moneda RON, nicio regulă moartă), toate cele cinci
+      joburi programate.
 - [x] Auditul de securitate și robustețe, înainte de 1.0 (27.11.2026)
       Securitatea e în regulă, cu dovezi: 11 din 11 endpointuri AJAX cu nonce și capabilitate, o singură acțiune
       pe GET și aia verificată, datele utilizatorului în SQL numai prin `prepare()`, extensia pozelor pe listă
