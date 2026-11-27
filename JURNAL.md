@@ -2,6 +2,39 @@
 
 ## 27 noiembrie 2026
 
+**Magazinul are ceas.** Până azi, Action Scheduler pornea pe traficul site-ului: `DISABLE_WP_CRON` era
+nedefinit și crontabul contului era gol. Seara joburile păreau punctuale la minut, dar o parte din traficul
+ăla eram eu, cu paginile de admin deschise. La patru dimineața, fără niciun vizitator, o preluare de preț
+putea întârzia ore. Nu conta cât timp scrierea e oprită; conta din clipa în care o pornim.
+
+Acum sunt două linii în crontab, la cinci minute, decalate cu două. Prima duce tot ce e programat în WP-Cron,
+inclusiv sarcinile LiteSpeed, care ar fi rămas și ele moarte; a doua rulează coada Action Scheduler direct,
+fără să mai treacă prin WP-Cron, fiindcă joburile pluginului sunt acțiuni Action Scheduler. La cinci minute,
+nu la unul: cel mai des job e la treizeci de minute, iar la un minut ar fi 1.440 de porniri pe zi pe o
+găzduire partajată, fără niciun câștig.
+
+Ordinea a contat mai mult decât conținutul: **întâi cronul, dovedit că rulează, abia apoi `DISABLE_WP_CRON`.**
+Invers, magazinul ar fi rămas fără niciun ceas între cele două comenzi. Dovada a fost un eveniment de probă
+pus în coadă, care a dispărut singur la tactul următor, iar confirmarea finală a fost rularea #25 de la
+22:55:57, cu WP-Cron deja oprit.
+
+`Lecție:` Înainte să scoți un mecanism, pune-l pe cel care îl înlocuiește și dovedește că merge. Nu cu
+documentația, cu un fapt observabil: o sarcină de probă care trebuie să dispară. Între „am instalat cronul” și
+„cronul rulează” încap toate nopțile în care nu rulează nimic.
+
+`Lecție:` Un `while true` dintr-o veghe nu moare când moare fereastra care îl asculta. Am ajuns cu două
+procese vii care împărțeau același fișier de stare, iar cel orfan consuma evenimentele în tăcere, din spatele
+celui ascultat. Veghea trebuie să iasă singură, sub fereastra ei, și să aibă lacăt. Simptomul: alarma tace, iar
+sistemul se dovedește sănătos la verificarea de mână.
+
+`Lecție:` Tăcerea unui sistem de alarmă nu e o veste bună până nu dovedești că alarma funcționează. Fără
+verificarea aia, raportul de a doua zi ar fi fost „totul a mers”, bazat pe un proces care nu se mai uita la
+nimic.
+
+`Lecție:` O copie de rezervă a lui `wp-config.php` nu se lasă niciodată în rădăcina web. Fișierele `.bak` de
+acolo pot fi servite ca text simplu, cu tot cu parola bazei. Serverul a răspuns 403, deci n-a fost expusă, dar
+locul ei e în afara rădăcinii, cu drepturi 600.
+
 **Patru decizii puse în cod, și un scop nou care le-a schimbat pe două.** Iulian a spus, la mijlocul lucrului,
 că pluginul trebuie să poată fi instalat ușor în alte magazine WooCommerce. Asta a mutat două judecăți pe loc.
 Tokenul în setări nu mai e o comoditate, e primul ecran al unei instalări noi: patronul altui magazin n-are

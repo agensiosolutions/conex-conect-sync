@@ -129,6 +129,11 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Cron de sistem, ca la un magazin serios (27.11.2026)
+      Două linii în crontab la 5 minute, decalate cu 2: `wp cron event run --due-now` pentru tot ce e în
+      WP-Cron, inclusiv LiteSpeed, și `wp action-scheduler run` direct pentru coada noastră. `MAILTO=""`, iar
+      erorile în `~/logs/wp-cron-erori.log`. Apoi `DISABLE_WP_CRON = true`, în ordinea asta, nu invers.
+      Dovedit: eveniment de probă dispărut la primul tact, apoi rularea #25 la 22:55:57 cu WP-Cron oprit.
 - [x] Numele pozelor: marcă, denumire, cod de producător (27.11.2026)
       `meyle-pompa-spalator-parbriz-014-870-0003.webp` în loc de `pompa-spalator-parbriz-111822.webp`. La 82,3%
       dintre produse codul de producător diferă de cel intern al furnizorului. Tăiere la cuvânt întreg, text
