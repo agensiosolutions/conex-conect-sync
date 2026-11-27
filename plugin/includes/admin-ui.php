@@ -711,6 +711,9 @@ function ccs_admin_tab_acces() {
 		__( 'Tokenul cu care pluginul cere date de la Conex. Fără el, nimic nu funcționează.', 'conex-conect-sync' )
 	);
 
+	// Două fapte, nu trei. „De unde vine tokenul” era informație pentru cine a instalat pluginul, nu pentru cel
+	// care îl folosește: patronul unui magazin n-a auzit de `wp-config.php` și nu are ce face cu răspunsul.
+	// Apare mai jos, și numai în cazul rar în care chiar îl împiedică să schimbe ceva.
 	ccs_ui_linie_stare(
 		array(
 			array(
@@ -720,47 +723,42 @@ function ccs_admin_tab_acces() {
 				$masca
 					? sprintf(
 						/* translators: %s: ultimele caractere ale tokenului. */
-						__( 'Se termină în %s. Nu se afișează niciodată întreg.', 'conex-conect-sync' ),
+						__( 'Se termină în %s. Nu se afișează niciodată întreg, nici după ce îl salvezi.', 'conex-conect-sync' ),
 						$masca
 					)
 					: __( 'Pluginul nu poate cere nimic de la furnizor până nu primește un token.', 'conex-conect-sync' ),
 			),
 			array(
-				__( 'Vine din', 'conex-conect-sync' ),
-				$din_cod ? __( 'wp-config.php', 'conex-conect-sync' ) : __( 'setările pluginului', 'conex-conect-sync' ),
-				'',
-				$din_cod
-					? __( 'Constanta CCS_API_TOKEN din wp-config.php. Ea bate setarea de aici.', 'conex-conect-sync' )
-					: __( 'Opțiunea din baza de date. Intră în orice export și în orice copie de siguranță.', 'conex-conect-sync' ),
-			),
-			array(
 				__( 'Ultima preluare reușită', 'conex-conect-sync' ),
 				$ultima ? ccs_data( $ultima, true ) : __( 'niciuna', 'conex-conect-sync' ),
 				$ultima ? 'bine' : 'atentie',
-				'',
+				$ultima
+					? __( 'Dacă data asta e proaspătă, tokenul merge. E singura dovadă care contează.', 'conex-conect-sync' )
+					: '',
 			),
 		)
 	);
 
 	ccs_ui_card(
-		$din_cod
-			? __( 'Tokenul e pus în cod', 'conex-conect-sync' )
-			: __( 'Schimbă tokenul', 'conex-conect-sync' ),
-		$din_cod
-			? __( 'Cât timp constanta există, ea câștigă, iar câmpul de mai jos n-ar schimba nimic.', 'conex-conect-sync' )
-			: __( 'Se salvează și se probează pe loc, cu o cerere adevărată către furnizor.', 'conex-conect-sync' )
+		__( 'Schimbă tokenul', 'conex-conect-sync' ),
+		__( 'Se salvează și se probează pe loc, cu o cerere adevărată către furnizor.', 'conex-conect-sync' )
 	);
+
+	// Cazul rar: cineva a pus tokenul în `wp-config.php`. Atunci câmpul chiar nu poate schimba nimic, iar
+	// tăcerea ar fi mai rea decât explicația: omul ar schimba tokenul, n-ar păți nimic, și ar căuta ore.
+	if ( $din_cod ) {
+		printf(
+			'<div class="ccs-nota ccs-nota--atentie"><span class="ccs-nota__icon">%1$s</span><div class="ccs-nota__text"><strong>%2$s</strong><p>%3$s</p></div></div>',
+			ccs_icon( 'warning', 18 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG al nostru.
+			esc_html__( 'Tokenul e pus în fișierele site-ului', 'conex-conect-sync' ),
+			esc_html__( 'Cineva a scris constanta CCS_API_TOKEN în wp-config.php, iar aceea bate orice pui aici. Câmpul de mai jos n-ar schimba nimic până nu e scoasă de acolo.', 'conex-conect-sync' )
+		);
+	}
 	?>
 	<div class="ccs-token">
 		<label class="ccs-camp">
 			<span><?php esc_html_e( 'Token Conex', 'conex-conect-sync' ); ?></span>
-			<small>
-				<?php
-				echo $din_cod
-					? esc_html__( 'Scoate constanta CCS_API_TOKEN din wp-config.php dacă vrei să-l ții de aici.', 'conex-conect-sync' )
-					: esc_html__( 'Lipește tokenul primit de la Conex. Lasă gol și salvează ca să-l ștergi.', 'conex-conect-sync' );
-				?>
-			</small>
+			<small><?php esc_html_e( 'Lipește tokenul primit de la Conex. Lasă câmpul gol și salvează ca să-l ștergi.', 'conex-conect-sync' ); ?></small>
 			<input
 				type="password"
 				class="ccs-token__camp"
