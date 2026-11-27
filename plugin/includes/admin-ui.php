@@ -109,6 +109,79 @@ function ccs_ui_cifra( $eticheta, $valoare, $ton = '', $optiuni = array() ) {
 }
 
 /**
+ * O durată scrisă în română.
+ *
+ * `human_time_diff()` urmează limba adminului WordPress, iar pe cezauto.ro adminul e în engleză. Rezultatul era
+ * „acum 23 hours”, româno-engleză în aceeași propoziție, într-un panou în care tot restul e în română. Pluginul
+ * nu poate schimba limba adminului și nici nu trebuie, deci își scrie singur durata.
+ *
+ * Rotunjim în jos și ne oprim la o singură unitate: „acum 3 ore” spune destul, „acum 3 ore și 14 minute” nu
+ * ajută pe nimeni să hotărască ceva.
+ *
+ * @param int $secunde Câte secunde.
+ * @return string Durata, fără prefix.
+ */
+function ccs_durata( $secunde ) {
+	$secunde = max( 0, (int) $secunde );
+
+	if ( $secunde < 60 ) {
+		return sprintf(
+			/* translators: %d: câte secunde. */
+			_n( '%d secundă', '%d secunde', $secunde, 'conex-conect-sync' ),
+			$secunde
+		);
+	}
+
+	$minute = (int) floor( $secunde / MINUTE_IN_SECONDS );
+	if ( $minute < 60 ) {
+		// În română, numeralele de la 20 în sus cer „de”: 20 de minute, dar 19 minute.
+		return $minute >= 20
+			/* translators: %d: câte minute. */
+			? sprintf( __( '%d de minute', 'conex-conect-sync' ), $minute )
+			/* translators: %d: câte minute. */
+			: sprintf( _n( '%d minut', '%d minute', $minute, 'conex-conect-sync' ), $minute );
+	}
+
+	$ore = (int) floor( $secunde / HOUR_IN_SECONDS );
+	if ( $ore < 24 ) {
+		return $ore >= 20
+			/* translators: %d: câte ore. */
+			? sprintf( __( '%d de ore', 'conex-conect-sync' ), $ore )
+			/* translators: %d: câte ore. */
+			: sprintf( _n( '%d oră', '%d ore', $ore, 'conex-conect-sync' ), $ore );
+	}
+
+	$zile = (int) floor( $secunde / DAY_IN_SECONDS );
+	if ( $zile < 30 ) {
+		return $zile >= 20
+			/* translators: %d: câte zile. */
+			? sprintf( __( '%d de zile', 'conex-conect-sync' ), $zile )
+			/* translators: %d: câte zile. */
+			: sprintf( _n( '%d zi', '%d zile', $zile, 'conex-conect-sync' ), $zile );
+	}
+
+	$luni = (int) floor( $zile / 30 );
+	return $luni >= 20
+		/* translators: %d: câte luni. */
+		? sprintf( __( '%d de luni', 'conex-conect-sync' ), $luni )
+		/* translators: %d: câte luni. */
+		: sprintf( _n( '%d lună', '%d luni', $luni, 'conex-conect-sync' ), $luni );
+}
+
+/**
+ * De cât timp s-a întâmplat ceva, în română.
+ *
+ * @param string $data Data din baza de date.
+ * @return string Durata.
+ */
+function ccs_de_cand( $data ) {
+	if ( ! $data ) {
+		return '?';
+	}
+	return ccs_durata( time() - (int) mysql2date( 'U', $data, false ) );
+}
+
+/**
  * Cum se cheamă fiecare tip de rulare, pe românește.
  *
  * @param string $tip Tipul din baza de date.
@@ -226,14 +299,14 @@ function ccs_ui_ultima_rulare() {
 	printf(
 		/* translators: %s: de cât timp, de exemplu „20 de minute”. */
 		esc_html__( 'acum %s', 'conex-conect-sync' ),
-		esc_html( $cand ? human_time_diff( (int) mysql2date( 'U', $cand, false ) ) : '?' )
+		esc_html( ccs_de_cand( $cand ) )
 	);
 	if ( $r['durata'] ) {
 		echo ' · ';
 		printf(
 			/* translators: %s: durata, de exemplu „6 minute”. */
 			esc_html__( 'a durat %s', 'conex-conect-sync' ),
-			esc_html( human_time_diff( 0, $r['durata'] ) )
+			esc_html( ccs_durata( $r['durata'] ) )
 		);
 	}
 	echo '</p>';
@@ -312,7 +385,7 @@ function ccs_ui_jurnal_rulari( $limita = 10 ) {
 			esc_html(
 				$cand
 					/* translators: %s: de cât timp. */
-					? sprintf( __( 'acum %s', 'conex-conect-sync' ), human_time_diff( (int) mysql2date( 'U', $cand, false ) ) )
+					? sprintf( __( 'acum %s', 'conex-conect-sync' ), ccs_de_cand( $cand ) )
 					: '?'
 			)
 		);
@@ -359,7 +432,7 @@ function ccs_ui_fapte_sistem() {
 			sprintf(
 				/* translators: %s: de cât timp, de exemplu „20 de minute”. */
 				__( 'acum %s', 'conex-conect-sync' ),
-				human_time_diff( (int) mysql2date( 'U', $ultima, false ) )
+				ccs_de_cand( $ultima )
 			),
 			$ore > (int) $setari['ore_fara_sincronizare'] ? 'problema' : 'bine',
 		);

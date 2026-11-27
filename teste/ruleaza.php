@@ -140,6 +140,34 @@ function wp_parse_url( $url, $componenta = -1 ) {
 
 require __DIR__ . '/../plugin/includes/import.php';
 
+/**
+ * Pluralul, varianta minimă: engleza are două forme, româna trei, dar `ccs_durata()` alege singură forma cu
+ * „de”, deci aici ajunge regula simplă.
+ *
+ * @param string $unu   Forma de singular.
+ * @param string $multe Forma de plural.
+ * @param int    $cate  Numărul.
+ * @return string Forma potrivită.
+ */
+function _n( $unu, $multe, $cate ) {
+	return 1 === (int) $cate ? $unu : $multe;
+}
+
+/**
+ * Traducerea, fără niciun fișier de limbă: textele sunt deja scrise în română în cod.
+ *
+ * @param string $text Textul.
+ * @return string Textul, neatins.
+ */
+function __( $text ) {
+	return $text;
+}
+
+defined( 'HOUR_IN_SECONDS' ) || define( 'HOUR_IN_SECONDS', 3600 );
+defined( 'DAY_IN_SECONDS' ) || define( 'DAY_IN_SECONDS', 86400 );
+
+require __DIR__ . '/../plugin/includes/admin-ui.php';
+
 /* ------------------------------------------------------------------------------------------------ ajutoare */
 
 $GLOBALS['ccs_trecute'] = 0;
@@ -535,6 +563,31 @@ setari(
 verifica( 'excepția poate schimba cota de TVA', 142.0, ccs_pret( 100, 0, array( 'cat2' => 'Carti tehnice' ) ) );
 
 setari( array( 'exceptii_pret' => array() ) );
+
+/* ------------------------------------------------------------------------------------------------ durata */
+
+sectiune( 'ccs_durata(), în română, cu regula lui „de”' );
+
+/*
+ * `human_time_diff()` din WordPress urmează limba adminului, iar pe cezauto.ro adminul e în engleză, deci scria
+ * „acum 23 hours” într-un panou în rest românesc. Funcția noastră scrie singură durata, iar partea pe care o
+ * greșește oricine o scrie prima dată e „de”: româna îl cere de la 20 în sus.
+ */
+
+verifica( 'sub un minut', '5 secunde', ccs_durata( 5 ) );
+verifica( 'exact un minut', '1 minut', ccs_durata( 60 ) );
+verifica( 'se rotunjește în jos', '1 minut', ccs_durata( 119 ) );
+verifica( 'minute, fără „de”', '19 minute', ccs_durata( 19 * 60 ) );
+verifica( 'minute, cu „de” de la 20', '20 de minute', ccs_durata( 20 * 60 ) );
+verifica( 'o oră', '1 oră', ccs_durata( 3600 ) );
+verifica( 'ore, fără „de”', '3 ore', ccs_durata( 3 * 3600 ) );
+verifica( 'ore, cu „de” de la 20', '23 de ore', ccs_durata( 23 * 3600 ) );
+verifica( 'trecerea la zile', '1 zi', ccs_durata( 86400 ) );
+verifica( 'zile, fără „de”', '2 zile', ccs_durata( 2 * 86400 ) );
+verifica( 'zile, cu „de” de la 20', '23 de zile', ccs_durata( 23 * 86400 ) );
+verifica( 'trecerea la luni', '2 luni', ccs_durata( 60 * 86400 ) );
+// O durată negativă nu are sens, dar un ceas nepotrivit între server și baza de date o poate produce.
+verifica( 'durată negativă, nu număr negativ pe ecran', '0 secunde', ccs_durata( -500 ) );
 
 /* ------------------------------------------------------------------------------------------- nume de fișier */
 
