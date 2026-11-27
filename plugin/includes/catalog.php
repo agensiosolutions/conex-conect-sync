@@ -39,6 +39,79 @@ function ccs_amprenta( $p ) {
 }
 
 /**
+ * Ultimele rulări, cu rezumatul lor despachetat.
+ *
+ * Tabelul `ccs_runs` ținea până acum evidența doar pentru cine se uita în baza de date. Rezumatul fiecărei rulări
+ * se scrie ca JSON la `ccs_rulare_stop()`, deci tot ce trebuie ca să arăți în panou „ce s-a întâmplat azi-noapte”
+ * era deja acolo, nefolosit.
+ *
+ * @param int    $limita Câte rulări.
+ * @param string $tip    Opțional, doar un tip de rulare.
+ * @return array Rulările, cea mai nouă prima.
+ */
+function ccs_rulari_recente( $limita = 10, $tip = '' ) {
+	global $wpdb;
+	$tabel = ccs_tabel( 'runs' );
+
+	$randuri = $tip
+		? $wpdb->get_results(
+			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL
+				"SELECT * FROM $tabel WHERE tip = %s ORDER BY id DESC LIMIT %d",
+				$tip,
+				(int) $limita
+			)
+		)
+		: $wpdb->get_results(
+			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL
+				"SELECT * FROM $tabel ORDER BY id DESC LIMIT %d",
+				(int) $limita
+			)
+		);
+
+	$iesire = array();
+	foreach ( (array) $randuri as $r ) {
+		$rezumat = json_decode( (string) $r->rezumat, true );
+		$inceput = $r->inceput ? (int) mysql2date( 'U', $r->inceput, false ) : 0;
+		$sfarsit = $r->sfarsit ? (int) mysql2date( 'U', $r->sfarsit, false ) : 0;
+
+		$iesire[] = array(
+			'id'      => (int) $r->id,
+			'tip'     => (string) $r->tip,
+			'stare'   => (string) $r->stare,
+			'inceput' => (string) $r->inceput,
+			'sfarsit' => (string) $r->sfarsit,
+			'durata'  => ( $inceput && $sfarsit ) ? max( 0, $sfarsit - $inceput ) : 0,
+			'rezumat' => is_array( $rezumat ) ? $rezumat : array(),
+		);
+	}
+
+	return $iesire;
+}
+
+/**
+ * Câte modificări ale unei rulări mai pot fi date înapoi.
+ *
+ * Zero înseamnă ori că rularea n-a scris nimic, ori că s-a revenit deja asupra ei. În ambele cazuri butonul de
+ * revenire n-are ce face, deci nu se arată.
+ *
+ * @param int $rulare_id Rularea.
+ * @return int Numărul.
+ */
+function ccs_rulare_de_revenit( $rulare_id ) {
+	global $wpdb;
+	$tabel = ccs_tabel( 'modificari' );
+	return (int) $wpdb->get_var(
+		$wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL
+			"SELECT COUNT(*) FROM $tabel WHERE rulare_id = %d AND revenit_la IS NULL",
+			(int) $rulare_id
+		)
+	);
+}
+
+/**
  * Pornește o rulare și întoarce id-ul ei.
  *
  * @param string $tip Tipul rulării.

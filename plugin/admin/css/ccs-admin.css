@@ -189,6 +189,15 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-plac--problema { background: var(--c-rosu-fundal); color: var(--c-rosu); }
 .ccs-plac--info { background: var(--c-accent-fundal); color: var(--c-accent-inchis); }
 
+/* ---------------------------------------------------------------- ultima rulare */
+.ccs-rulare__cand { margin: 0 0 12px; font-size: 13px; color: var(--c-text-3); }
+.ccs-rulare__efect { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.ccs-rulare__efect .ccs-pastila b { font-weight: 600; color: var(--c-text); }
+.ccs-rulare__verbe { display: flex; align-items: center; gap: 12px; margin: 16px 0 0; }
+/* Textul retras dintr-un tabel: ora, un „nimic”, orice nu e o valoare de comparat. */
+.ccs-tabel__slab { color: var(--c-text-3); }
+.ccs-tabel .ccs-pastila b { font-weight: 600; color: var(--c-text); }
+
 /* ---------------------------------------------------------------- linia de stare */
 /* Un rând de fapte despre sistem, fără cutii: bulină, eticheta în gri, valoarea în negru. Stă deasupra cardurilor
    fiindcă răspunde la „merge?”, întrebarea dinaintea oricărei cifre. */

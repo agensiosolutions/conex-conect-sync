@@ -109,6 +109,236 @@ function ccs_ui_cifra( $eticheta, $valoare, $ton = '', $optiuni = array() ) {
 }
 
 /**
+ * Cum se cheamă fiecare tip de rulare, pe românește.
+ *
+ * @param string $tip Tipul din baza de date.
+ * @return string Numele.
+ */
+function ccs_ui_nume_rulare( $tip ) {
+	$nume = array(
+		'catalog'        => __( 'Preluare catalog', 'conex-conect-sync' ),
+		'potrivire'      => __( 'Legare produse', 'conex-conect-sync' ),
+		'aplicare_tot'   => __( 'Aplicare preț și stoc', 'conex-conect-sync' ),
+		'aplicare_pret'  => __( 'Aplicare prețuri', 'conex-conect-sync' ),
+		'aplicare_stoc'  => __( 'Aplicare stocuri', 'conex-conect-sync' ),
+		'import'         => __( 'Import produse noi', 'conex-conect-sync' ),
+		'imagini'        => __( 'Preluare imagini', 'conex-conect-sync' ),
+		'atribute'       => __( 'Preluare date tehnice', 'conex-conect-sync' ),
+		'retragere'      => __( 'Retragere de la vânzare', 'conex-conect-sync' ),
+		'curatenie'      => __( 'Curățare produse', 'conex-conect-sync' ),
+		'revenire'       => __( 'Revenire', 'conex-conect-sync' ),
+		'corectii'       => __( 'Corectare produse', 'conex-conect-sync' ),
+	);
+	return $nume[ $tip ] ?? ucfirst( str_replace( '_', ' ', $tip ) );
+}
+
+/**
+ * Tonul și eticheta stării unei rulări.
+ *
+ * @param string $stare Starea din baza de date.
+ * @return array array( eticheta, ton ).
+ */
+function ccs_ui_stare_rulare( $stare ) {
+	$stari = array(
+		'gata'           => array( __( 'reușită', 'conex-conect-sync' ), 'bine' ),
+		'gata_cu_erori'  => array( __( 'cu erori', 'conex-conect-sync' ), 'atentie' ),
+		'pornit'         => array( __( 'în lucru', 'conex-conect-sync' ), 'info' ),
+		'intrerupta'     => array( __( 'întreruptă', 'conex-conect-sync' ), 'problema' ),
+	);
+	return $stari[ $stare ] ?? array( $stare, 'neutru' );
+}
+
+/**
+ * Ce a schimbat o rulare, în cuvinte, din rezumatul ei.
+ *
+ * Rezumatele au chei diferite după tip, fiindcă fiecare rulare face altceva. Aici le traducem într-o listă de
+ * perechi „cifră, ce e”, din care se fac pastilele. Cheile care lipsesc sau sunt zero se sar: un rând cu cinci
+ * zerouri nu spune nimic.
+ *
+ * Întoarce și cheia, nu doar eticheta: tonul pastilei se alege după ea. O comparație pe eticheta tradusă s-ar
+ * rupe la prima traducere, și se rupsese deja aici, într-un loc unde scrisesem „esuate” fără diacritice.
+ *
+ * @param array $rulare O rulare din `ccs_rulari_recente()`.
+ * @return array Listă de array( valoare, eticheta, cheie ).
+ */
+function ccs_ui_efect_rulare( $rulare ) {
+	$r = $rulare['rezumat'];
+
+	$harta = array(
+		'pret'       => __( 'prețuri', 'conex-conect-sync' ),
+		'stoc'       => __( 'stocuri', 'conex-conect-sync' ),
+		'stare_stoc' => __( 'intrate sau ieșite din stoc', 'conex-conect-sync' ),
+		'create'     => __( 'produse noi', 'conex-conect-sync' ),
+		'poze'       => __( 'poze', 'conex-conect-sync' ),
+		'atinse'     => __( 'produse atinse', 'conex-conect-sync' ),
+		'sterse'     => __( 'la coșul de gunoi', 'conex-conect-sync' ),
+		'ascunse'    => __( 'ascunse din catalog', 'conex-conect-sync' ),
+		'readuse'    => __( 'readuse', 'conex-conect-sync' ),
+		'produse'    => __( 'produse', 'conex-conect-sync' ),
+		'perechi'    => __( 'date tehnice', 'conex-conect-sync' ),
+		'noi'        => __( 'produse noi la furnizor', 'conex-conect-sync' ),
+		'esuate'     => __( 'eșuate', 'conex-conect-sync' ),
+	);
+
+	// „atinse” și „produse” spun același lucru când rularea are deja detalii pe câmpuri; le ținem doar ca plasă.
+	if ( ! empty( $r['pret'] ) || ! empty( $r['stoc'] ) ) {
+		unset( $harta['atinse'], $harta['produse'] );
+	}
+
+	$iesire = array();
+	foreach ( $harta as $cheie => $eticheta ) {
+		if ( ! empty( $r[ $cheie ] ) && is_scalar( $r[ $cheie ] ) ) {
+			$iesire[] = array( (int) $r[ $cheie ], $eticheta, $cheie );
+		}
+	}
+
+	return $iesire;
+}
+
+/**
+ * Cardul „Ce s-a întâmplat la ultima rulare”.
+ *
+ * E primul lucru pe care ar trebui să îl vadă cineva care deschide panoul dimineața, iar până acum nu exista
+ * nicăieri: datele erau în `ccs_runs` de la bun început, dar nimic nu le citea.
+ *
+ * @return void
+ */
+function ccs_ui_ultima_rulare() {
+	$rulari = ccs_rulari_recente( 1 );
+	if ( ! $rulari ) {
+		return;
+	}
+	$r = $rulari[0];
+
+	list( $eticheta, $ton ) = ccs_ui_stare_rulare( $r['stare'] );
+	$cand    = $r['sfarsit'] ? $r['sfarsit'] : $r['inceput'];
+	$de_dat  = ccs_rulare_de_revenit( $r['id'] );
+
+	ccs_ui_card(
+		__( 'Ultima rulare', 'conex-conect-sync' ),
+		ccs_ui_nume_rulare( $r['tip'] ),
+		ccs_ui_pastila( $eticheta, $ton )
+	);
+
+	echo '<div class="ccs-rulare">';
+
+	echo '<p class="ccs-rulare__cand">';
+	printf(
+		/* translators: %s: de cât timp, de exemplu „20 de minute”. */
+		esc_html__( 'acum %s', 'conex-conect-sync' ),
+		esc_html( $cand ? human_time_diff( (int) mysql2date( 'U', $cand, false ) ) : '?' )
+	);
+	if ( $r['durata'] ) {
+		echo ' · ';
+		printf(
+			/* translators: %s: durata, de exemplu „6 minute”. */
+			esc_html__( 'a durat %s', 'conex-conect-sync' ),
+			esc_html( human_time_diff( 0, $r['durata'] ) )
+		);
+	}
+	echo '</p>';
+
+	$efect = ccs_ui_efect_rulare( $r );
+	if ( $efect ) {
+		echo '<p class="ccs-rulare__efect">';
+		foreach ( $efect as $e ) {
+			printf(
+				'<span class="ccs-pastila ccs-pastila--%1$s"><b>%2$s</b> %3$s</span>',
+				'esuate' === $e[2] ? 'problema' : 'info',
+				esc_html( ccs_nr( $e[0] ) ),
+				esc_html( $e[1] )
+			);
+		}
+		echo '</p>';
+	} else {
+		printf( '<p class="ccs-rulare__efect ccs-mic">%s</p>', esc_html__( 'Nu a schimbat nimic pe site.', 'conex-conect-sync' ) );
+	}
+
+	if ( $de_dat ) {
+		printf(
+			'<p class="ccs-rulare__verbe"><button type="button" class="ccs-buton ccs-buton--atentie ccs-revino" data-rulare="%1$d" data-cate="%2$d">%3$s</button> <span class="ccs-stare-text"></span></p>',
+			(int) $r['id'],
+			(int) $de_dat,
+			esc_html(
+				sprintf(
+					/* translators: %s: câte modificări. */
+					__( 'Dă înapoi rularea (%s modificări)', 'conex-conect-sync' ),
+					ccs_nr( $de_dat )
+				)
+			)
+		);
+	}
+
+	echo '</div>';
+	ccs_ui_card_sfarsit();
+}
+
+/**
+ * Jurnalul rulărilor recente.
+ *
+ * Forma e luată din „Recent Sync Activity” al lui Omni Supplier Sync: ce rulare, starea ca pastilă, acum cât
+ * timp, și ce a schimbat, tot în pastile. Un tabel care se scanează pe coloane, nu se citește rând cu rând.
+ *
+ * @param int $limita Câte rulări.
+ * @return void
+ */
+function ccs_ui_jurnal_rulari( $limita = 10 ) {
+	$rulari = ccs_rulari_recente( $limita );
+	if ( ! $rulari ) {
+		return;
+	}
+
+	ccs_ui_card(
+		__( 'Rulările recente', 'conex-conect-sync' ),
+		__( 'Fiecare pornire a sincronizării, cu ce a schimbat pe site.', 'conex-conect-sync' )
+	);
+
+	echo '<div class="ccs-tabel-cadru"><table class="ccs-tabel"><thead><tr>';
+	printf( '<th>%s</th>', esc_html__( 'Rulare', 'conex-conect-sync' ) );
+	printf( '<th>%s</th>', esc_html__( 'Stare', 'conex-conect-sync' ) );
+	printf( '<th>%s</th>', esc_html__( 'Când', 'conex-conect-sync' ) );
+	printf( '<th>%s</th>', esc_html__( 'Ce a schimbat', 'conex-conect-sync' ) );
+	echo '</tr></thead><tbody>';
+
+	foreach ( $rulari as $r ) {
+		list( $eticheta, $ton ) = ccs_ui_stare_rulare( $r['stare'] );
+		$cand = $r['sfarsit'] ? $r['sfarsit'] : $r['inceput'];
+
+		echo '<tr>';
+		printf( '<td><strong>%s</strong></td>', esc_html( ccs_ui_nume_rulare( $r['tip'] ) ) );
+		printf( '<td>%s</td>', wp_kses_post( ccs_ui_pastila( $eticheta, $ton ) ) );
+		printf(
+			'<td class="ccs-tabel__slab">%s</td>',
+			esc_html(
+				$cand
+					/* translators: %s: de cât timp. */
+					? sprintf( __( 'acum %s', 'conex-conect-sync' ), human_time_diff( (int) mysql2date( 'U', $cand, false ) ) )
+					: '?'
+			)
+		);
+
+		echo '<td>';
+		$efect = ccs_ui_efect_rulare( $r );
+		if ( $efect ) {
+			foreach ( array_slice( $efect, 0, 4 ) as $e ) {
+				printf(
+					'<span class="ccs-pastila ccs-pastila--%1$s"><b>%2$s</b> %3$s</span> ',
+					'esuate' === $e[2] ? 'problema' : 'neutru',
+					esc_html( ccs_nr( $e[0] ) ),
+					esc_html( $e[1] )
+				);
+			}
+		} else {
+			printf( '<span class="ccs-tabel__slab">%s</span>', esc_html__( 'nimic', 'conex-conect-sync' ) );
+		}
+		echo '</td></tr>';
+	}
+
+	echo '</tbody></table></div>';
+	ccs_ui_card_sfarsit();
+}
+
+/**
  * Faptele despre sistem pentru linia de stare de pe Panou.
  *
  * Patru lucruri, în ordinea în care contează pentru cineva care tocmai a deschis pagina: mai vorbim cu furnizorul,
@@ -444,6 +674,7 @@ function ccs_admin_pagina() {
 					'eroare'   => __( 'Nu s-a putut salva. Încearcă din nou.', 'conex-conect-sync' ),
 					'lucrez'   => __( 'Salvez...', 'conex-conect-sync' ),
 					'confirma' => __( 'Apasă din nou ca să confirmi', 'conex-conect-sync' ),
+					'confirmaRevenirea' => __( 'Sigur? Apasă din nou ca să dai înapoi', 'conex-conect-sync' ),
 					'nimic'    => __( 'Nu mai sunt produse de hotărât.', 'conex-conect-sync' ),
 				),
 			)
@@ -577,7 +808,12 @@ function ccs_admin_tab_panou() {
 	</div>
 
 	<?php
+	// Ce s-a întâmplat, înainte de ce ai de făcut: dimineața prima întrebare e „a mers azi-noapte?”.
+	ccs_ui_eticheta_sectiune( __( 'Ce s-a întâmplat', 'conex-conect-sync' ) );
+	ccs_ui_ultima_rulare();
+
 	if ( $total ) {
+		ccs_ui_eticheta_sectiune( __( 'Ce ai de hotărât', 'conex-conect-sync' ) );
 		ccs_ui_card(
 			__( 'De hotărât', 'conex-conect-sync' ),
 			__( 'Până la primirea unui răspuns, produsele respective rămân neschimbate.', 'conex-conect-sync' )
@@ -676,6 +912,11 @@ function ccs_admin_tab_panou() {
 		'neutru'   => 'minus',
 	);
 
+	// Jurnalul rulărilor stă înaintea stării, fiindcă răspunde la ce s-a întâmplat, nu la cum e configurat.
+	ccs_ui_eticheta_sectiune( __( 'Istoric', 'conex-conect-sync' ) );
+	ccs_ui_jurnal_rulari( 10 );
+
+	ccs_ui_eticheta_sectiune( __( 'Starea sistemului', 'conex-conect-sync' ) );
 	ccs_ui_card( __( 'Starea', 'conex-conect-sync' ) );
 	echo '<ul class="ccs-stari">';
 	foreach ( $stari as $st ) {

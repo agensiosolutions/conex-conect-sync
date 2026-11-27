@@ -324,6 +324,48 @@
 			} );
 	} );
 
+	/* Revenirea dintr-o rulare. Doua clicuri, ca la „la fel pentru toate”: o operatie care atinge mii de produse
+	   nu se da dintr-un clic ratat. Nu folosim confirm() din browser, fiindca blocheaza extensia. */
+	document.addEventListener( 'click', function ( ev ) {
+		var buton = ev.target.closest( '.ccs-revino' );
+		if ( ! buton ) {
+			return;
+		}
+		ev.preventDefault();
+
+		var stare = buton.parentNode.querySelector( '.ccs-stare-text' );
+
+		if ( 'da' !== buton.getAttribute( 'data-confirma' ) ) {
+			if ( ! buton.getAttribute( 'data-eticheta' ) ) {
+				buton.setAttribute( 'data-eticheta', buton.textContent );
+			}
+			buton.setAttribute( 'data-confirma', 'da' );
+			buton.textContent = texte.confirmaRevenirea;
+			return;
+		}
+
+		buton.disabled = true;
+		buton.textContent = buton.getAttribute( 'data-eticheta' );
+		buton.removeAttribute( 'data-confirma' );
+		arataStare( stare, texte.lucrez, false );
+
+		trimite( 'ccs_revino', { rulare: buton.getAttribute( 'data-rulare' ) } )
+			.then( function ( raspuns ) {
+				if ( ! raspuns || ! raspuns.success ) {
+					buton.disabled = false;
+					arataStare( stare, ( raspuns && raspuns.data && raspuns.data.mesaj ) || texte.eroare, true );
+					return;
+				}
+				arataStare( stare, raspuns.data.efect, false );
+				// Butonul dispare: aceeasi rulare nu se mai poate da inapoi a doua oara.
+				buton.remove();
+			} )
+			.catch( function () {
+				buton.disabled = false;
+				arataStare( stare, texte.eroare, true );
+			} );
+	} );
+
 	/* ---------------------------------------------------------------- simulatorul de preț */
 
 	if ( ! document.getElementById( 'ccs-adaos' ) || ! sim.cost || ! sim.cost.length ) {

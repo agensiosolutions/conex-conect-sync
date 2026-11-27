@@ -557,6 +557,69 @@ function ccs_admin_ajax_retrage() {
 add_action( 'wp_ajax_ccs_retrage', 'ccs_admin_ajax_retrage' );
 
 /**
+ * Dă înapoi o rulare, din panou.
+ *
+ * Până acum revenirea exista doar ca `wp ccs revino`, adică numai pentru cineva cu acces la terminal. Pentru
+ * client, o sincronizare care îi schimbă trei mii de prețuri fără buton de înapoi e un sistem în care trebuie să
+ * aibă încredere orbește. Ăsta e butonul.
+ *
+ * Numai ultima rulare se poate da înapoi, și numai dacă mai are modificări neanulate. O rulare de acum trei zile,
+ * peste care s-au aplicat altele, ar lăsa prețuri amestecate: o parte vechi, o parte noi, fără ca cineva să poată
+ * spune care.
+ *
+ * @return void
+ */
+function ccs_admin_ajax_revino() {
+	ccs_admin_ajax_poarta();
+
+	$cerut = (int) ( $_POST['rulare'] ?? 0 );
+	if ( ! $cerut ) {
+		wp_send_json_error( array( 'mesaj' => __( 'Nu știu ce rulare să dau înapoi.', 'conex-conect-sync' ) ) );
+	}
+
+	$ultimele = ccs_rulari_recente( 1 );
+	if ( ! $ultimele || (int) $ultimele[0]['id'] !== $cerut ) {
+		wp_send_json_error(
+			array(
+				'mesaj' => __( 'Se poate da înapoi doar ultima rulare. Între timp a rulat altceva, deci reîncarcă pagina.', 'conex-conect-sync' ),
+			)
+		);
+	}
+
+	if ( ! ccs_rulare_de_revenit( $cerut ) ) {
+		wp_send_json_error( array( 'mesaj' => __( 'Rularea asta nu mai are nimic de dat înapoi.', 'conex-conect-sync' ) ) );
+	}
+
+	$r = ccs_revino( $cerut );
+	if ( is_wp_error( $r ) ) {
+		wp_send_json_error( array( 'mesaj' => $r->get_error_message() ) );
+	}
+
+	ccs_admin_uita();
+
+	$spuse = array();
+	if ( ! empty( $r['produse'] ) ) {
+		/* translators: %d: câte produse. */
+		$spuse[] = sprintf( __( '%d produse readuse la valorile dinainte', 'conex-conect-sync' ), $r['produse'] );
+	}
+	if ( ! empty( $r['sterse'] ) ) {
+		/* translators: %d: câte produse. */
+		$spuse[] = sprintf( __( '%d produse trecute la coșul de gunoi', 'conex-conect-sync' ), $r['sterse'] );
+	}
+	if ( ! empty( $r['readuse'] ) ) {
+		/* translators: %d: câte produse. */
+		$spuse[] = sprintf( __( '%d produse scoase din coșul de gunoi', 'conex-conect-sync' ), $r['readuse'] );
+	}
+
+	wp_send_json_success(
+		array(
+			'efect' => $spuse ? implode( '. ', $spuse ) . '.' : __( 'Nu era nimic de dat înapoi.', 'conex-conect-sync' ),
+		)
+	);
+}
+add_action( 'wp_ajax_ccs_revino', 'ccs_admin_ajax_revino' );
+
+/**
  * Scrie o asociere de categorie pusă de om.
  *
  * Regulile puse de om bat regulile învățate și nu se pierd la reînvățare. Un `term_id` zero șterge asocierea.
