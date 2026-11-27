@@ -293,7 +293,7 @@ add_action( 'ccs_job_catalog', 'ccs_job_catalog' );
 /**
  * Starea joburilor, pentru panou și pentru linia de comandă.
  *
- * @return array hook => array( nume, pornit, urmatoarea, interval ).
+ * @return array hook => array( 'nume', 'pornit', 'urmatoarea', 'interval' ), pe chei, nu pe poziții.
  */
 function ccs_joburi_stare() {
 	$stare = array();
