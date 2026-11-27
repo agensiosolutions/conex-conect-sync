@@ -629,6 +629,65 @@ function ccs_ui_mai_sunt_pasi() {
 }
 
 /**
+ * Lista atributelor peste care ar veni valori, desenată pe bucăți.
+ *
+ * Fiecare atribut primește un rând de cap, cu numele îngroșat și o pastilă cu câte valori noi ar veni, iar sub
+ * el cele două liste, etichetate și despărțite prin culoare: ce are magazinul rămâne neutru, ce ar aduce
+ * furnizorul ia tonul de atenție. Diferența dintre „al meu” și „ce vine peste” e singurul lucru pentru care
+ * există avertismentul, deci merită să se vadă fără citit.
+ *
+ * @param array $date intro, randuri, incheiere.
+ * @return array Bucăți de HTML, ca paragrafele celorlalte probleme.
+ */
+function ccs_ui_sanatate_atribute( $date ) {
+	$bucati = array();
+
+	if ( ! empty( $date['intro'] ) ) {
+		$bucati[] = '<p>' . esc_html( $date['intro'] ) . '</p>';
+	}
+
+	foreach ( (array) $date['randuri'] as $r ) {
+		$are      = (int) $r['are'];
+		$noi      = (int) $r['noi'];
+		$acum     = implode( ', ', (array) $r['ale_lui'] ) . ( $are > count( (array) $r['ale_lui'] ) ? ', …' : '' );
+		$adaugate = implode( ', ', (array) $r['adaugate'] ) . ( $noi > count( (array) $r['adaugate'] ) ? ', …' : '' );
+
+		$bucati[] = sprintf(
+			'<div class="ccs-atr">
+				<p class="ccs-atr__cap"><strong>%1$s</strong>%2$s<span class="ccs-atr__are">%3$s</span></p>
+				<p class="ccs-atr__linie"><span class="ccs-atr__et">%4$s</span><span>%5$s</span></p>
+				<p class="ccs-atr__linie ccs-atr__linie--noi"><span class="ccs-atr__et">%6$s</span><span>%7$s</span></p>
+			</div>',
+			esc_html( $r['eticheta'] ),
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construită de noi, escapată.
+			ccs_ui_pastila(
+				sprintf(
+					/* translators: %d: câte valori noi. */
+					_n( '+%d valoare nouă', '+%d valori noi', $noi, 'conex-conect-sync' ),
+					$noi
+				),
+				'atentie'
+			),
+			sprintf(
+				/* translators: %d: câte valori are acum. */
+				esc_html( _n( 'are acum %d valoare', 'are acum %d valori', $are, 'conex-conect-sync' ) ),
+				$are
+			),
+			esc_html__( 'acum', 'conex-conect-sync' ),
+			esc_html( $acum ),
+			esc_html__( 's-ar adăuga', 'conex-conect-sync' ),
+			esc_html( $adaugate )
+		);
+	}
+
+	if ( ! empty( $date['incheiere'] ) ) {
+		$bucati[] = '<p>' . esc_html( $date['incheiere'] ) . '</p>';
+	}
+
+	return $bucati;
+}
+
+/**
  * Cardul cu presupunerile care nu mai țin.
  *
  * Stă sus, înaintea pașilor și a cifrelor, fiindcă o cifră citită sub o presupunere greșită e mai rea decât
@@ -665,6 +724,12 @@ function ccs_ui_card_sanatate() {
 			if ( '' !== $paragraf ) {
 				$paragrafe[] = '<p>' . nl2br( esc_html( $paragraf ) ) . '</p>';
 			}
+		}
+
+		// Când problema vine și cu date, nu doar cu text, le arătăm ca date. Un perete de propoziții în care
+		// numele atributului, cifra și cele două liste au toate aceeași greutate nu se citește, se sare.
+		if ( isset( $p[2]['randuri'] ) ) {
+			$paragrafe = ccs_ui_sanatate_atribute( $p[2] );
 		}
 
 		// Strângem fiecare problemă la titlu plus primul paragraf, nu cardul întreg: titlurile sunt exact ce

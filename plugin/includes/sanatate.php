@@ -249,6 +249,10 @@ function ccs_sanatate_atribute() {
 		);
 	}
 
+	$intro = __( 'La importul de produse noi, valorile de la Conex s-ar scrie în atribute pe care magazinul le are deja, nu în atribute noi. Atât timp cât înseamnă același lucru, e în regulă. Când nu înseamnă, filtrele din magazin ajung să arate două vocabulare amestecate.', 'conex-conect-sync' );
+
+	$incheiere = __( 'Câteva valori noi sunt de obicei normale. Multe valori noi peste puține existente înseamnă, de regulă, că cele două atribute poartă același nume din întâmplare.', 'conex-conect-sync' );
+
 	return array(
 		'atribute_comune' => array(
 			sprintf(
@@ -256,10 +260,15 @@ function ccs_sanatate_atribute() {
 				_n( '%d atribut al magazinului ar primi valori noi de la Conex', '%d atribute ale magazinului ar primi valori noi de la Conex', count( $peste ), 'conex-conect-sync' ),
 				count( $peste )
 			),
-			sprintf(
-				/* translators: %s: lista atributelor cu valorile lor. */
-				__( "La importul de produse noi, valorile de la Conex s-ar scrie în atribute pe care magazinul le are deja, nu în atribute noi. Atât timp cât înseamnă același lucru, e în regulă. Când nu înseamnă, filtrele din magazin ajung să arate două vocabulare amestecate.\n\n%s\n\nCâteva valori noi sunt de obicei normale. Multe valori noi peste puține existente înseamnă, de regulă, că cele două atribute poartă același nume din întâmplare.", 'conex-conect-sync' ),
-				implode( "\n\n", $linii )
+			// Varianta de text, pentru email, unde nu există decât rânduri.
+			$intro . "\n\n" . implode( "\n\n", $linii ) . "\n\n" . $incheiere,
+			// Aceleași date, nedesfăcute în text, pentru panou. Un email și o pagină de admin sunt două medii
+			// diferite: acolo un paragraf e tot ce se poate, aici numele atributului, cifra și cele două liste
+			// merită să se vadă ca lucruri distincte, nu ca o pastă de text.
+			array(
+				'intro'     => $intro,
+				'randuri'   => $peste,
+				'incheiere' => $incheiere,
 			),
 		),
 	);

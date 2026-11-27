@@ -693,6 +693,29 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
 }
 .ccs-nota__mai:hover { text-decoration: none; }
+
+/* Un atribut peste care ar veni valori. Trei lucruri trebuie să se vadă fără citit: care atribut, cât de mult
+   se schimbă, și care listă e a magazinului și care a furnizorului. Deci numele îngroșat, cifra într-o pastilă,
+   iar cele două liste etichetate și despărțite prin culoare. */
+.ccs-atr { margin: 0 0 10px; padding-left: 10px; border-left: 2px solid rgba(194, 65, 12, .25); }
+.ccs-atr:last-of-type { margin-bottom: 0; }
+.ccs-atr__cap { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 4px; }
+.ccs-atr__cap strong { font-weight: 600; }
+/* O pastilă de atenție pe fundalul unei note de atenție e invizibilă: are exact aceeași culoare de fundal.
+   Înăuntrul notei o ridicăm pe alb, cu un contur subțire, ca să se citească tot ca pastilă. */
+.ccs-nota .ccs-pastila { background: #fff; box-shadow: inset 0 0 0 1px rgba(194, 65, 12, .3); }
+.ccs-atr__are { font-size: 12px; color: var(--c-text-3); }
+
+/* Eticheta pe o coloană fixă: cele două rânduri încep din același loc, deci ochiul le compară fără să caute. */
+.ccs-atr__linie { display: flex; gap: 8px; margin: 0 0 2px; }
+.ccs-atr__linie:last-child { margin-bottom: 0; }
+.ccs-atr__et {
+  flex: none; width: 86px; font-size: 12px; line-height: 20px;
+  color: var(--c-text-3); text-align: right;
+}
+/* Ce ar aduce furnizorul poartă tonul de atenție; ce are magazinul rămâne neutru. Asta e toată diferența pe
+   care o caută ochiul: „al meu” față de „ce vine peste”. */
+.ccs-atr__linie--noi > span:last-child { color: var(--c-atentie); }
 .ccs-nota__mai:focus-visible { outline: none; box-shadow: var(--c-inel); border-radius: 4px; }
 
 /* Cine a cerut mai puțină mișcare o primește: strângerea rămâne, animația dispare. */
