@@ -484,6 +484,37 @@
 			} );
 	} );
 
+	/* Stergerea tokenului. Separat de salvare, si cu doua apasari: e singurul lucru din ecran care strica ceva. */
+	document.addEventListener( 'click', function ( ev ) {
+		var buton = ev.target.closest( '.ccs-token__sterge' );
+		if ( ! buton ) {
+			return;
+		}
+		var stare = document.querySelector( '.ccs-token__stare' );
+
+		if ( 'da' !== buton.getAttribute( 'data-confirma' ) ) {
+			buton.setAttribute( 'data-confirma', 'da' );
+			buton.textContent = buton.dataset.confirmare;
+			return;
+		}
+
+		buton.removeAttribute( 'data-confirma' );
+		buton.textContent = buton.dataset.eticheta;
+		buton.disabled = true;
+
+		trimite( 'ccs_token', { sterge: 1 } ).then( function ( r ) {
+			if ( r && r.success ) {
+				window.location.reload();
+				return;
+			}
+			buton.disabled = false;
+			if ( stare ) {
+				stare.className = 'ccs-stare-text ccs-stare-text--problema';
+				stare.textContent = ( r && r.data && r.data.mesaj ) || 'Nu a mers.';
+			}
+		} );
+	} );
+
 	/* Salvarea tokenului. Campul nu se umple niciodata inapoi cu valoarea, nici dupa succes: ce a plecat spre
 	   server ramane acolo, iar pagina nu tine un secret in DOM mai mult decat trebuie. */
 	document.addEventListener( 'click', function ( ev ) {

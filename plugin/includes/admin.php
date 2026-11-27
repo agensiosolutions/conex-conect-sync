@@ -222,11 +222,45 @@ function ccs_admin_ajax_token() {
 
 	$token  = trim( sanitize_text_field( wp_unslash( $_POST['token'] ?? '' ) ) );
 	$setari = (array) get_option( CCS_OPTIUNE_SETARI, array() );
+	$sterge = ! empty( $_POST['sterge'] );
 
-	if ( '' === $token ) {
+	// Ștergerea are nevoie de butonul ei. Prima versiune ștergea tokenul când câmpul era gol, adică exact la
+	// gestul cel mai probabil: cineva apasă „Salvează și probează” ca să vadă dacă legătura merge, fără să
+	// scrie nimic, fiindcă tokenul e deja pus. Iulian a pățit-o în primul minut.
+	if ( $sterge ) {
 		unset( $setari['token'] );
 		update_option( CCS_OPTIUNE_SETARI, $setari );
-		wp_send_json_success( array( 'efect' => __( 'Tokenul a fost șters.', 'conex-conect-sync' ) ) );
+		wp_send_json_success( array( 'efect' => __( 'Tokenul a fost șters. Sincronizarea nu mai poate cere nimic de la furnizor.', 'conex-conect-sync' ) ) );
+	}
+
+	// Câmp gol, dar există deja un token: nu-l atingem, doar probăm. Asta e și ce așteaptă omul de la buton.
+	if ( '' === $token ) {
+		if ( '' === ccs_api_token() ) {
+			wp_send_json_error( array( 'mesaj' => __( 'Scrie tokenul primit de la Conex, apoi apasă din nou.', 'conex-conect-sync' ) ) );
+		}
+
+		$proba = ccs_api_proba();
+		if ( is_wp_error( $proba ) ) {
+			wp_send_json_error(
+				array(
+					'mesaj' => sprintf(
+						/* translators: %s: mesajul de la furnizor. */
+						__( 'Tokenul de acum nu merge: %s', 'conex-conect-sync' ),
+						$proba->get_error_message()
+					),
+				)
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'efect' => sprintf(
+					/* translators: %d: câte produse a întors furnizorul. */
+					__( 'Tokenul de acum merge. Furnizorul a răspuns cu %d produse.', 'conex-conect-sync' ),
+					(int) $proba
+				),
+			)
+		);
 	}
 
 	$setari['token'] = $token;

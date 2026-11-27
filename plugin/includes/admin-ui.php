@@ -758,7 +758,7 @@ function ccs_admin_tab_acces() {
 	<div class="ccs-token">
 		<label class="ccs-camp">
 			<span><?php esc_html_e( 'Token Conex', 'conex-conect-sync' ); ?></span>
-			<small><?php esc_html_e( 'Lipește tokenul primit de la Conex. Lasă câmpul gol și salvează ca să-l ștergi.', 'conex-conect-sync' ); ?></small>
+			<small><?php esc_html_e( 'Lipește tokenul primit de la Conex. Cu câmpul gol, butonul doar probează tokenul de acum.', 'conex-conect-sync' ); ?></small>
 			<input
 				type="password"
 				class="ccs-token__camp"
@@ -772,6 +772,20 @@ function ccs_admin_tab_acces() {
 			<button type="button" class="ccs-btn ccs-btn--principal ccs-token__salveaza" <?php disabled( $din_cod ); ?>>
 				<?php esc_html_e( 'Salvează și probează', 'conex-conect-sync' ); ?>
 			</button>
+			<?php if ( $masca && ! $din_cod ) : ?>
+				<?php
+				// Ștergerea stă separat și cere două apăsări. E singurul lucru din ecranul ăsta care strică
+				// ceva, deci nu are ce căuta pe același buton cu „probează”.
+				?>
+				<button
+					type="button"
+					class="ccs-btn ccs-btn--mic ccs-btn--fantoma ccs-token__sterge"
+					data-eticheta="<?php esc_attr_e( 'Șterge tokenul', 'conex-conect-sync' ); ?>"
+					data-confirmare="<?php esc_attr_e( 'Sigur? Apasă din nou', 'conex-conect-sync' ); ?>"
+				>
+					<?php esc_html_e( 'Șterge tokenul', 'conex-conect-sync' ); ?>
+				</button>
+			<?php endif; ?>
 			<span class="ccs-stare-text ccs-token__stare"></span>
 		</p>
 	</div>
