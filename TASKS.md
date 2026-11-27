@@ -60,8 +60,9 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
       A: linia de stare, cifre cu plăcuță și pastilă, ultima rulare cu verbe, jurnalul rulărilor, revenire din
       panou. B: poze pe rând, pastile, grupare pe gravitate, totaluri. C: catalogul furnizorului răsfoibil, cu
       filtre prin URL și import pe bifă. Referințele vizuale: `cez-auto/docs/referinte-design/`.
-- [ ] Ghidul scurt de utilizare pentru owner @claude
-      Ultimul lucru promis în ofertă care lipsește, la „prezentarea panoului”.
+- [x] Ghidul scurt de utilizare pentru owner (27.11.2026)
+      `cez-auto/docs/ghid-panou-cezauto.md`. Scris pentru Roli, fără termeni tehnici. Cu asta, tot ce promite
+      oferta e construit.
 - [ ] Filtru și coloană în wp-admin > Produse @claude
   Scrise și probate pe local, nu sunt încă pe live. Roli lucrează în lista de produse, nu în panou, și acolo nu
   găsea nimic. De verificat vizual pe live după urcare.

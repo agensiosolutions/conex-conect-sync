@@ -127,6 +127,67 @@ categoriilor.
 din panou vin din potrivirea întreagă, care ia minute pe douăzeci de mii de produse; pentru lista de produse
 aceleași grupuri se calculează cu o interogare pe `_sku` și un `LEFT JOIN`, prin indecși.
 
+## 27 noiembrie 2026
+
+**Tot ce lipsea din ofertă e construit, plus un redesign cerut de Iulian, iar 0.9.0 e pe live.** Zi lungă, deci
+țin minte doar ce schimbă felul în care lucrăm data viitoare.
+
+**Ce lipsea din ofertă.** Am recitit oferta întreagă și am verificat fiecare promisiune în cod, nu din memorie.
+Patru lucruri vândute explicit nu existau deloc: datele tehnice de la furnizor, răsfoirea catalogului în panou,
+emailul cu rezumat și alerte, și produsul care urcă singur când apare poza. Plus excepțiile de preț și ghidul.
+Toate sunt făcute acum.
+
+Despărțirea care mi-a plăcut cel mai mult: care atribute tehnice devin filtre în magazin. Un prag fix pe numărul
+de valori respingea „Partea de montare”, care are 125 de valori dar pe 2.874 de produse, adică exact genul de
+filtru pe care îl caută cumpărătorul. Raportul dintre valori distincte și produse alege corect: 21 de atribute
+filtrabile din 381, iar identificatoarele ca „pt. cod original (OE)”, cu 1.531 de valori pentru 1.577 de produse,
+cad singure.
+
+**Redesignul.** Iulian a cerut capturi din pluginuri care fac același lucru, nu principii. Am adunat unsprezece,
+de la ATUM, WP All Import, Smart Manager, Omni Supplier Sync, AliNext și Rank Math, și a ales limbajul lui Omni.
+L-am măsurat, nu l-am aproximat: paletă scoasă din imagine, zone decupate și mărite. Regula care a ieșit și care
+ține acum tot CSS-ul: **culoarea stă în plăcuța de iconiță, în pastile și în butonul principal, nicăieri
+altundeva**. Cardul rămâne alb.
+
+Asta explică retroactiv de ce cardurile pline de culoare făcute cu două zile înainte nu funcționau, și de ce
+feedbackul „prea sec și gri” și „prea mult acum” au venit amândouă: problema nu era cantitatea de culoare, era
+locul ei.
+
+`Lecție:` Când clientul respinge aceeași zonă de două ori, în direcții opuse, oprește-te din reglat. Culoarea a
+fost crescută, apoi scăzută, iar reproșul a supraviețuit amândurora. Semnul că problema e în altă parte, de
+obicei în ierarhie sau în ordine, nu în intensitate.
+
+`Lecție:` Un selector CSS pe element, într-o componentă care are mai multe elemente de același fel, e o capcană.
+`.ccs-cifra span` lovea și plăcuța de iconiță, tot un `span`, cu specificitate mai mare decât clasa ei, și îi
+anula `display: flex`. Iconița ateriza în colțul din stânga sus. Simptomul: un element arată ca și cum nu i s-ar
+aplica regula proprie. Verifică `getComputedStyle` înainte să schimbi valori la ghici.
+
+`Lecție:` Numele unui simbol de culoare trebuie să spună înțelesul, nu nuanța. `--c-galben` care ține un
+portocaliu minte pe oricine îl citește, iar la următoarea schimbare cineva caută galben și nu găsește nimic.
+Redenumit în `--c-atentie`. Atenție că numele de culoare ajung și în PHP, acolo unde se construiesc clase CSS din
+șiruri: o redenumire numai în CSS rupe tăcut tot ce vine din PHP.
+
+`Lecție:` Caută valorile scrise de mână înainte să declari o schimbare de paletă terminată. Două nuanțe ale
+galbenului vechi erau în CSS ca `rgba(161, 98, 7, ...)`, într-o umbră și într-un chenar, și ar fi rămas galbene
+lângă restul portocaliu. Le-am găsit căutând cifrele, nu uitându-mă la pagină.
+
+`Lecție:` Funcțiile WordPress care întorc text urmează limba adminului, nu limba pluginului. Pe un site cu admin
+în engleză și plugin în română, `human_time_diff()` scria „acum 23 hours”. Dacă textele tale sunt într-o singură
+limbă, scrie-ți singur formatările de timp și de număr. Pentru română, regula pe care o uită toată lumea e „de”
+de la 20 în sus: 19 minute, dar 20 de minute.
+
+`Lecție:` O previzualizare care nu încarcă toate resursele te face orb exact la ce verifici. Previzualizarea mea
+statică nu lega fontul Dashicons, deci plăcuțele apăreau goale și am pus-o pe seama previzualizării, timp de
+două zile. Prima randare adevărată, o captură trimisă de Iulian, a arătat bugul în zece secunde. Dacă
+previzualizezi o interfață, încarcă-i toate resursele, sau notează explicit ce lipsește din ea.
+
+`Lecție:` Un `tr` cu `display: grid` face `colspan` să nu mai facă nimic. Am botezat un rând de grup `ccs-grup`,
+nume folosit deja pentru altceva în același fișier, iar banda de grup s-a randat lată de 40px în loc de toată
+lățimea tabelului. Înainte de a inventa un nume de clasă, caută-l.
+
+**0.9.0 pe live**, cu backup, lint cu PHP-ul serverului și migrarea schemei la v8. Scrierea în WooCommerce e în
+continuare oprită.
+
 **Pozele se convertesc în WebP, la calitate 90, și 0.8.0 e pe live.** Conversia se face la import fiindcă după
 import nu se mai face niciodată: o poză intrată JPEG rămâne JPEG în toate dimensiunile pe care le generează
 WordPress, iar magazinul plătește diferența la fiecare vizitator, nu o dată. Calitatea e peste implicita
