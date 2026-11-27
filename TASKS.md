@@ -56,6 +56,12 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
   Lista e făcută din 16 luni de Search Console: `cez-auto/rapoarte/curatenie-2026-11-26.json`, 1.827 de șters
   (zero afișări, zero comenzi, zero recenzii) și 612 de ascuns din catalog. Se dă cu
   `wp ccs curata --fisier=... --executa`, probat pe local, reversibil cu `wp ccs revino`. Cere push pe live.
+- [x] Panoul rescris în limbajul Omni Supplier Sync, direcțiile A, B și C (27.11.2026)
+      A: linia de stare, cifre cu plăcuță și pastilă, ultima rulare cu verbe, jurnalul rulărilor, revenire din
+      panou. B: poze pe rând, pastile, grupare pe gravitate, totaluri. C: catalogul furnizorului răsfoibil, cu
+      filtre prin URL și import pe bifă. Referințele vizuale: `cez-auto/docs/referinte-design/`.
+- [ ] Ghidul scurt de utilizare pentru owner @claude
+      Ultimul lucru promis în ofertă care lipsește, la „prezentarea panoului”.
 - [ ] Filtru și coloană în wp-admin > Produse @claude
   Scrise și probate pe local, nu sunt încă pe live. Roli lucrează în lista de produse, nu în panou, și acolo nu
   găsea nimic. De verificat vizual pe live după urcare.
