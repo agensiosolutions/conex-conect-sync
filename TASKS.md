@@ -87,6 +87,15 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
   interesează.
 
 ### Etapa 5: panou, cron, predare
+- [ ] Portabilitatea: ce cere pluginul ca să meargă în orice magazin WooCommerce @iulian
+      Lista întreagă, cu ce e verificat și ce e bănuială, în `docs/portabilitate.md`. Furnizorul rămâne mereu
+      Conex, deci nu e nevoie de abstractizare peste furnizori; variabila e magazinul. Primele cinci sunt „nu
+      se poate instala altundeva”, restul „se poate, dar e neplăcut”.
+      - [ ] Probă pe un WordPress curat cu WooCommerce proaspăt. O oră, și confirmă sau infirmă jumătate din listă.
+      - [ ] `Requires Plugins: woocommerce` în antet plus o verificare la încărcare.
+      - [ ] Maparea categoriilor pentru magazine fără istoric. Fără ea, importul rămâne gol oriunde altundeva.
+      - [ ] `uninstall.php`: zece tabele și nouă opțiuni rămân azi în urmă.
+      - [ ] Pachet `.zip` și versionare: `tools/zip.mjs` și `release.mjs` sunt pomenite în `package.json` și nu există.
 - [ ] Panoul de admin: tablou de bord, setări, catalog, jurnal @claude
 - [ ] `tools/zip.mjs`, `release.mjs`, `flota.mjs` copiate și adaptate din `agensio-consent` @claude
 - [ ] Ghid scurt de utilizare pentru owner @claude
