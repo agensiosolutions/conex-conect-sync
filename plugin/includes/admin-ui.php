@@ -459,6 +459,43 @@ function ccs_ui_jurnal_rulari( $limita = 10 ) {
 }
 
 /**
+ * Banda de sus care spune de ce nu se aplică nimic.
+ *
+ * Până acum faptul ăsta stătea într-o pastilă de 11px în antet, adică în cel mai mic text din pagină, deși e
+ * singurul lucru care schimbă înțelesul tuturor cifrelor de dedesubt: fără el, „3.692 prețuri de schimbat” se
+ * citește ca „s-au schimbat”.
+ *
+ * Spune și când se poate porni, fiindcă altfel întrebarea următoare rămâne fără răspuns.
+ *
+ * @return void
+ */
+function ccs_ui_banner_scriere() {
+	if ( ! ccs_setari()['mod_raport'] ) {
+		return;
+	}
+
+	$politica = ccs_decizii_curente( 'politica_pret' );
+	$gata     = ! empty( $politica[''] );
+
+	printf(
+		'<div class="ccs-banner"><span class="ccs-banner__icon dashicons dashicons-info-outline" aria-hidden="true"></span><span class="ccs-banner__corp"><strong>%s</strong><span>%s</span></span>%s</div>',
+		esc_html__( 'Scrierea pe site e oprită', 'conex-conect-sync' ),
+		esc_html(
+			$gata
+				? __( 'Cifrele de mai jos sunt modificări propuse, nu aplicate. Niciun produs nu se schimbă până nu pornești scrierea. Politica de preț e confirmată, deci o poți porni oricând, din Panou.', 'conex-conect-sync' )
+				: __( 'Cifrele de mai jos sunt modificări propuse, nu aplicate. Niciun produs nu se schimbă. Ca să poți porni scrierea, confirmă întâi politica de preț: adaosul, cota de TVA și marja minimă.', 'conex-conect-sync' )
+		),
+		$gata
+			? ''
+			: sprintf(
+				'<a class="ccs-btn ccs-btn--mic" href="%s">%s</a>',
+				esc_url( ccs_admin_url( 'pret' ) ),
+				esc_html__( 'Deschide politica de preț', 'conex-conect-sync' )
+			)
+	);
+}
+
+/**
  * Pașii de pus la punct, cu starea fiecăruia citită din sistem.
  *
  * Un ghid scris într-un fișier separat are două probleme: trebuie deschis, și îmbătrânește. Ăsta stă în panou și
@@ -975,7 +1012,7 @@ function ccs_ui_cate_rezolvate( $randuri, $decizii ) {
  */
 function ccs_ui_bara_lot( $tip, $opt ) {
 	echo '<div class="ccs-lot-bara" data-tip-lot="' . esc_attr( $tip ) . '">';
-	echo '<span>' . esc_html__( 'Aplică aceeași alegere pentru restul:', 'conex-conect-sync' ) . '</span>';
+	echo '<span>' . esc_html__( 'Aplică aceeași alegere pentru toate:', 'conex-conect-sync' ) . '</span>';
 
 	// Aceeași formă ca alegerile de pe rând: aceeași acțiune, deci același obiect. Înainte era buton cu chenar
 	// sus și control segmentat pe rând, adică două lucruri diferite pentru aceeași hotărâre.
@@ -1106,7 +1143,13 @@ function ccs_admin_pagina() {
 				<?php endforeach; ?>
 			</nav>
 			<main class="ccs-principal">
-				<?php call_user_func( 'ccs_admin_tab_' . str_replace( '-', '_', $tab ) ); ?>
+				<?php
+				// Un singur banner, deasupra a tot: faptul că nimic nu se aplică e informația care schimbă
+				// înțelesul fiecărei cifre de dedesubt, deci nu are ce căuta într-o pastilă de 11px din antet.
+				ccs_ui_banner_scriere();
+
+				call_user_func( 'ccs_admin_tab_' . str_replace( '-', '_', $tab ) );
+				?>
 			</main>
 		</div>
 	</div>
@@ -2391,30 +2434,55 @@ function ccs_ui_catalog_rasfoire() {
 	// spune pe șleau în loc să lase omul să descopere singur că jumătate din carduri nu se pot bifa.
 	$gata = ccs_admin_candidati();
 
-	ccs_ui_card(
-		__( 'Catalogul furnizorului', 'conex-conect-sync' ),
-		sprintf(
+	// Mesajul se schimbă după situația reală. „0 au poză, cost și stoc; dintre ele 0 au și o categorie” e
+	// adevărat, dar nu spune nimic omului care se uită la o listă goală și se întreabă dacă s-a stricat ceva.
+	if ( 0 === (int) $gata['nelegate'] ) {
+		$povestea = __( 'Toate produsele din catalogul Conex sunt deja pe site. Nu mai e nimic de adus.', 'conex-conect-sync' );
+	} elseif ( 0 === (int) $r['total'] && $gata['fara_poza'] >= max( 1, $gata['nelegate'] ) * 0.9 ) {
+		$povestea = sprintf(
+			/* translators: %s: câte produse are furnizorul și nu sunt pe site. */
+			__( 'Conex are %s produse pe care magazinul nu le are, dar încă nu avem nicio poză pentru ele, iar un produs fără poză nu se poate aduce pe site. Pozele se iau automat de la furnizor în fiecare noapte, între 19:00 și 05:00, fiindcă doar atunci le pune la dispoziție. După prima preluare, produsele apar aici.', 'conex-conect-sync' ),
+			ccs_nr( $gata['nelegate'] )
+		);
+	} elseif ( 0 === (int) ( $gata['gata'] ?? 0 ) ) {
+		$povestea = sprintf(
+			/* translators: %s: câte au poză, cost și stoc. */
+			__( '%s produse au poză, cost și stoc, dar niciunul nu are încă o categorie din magazin, iar fără ea nu știm unde să îl punem. Asociază categoriile mai sus, apoi revino aici.', 'conex-conect-sync' ),
+			ccs_nr( $r['total'] )
+		);
+	} else {
+		$povestea = sprintf(
 			/* translators: 1: câte au poză, cost și stoc, 2: câte se pot aduce acum. */
 			__( 'Produsele pe care Conex le are și magazinul nu. %1$s au poză, cost și stoc; dintre ele %2$s au și o categorie asociată, deci se pot aduce acum. Restul așteaptă o asociere de categorie, mai sus.', 'conex-conect-sync' ),
 			ccs_nr( $r['total'] ),
 			ccs_nr( $gata['gata'] ?? 0 )
-		),
+		);
+	}
+
+	ccs_ui_card(
+		__( 'Catalogul furnizorului', 'conex-conect-sync' ),
+		$povestea,
 		ccs_ui_pastila(
 			sprintf(
 				/* translators: %s: câte produse se pot aduce. */
 				__( '%s se pot aduce', 'conex-conect-sync' ),
 				ccs_nr( $gata['gata'] ?? 0 )
 			),
-			'info'
+			( $gata['gata'] ?? 0 ) ? 'info' : 'neutru'
 		)
 	);
 
 	ccs_ui_catalog_filtre_bara( $cautare, $brand, $cale, $toate );
 
 	if ( ! $r['randuri'] ) {
+		$filtrat = '' !== $cautare || '' !== $brand || '' !== $cale;
 		ccs_ui_gol(
-			__( 'Niciun produs nu se potrivește.', 'conex-conect-sync' ),
-			__( 'Încearcă fără filtre, sau bifează „arată și produsele incomplete”.', 'conex-conect-sync' )
+			$filtrat
+				? __( 'Niciun produs nu se potrivește cu filtrele.', 'conex-conect-sync' )
+				: __( 'Nu e nimic de adus deocamdată.', 'conex-conect-sync' ),
+			$filtrat
+				? __( 'Încearcă fără filtre, sau bifează „arată și produsele incomplete”.', 'conex-conect-sync' )
+				: __( 'Vezi explicația de mai sus: nu e o eroare, doar nu sunt încă produse gata de adus.', 'conex-conect-sync' )
 		);
 		ccs_ui_card_sfarsit();
 		return;

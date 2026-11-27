@@ -483,7 +483,10 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-tabel td { padding: 12px 16px; border-bottom: 1px solid var(--c-linie); vertical-align: middle; }
 .ccs-tabel tr:last-child td { border-bottom: 0; }
 .ccs-tabel tbody tr { transition: background 140ms var(--c-curba); }
-.ccs-tabel tbody tr:hover { background: var(--c-fundal); }
+/* Hover-ul se pune pe celule, nu pe rând, ca să bată fundalul rândurilor rezolvate; altfel un rând rezolvat
+   n-avea niciun semn la hover. Și nu folosește aceeași culoare ca ele: `--c-fundal` pe hover făcea ca orice rând
+   peste care treceai să arate rezolvat. Antetul de grup nu reacționează, fiindcă nu e un rând pe care îl atingi. */
+.ccs-tabel tbody tr:not(.ccs-rand-grup):hover > td { background: var(--c-ridicat); }
 .ccs-tabel th.num, .ccs-tabel td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ccs-tabel td.num { color: var(--c-text); }
 .ccs-tabel td.ccs-rosu { color: var(--c-rosu); font-weight: 500; }
@@ -513,7 +516,6 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
    tabel intreg la 62% opacitate arata ca si cum pagina ar fi stricata. Un fundal abia perceptibil spune acelasi
    lucru fara sa stinga textul. */
 .ccs-rezolvat > td { background: var(--c-fundal); }
-.ccs-rezolvat:hover > td { background: transparent; }
 
 /* In bara „la fel pentru toate” nu exista o alegere facuta, deci nu exista stare apasata, deci butoanele
    ramaneau gri si pareau dezactivate. Acolo tonul se poarta din start: butonul nu arata o stare, propune o
@@ -608,6 +610,19 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 /* ---------------------------------------------------------------- carduri de acțiune */
 /* Cardurile de acțiune: fundal alb ca tot panoul, iar culoarea stă în iconița din colț și în cifră. Pline de
    culoare erau citibile, dar trei dreptunghiuri tari unul lângă altul strigă mai tare decât conținutul lor. */
+/* ---------------------------------------------------------------- banda de sus */
+/* Un singur banner pe pagina, deasupra a tot. Bordura doar in stanga, ca notificarile din WordPress 7.0. */
+.ccs-banner {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin-bottom: 20px; padding: 14px 16px;
+  background: var(--c-atentie-fundal); border-left: 3px solid var(--c-atentie); border-radius: 8px;
+}
+.ccs-banner__icon { flex: none; color: var(--c-atentie); width: 20px; height: 20px; font-size: 20px; }
+.ccs-banner__corp { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.ccs-banner__corp strong { font-size: 14px; color: var(--c-text); }
+.ccs-banner__corp span { font-size: 13px; line-height: 18px; color: var(--c-text-2); max-width: 86ch; }
+.ccs-banner .ccs-btn { flex: none; align-self: center; background: var(--c-card); }
+
 /* ---------------------------------------------------------------- pasii de pus la punct */
 /* Pasii se bifeaza singuri din starea reala. Cel curent e singurul cu text si cu buton: sapte lucruri deodata
    nu spun de unde incepi. */
