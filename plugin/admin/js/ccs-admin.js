@@ -447,6 +447,22 @@
 			} );
 	} );
 
+	/* Inchiderea ghidului cu pasi. */
+	document.addEventListener( 'click', function ( ev ) {
+		var buton = ev.target.closest( '.ccs-inchide-ghid' );
+		if ( ! buton ) {
+			return;
+		}
+		ev.preventDefault();
+		buton.disabled = true;
+		trimite( 'ccs_inchide_ghid', {} ).then( function () {
+			var card = buton.closest( '.ccs-card' );
+			if ( card ) {
+				card.remove();
+			}
+		} );
+	} );
+
 	/* ---------------------------------------------------------------- simulatorul de preț */
 
 	if ( ! document.getElementById( 'ccs-adaos' ) || ! sim.cost || ! sim.cost.length ) {

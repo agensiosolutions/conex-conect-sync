@@ -102,6 +102,58 @@ function ccs_admin_assets( $hook ) {
 add_action( 'admin_enqueue_scripts', 'ccs_admin_assets' );
 
 /**
+ * Închide ghidul cu pași, definitiv.
+ *
+ * @return void
+ */
+function ccs_admin_ajax_inchide_ghid() {
+	ccs_admin_ajax_poarta();
+	update_option( 'ccs_ghid_inchis', 1, false );
+	wp_send_json_success( array( 'efect' => __( 'Gata, nu îl mai arăt.', 'conex-conect-sync' ) ) );
+}
+add_action( 'wp_ajax_ccs_inchide_ghid', 'ccs_admin_ajax_inchide_ghid' );
+
+/**
+ * Subsolul paginilor pluginului.
+ *
+ * WordPress scrie acolo „Thank you for creating with WordPress”, ceea ce pe o pagină de plugin nu spune nimic
+ * despre cine a făcut-o și pe cine suni dacă ceva nu merge. Se schimbă numai pe paginile noastre.
+ *
+ * @param string $text Textul WordPress.
+ * @return string Textul nostru, pe paginile pluginului.
+ */
+function ccs_admin_subsol( $text ) {
+	$ecran = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	if ( ! $ecran || false === strpos( (string) $ecran->id, 'ccs-decizii' ) ) {
+		return $text;
+	}
+
+	return sprintf(
+		/* translators: 1: numele pluginului, 2: versiunea, 3: linkul către Agensio. */
+		__( '%1$s %2$s, dezvoltat și întreținut de %3$s', 'conex-conect-sync' ),
+		'<strong>Sincronizare Conex</strong>',
+		esc_html( CCS_VERSIUNE ),
+		'<a href="https://agensio.ro" target="_blank" rel="noopener">Agensio</a>'
+	);
+}
+add_filter( 'admin_footer_text', 'ccs_admin_subsol' );
+
+/**
+ * Scoate și versiunea WordPress din colțul din dreapta al subsolului, pe paginile noastre.
+ *
+ * @param string $text Textul.
+ * @return string Gol pe paginile pluginului.
+ */
+function ccs_admin_subsol_versiune( $text ) {
+	$ecran = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	if ( $ecran && false !== strpos( (string) $ecran->id, 'ccs-decizii' ) ) {
+		return '';
+	}
+	return $text;
+}
+add_filter( 'update_footer', 'ccs_admin_subsol_versiune', 20 );
+
+/**
  * Scoate notificările celorlalte pluginuri de pe ecranul nostru.
  *
  * Pe o pagină de setări obișnuită, notificările își au rostul. Aici nu: pagina asta o deschide clientul ca să ia

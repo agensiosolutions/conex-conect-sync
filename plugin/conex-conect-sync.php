@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Conex Conect Sync pentru WooCommerce
  * Description:       Sincronizează stocul, prețul și produsele cu API-ul Conex Conect: catalog la 30 de minute, imagini și date tehnice din fereastra de noapte, import de produse noi cu confirmare.
- * Version:           0.9.0
+ * Version:           0.10.0
  * Requires at least: 6.4
  * Requires PHP:      8.0
  * Author:            Agensio
@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 
 // Update URI: false, ca la agensio-consent: fără actualizări automate de nicăieri. Versiunile se urcă din chatul
 // fiecărui proiect, cu arhiva din `npm run zip`.
-define( 'CCS_VERSIUNE', '0.9.0' );
+define( 'CCS_VERSIUNE', '0.10.0' );
 define( 'CCS_FISIER', __FILE__ );
 define( 'CCS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CCS_URL', plugin_dir_url( __FILE__ ) );

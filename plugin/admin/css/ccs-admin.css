@@ -471,15 +471,6 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-doua { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 40px; align-items: start; }
 
 /* ---------------------------------------------------------------- efectul politicii */
-.ccs-efect { width: 100%; border-collapse: collapse; }
-.ccs-efect th, .ccs-efect td { padding: 8px 0; border-bottom: 1px solid var(--c-linie); text-align: left; font-size: 13px; }
-.ccs-efect th { font-weight: 400; color: var(--c-text-3); }
-.ccs-efect td { text-align: right; font-weight: 500; color: var(--c-text); font-variant-numeric: tabular-nums; }
-.ccs-efect .ccs-total th, .ccs-efect .ccs-total td { padding-top: 12px; border-top: 1px solid var(--c-linie-tare); border-bottom: 0; font-size: 14px; }
-.ccs-efect .ccs-total th { font-weight: 500; color: var(--c-text); }
-
-/* Grupurile de produse retrase: iconita colorata la stanga, cifra mare, si o bara care arata cat s-a facut deja.
-   Fara bara, „2.435” si „1.826 inca de vanzare” sunt doua numere care cer o scadere in minte. */
 /* ---------------------------------------------------------------- tabele */
 .ccs-tabel-cadru { border: 1px solid var(--c-linie); border-radius: 8px; overflow: hidden; }
 .ccs-tabel { width: 100%; border-collapse: collapse; }
@@ -596,6 +587,62 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 /* ---------------------------------------------------------------- carduri de acțiune */
 /* Cardurile de acțiune: fundal alb ca tot panoul, iar culoarea stă în iconița din colț și în cifră. Pline de
    culoare erau citibile, dar trei dreptunghiuri tari unul lângă altul strigă mai tare decât conținutul lor. */
+/* ---------------------------------------------------------------- pasii de pus la punct */
+/* Pasii se bifeaza singuri din starea reala. Cel curent e singurul cu text si cu buton: sapte lucruri deodata
+   nu spun de unde incepi. */
+.ccs-pasi { margin: 0; padding: 0; list-style: none; counter-reset: pas; }
+.ccs-pas {
+  display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px;
+  padding: 12px 0; border-top: 1px solid var(--c-linie);
+}
+.ccs-pas:first-child { border-top: 0; padding-top: 0; }
+.ccs-pas:last-child { padding-bottom: 0; }
+.ccs-pas__bifa {
+  display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--c-ridicat); color: var(--c-text-3);
+}
+.ccs-pas__bifa .dashicons { width: 14px; height: 14px; font-size: 14px; }
+.ccs-pas--gata .ccs-pas__bifa { background: var(--c-verde-fundal); color: var(--c-verde); }
+.ccs-pas--acum .ccs-pas__bifa { background: var(--c-accent-fundal); color: var(--c-accent); }
+.ccs-pas__corp { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ccs-pas__titlu { font-size: 14px; color: var(--c-text-3); }
+.ccs-pas--gata .ccs-pas__titlu { color: var(--c-text-2); }
+.ccs-pas--acum .ccs-pas__titlu { font-weight: 600; color: var(--c-text); }
+.ccs-pas__text { font-size: 13px; line-height: 18px; color: var(--c-text-3); max-width: 70ch; }
+.ccs-pas .ccs-btn { align-self: flex-start; margin-top: 4px; }
+
+/* ---------------------------------------------------------------- efectul politicii de pret */
+/* Aceeasi anatomie ca o cifra din Panou. Doua pe rand, nu patru: etichetele sunt lungi, iar valorile au si ele
+   o paranteza cu media, deci patru coloane ar taia text la jumatate. */
+.ccs-efect-grila { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.ccs-efect-item {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr); align-items: center; gap: 10px;
+  padding: 10px 12px; background: var(--c-fundal); border-radius: 10px;
+}
+.ccs-efect-item .ccs-plac { width: 32px; height: 32px; border-radius: 8px; }
+.ccs-efect-item .ccs-plac .dashicons { width: 16px; height: 16px; font-size: 16px; }
+.ccs-efect-item__corp { min-width: 0; }
+.ccs-efect-item__eticheta { display: block; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
+.ccs-efect-item strong {
+  display: block; font-size: 15px; line-height: 20px; font-weight: 600; color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Marja e concluzia intregii pagini, deci are voie sa fie singura linie cu greutate. */
+.ccs-efect-total {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 12px 14px; border: 1px solid var(--c-linie); border-radius: 10px; background: var(--c-card);
+}
+.ccs-efect-total span { font-size: 13px; color: var(--c-text-2); }
+.ccs-efect-total strong {
+  font-size: 17px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Cursoarele iau accentul panoului, nu albastrul implicit al browserului. */
+.ccs-admin input[type="range"] { accent-color: var(--c-accent); }
+
 /* ---------------------------------------------------------------- cardul de actiune */
 /* Acelasi obiect ca si cardul de produs din catalog, pe care Iulian l-a aprobat: chenar subtire, colturi de 12px,
    si o reactie la hover. Inainte erau doua limbaje in paralel, unul cu placute pline si cifre colorate aici,

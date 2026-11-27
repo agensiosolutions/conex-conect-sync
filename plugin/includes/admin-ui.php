@@ -412,6 +412,193 @@ function ccs_ui_jurnal_rulari( $limita = 10 ) {
 }
 
 /**
+ * Pașii de pus la punct, cu starea fiecăruia citită din sistem.
+ *
+ * Un ghid scris într-un fișier separat are două probleme: trebuie deschis, și îmbătrânește. Ăsta stă în panou și
+ * se uită la ce s-a făcut deja, deci nu poate minți. Bifele nu se pun cu mâna niciodată.
+ *
+ * Ordinea e ordinea reală de lucru: fără catalog nu ai ce lega, fără legături nu ai ce calcula, fără politica de
+ * preț nu ai voie să scrii, și așa mai departe. De aceea se arată un singur pas deschis, primul neterminat: un om
+ * care vede șapte lucruri deodată nu știe cu care să înceapă.
+ *
+ * @return array Pașii, fiecare cu gata, titlu, text, buton.
+ */
+function ccs_ui_pasi() {
+	global $wpdb;
+	$setari = ccs_setari();
+
+	$produse  = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . ccs_tabel( 'products' ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+	$legaturi = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . ccs_tabel( 'links' ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+	$imagini  = ccs_imagini_stare();
+	$politica = ccs_decizii_curente( 'politica_pret' );
+	$aplicari = (int) $wpdb->get_var(
+		// phpcs:ignore WordPress.DB.PreparedSQL
+		"SELECT COUNT(*) FROM " . ccs_tabel( 'runs' ) . " WHERE tip LIKE 'aplicare%' AND stare IN ('gata','gata_cu_erori')"
+	);
+
+	return array(
+		array(
+			'gata'  => $produse > 0,
+			'titlu' => __( 'Catalogul furnizorului e preluat', 'conex-conect-sync' ),
+			'text'  => $produse
+				? sprintf(
+					/* translators: %s: câte produse. */
+					__( '%s produse citite de la Conex.', 'conex-conect-sync' ),
+					ccs_nr( $produse )
+				)
+				: __( 'Încă nu am citit catalogul Conex. Apasă „Recalculează”, sus în dreapta.', 'conex-conect-sync' ),
+			'buton' => '',
+			'tab'   => '',
+		),
+		array(
+			'gata'  => $legaturi > 0,
+			'titlu' => __( 'Produsele de pe site sunt legate de furnizor', 'conex-conect-sync' ),
+			'text'  => $legaturi
+				? sprintf(
+					/* translators: %s: câte legături. */
+					__( '%s produse de pe site au corespondent la Conex. Numai ele se sincronizează.', 'conex-conect-sync' ),
+					ccs_nr( $legaturi )
+				)
+				: __( 'Niciun produs de pe site nu e legat încă de catalogul Conex.', 'conex-conect-sync' ),
+			'buton' => '',
+			'tab'   => '',
+		),
+		array(
+			'gata'  => ! empty( $politica[''] ),
+			'titlu' => __( 'Politica de preț e confirmată', 'conex-conect-sync' ),
+			'text'  => ! empty( $politica[''] )
+				? __( 'Adaosul, cota de TVA și marja minimă sunt stabilite.', 'conex-conect-sync' )
+				: __( 'Stabilește adaosul, cota de TVA și marja minimă. Până atunci nu se poate schimba niciun preț.', 'conex-conect-sync' ),
+			'buton' => __( 'Deschide politica de preț', 'conex-conect-sync' ),
+			'tab'   => 'pret',
+		),
+		array(
+			'gata'  => $imagini['produse'] > 0,
+			'titlu' => __( 'Pozele produselor sunt preluate', 'conex-conect-sync' ),
+			'text'  => $imagini['produse']
+				? sprintf(
+					/* translators: 1: câte produse au poze, 2: câte poze. */
+					__( '%1$s produse au poze la furnizor, %2$s poze în total.', 'conex-conect-sync' ),
+					ccs_nr( $imagini['produse'] ),
+					ccs_nr( $imagini['poze'] )
+				)
+				: __( 'Pozele se iau noaptea, între 19:00 și 05:00, fiindcă furnizorul le dă doar atunci. Fără ele nu se poate importa niciun produs.', 'conex-conect-sync' ),
+			'buton' => '',
+			'tab'   => '',
+		),
+		array(
+			'gata'  => ! $setari['mod_raport'],
+			'titlu' => __( 'Scrierea pe site e pornită', 'conex-conect-sync' ),
+			'text'  => $setari['mod_raport']
+				? __( 'Deocamdată panoul doar îți arată ce s-ar schimba. Nimic nu se aplică pe produse.', 'conex-conect-sync' )
+				: __( 'Sincronizarea schimbă prețurile și stocurile pe site.', 'conex-conect-sync' ),
+			'buton' => '',
+			'tab'   => '',
+		),
+		array(
+			'gata'  => $aplicari > 0,
+			'titlu' => __( 'Prima aplicare e făcută', 'conex-conect-sync' ),
+			'text'  => $aplicari
+				? sprintf(
+					/* translators: %s: câte aplicări. */
+					__( '%s aplicări duse la capăt până acum.', 'conex-conect-sync' ),
+					ccs_nr( $aplicari )
+				)
+				: __( 'Prețurile și stocurile nu au fost încă scrise pe site nici măcar o dată.', 'conex-conect-sync' ),
+			'buton' => '',
+			'tab'   => '',
+		),
+		array(
+			'gata'  => (bool) $setari['joburi_pornite'],
+			'titlu' => __( 'Sincronizarea rulează singură', 'conex-conect-sync' ),
+			'text'  => $setari['joburi_pornite']
+				? sprintf(
+					/* translators: %d: la câte minute. */
+					__( 'Catalogul se citește la fiecare %d minute, fără să apeși nimic.', 'conex-conect-sync' ),
+					(int) $setari['interval_catalog']
+				)
+				: __( 'Catalogul se preia doar când apeși „Recalculează”. Pornește rularea automată ca să meargă singură.', 'conex-conect-sync' ),
+			'buton' => '',
+			'tab'   => '',
+		),
+	);
+}
+
+/**
+ * Cardul cu pașii de pus la punct.
+ *
+ * Dispare singur când totul e gata, fiindcă un card bifat în întregime devine mobilier. Se poate și închide, iar
+ * alegerea se ține minte.
+ *
+ * @return void
+ */
+function ccs_ui_card_pasi() {
+	if ( get_option( 'ccs_ghid_inchis' ) ) {
+		return;
+	}
+
+	$pasi  = ccs_ui_pasi();
+	$gata  = 0;
+	foreach ( $pasi as $p ) {
+		if ( $p['gata'] ) {
+			$gata++;
+		}
+	}
+	$total = count( $pasi );
+	if ( $gata >= $total ) {
+		return;
+	}
+
+	ccs_ui_card(
+		__( 'Ce mai e de pus la punct', 'conex-conect-sync' ),
+		__( 'Pașii se bifează singuri, pe măsură ce lucrurile se întâmplă. Nu ai de ținut minte nimic.', 'conex-conect-sync' ),
+		ccs_ui_pastila(
+			sprintf(
+				/* translators: 1: câți pași gata, 2: câți în total. */
+				__( '%1$d din %2$d', 'conex-conect-sync' ),
+				$gata,
+				$total
+			),
+			$gata ? 'info' : 'atentie'
+		)
+	);
+
+	echo '<ol class="ccs-pasi">';
+	$deschis = false;
+	foreach ( $pasi as $i => $p ) {
+		// Un singur pas deschis: primul neterminat. Șapte lucruri deodată nu spun de unde începi.
+		$acesta  = ! $p['gata'] && ! $deschis;
+		$deschis = $deschis || $acesta;
+		?>
+		<li class="ccs-pas<?php echo $p['gata'] ? ' ccs-pas--gata' : ''; ?><?php echo $acesta ? ' ccs-pas--acum' : ''; ?>">
+			<span class="ccs-pas__bifa" aria-hidden="true">
+				<span class="dashicons dashicons-<?php echo $p['gata'] ? 'yes' : 'marker'; ?>"></span>
+			</span>
+			<span class="ccs-pas__corp">
+				<span class="ccs-pas__titlu"><?php echo esc_html( $p['titlu'] ); ?></span>
+				<?php if ( $acesta || $p['gata'] ) : ?>
+					<span class="ccs-pas__text"><?php echo esc_html( $p['text'] ); ?></span>
+				<?php endif; ?>
+				<?php if ( $acesta && $p['buton'] && $p['tab'] ) : ?>
+					<a class="ccs-btn ccs-btn--mic ccs-btn--principal" href="<?php echo esc_url( ccs_admin_url( $p['tab'] ) ); ?>">
+						<?php echo esc_html( $p['buton'] ); ?>
+					</a>
+				<?php endif; ?>
+			</span>
+		</li>
+		<?php
+	}
+	echo '</ol>';
+
+	printf(
+		'<p class="ccs-mic"><button type="button" class="ccs-btn ccs-btn--mic ccs-btn--fantoma ccs-inchide-ghid">%s</button></p>',
+		esc_html__( 'Nu îmi mai arăta pașii', 'conex-conect-sync' )
+	);
+
+	ccs_ui_card_sfarsit();
+}
+
+/**
  * Faptele despre sistem pentru linia de stare de pe Panou.
  *
  * Patru lucruri, în ordinea în care contează pentru cineva care tocmai a deschis pagina: mai vorbim cu furnizorul,
@@ -733,15 +920,20 @@ function ccs_ui_cate_rezolvate( $randuri, $decizii ) {
 function ccs_ui_bara_lot( $tip, $opt ) {
 	echo '<div class="ccs-lot-bara" data-tip-lot="' . esc_attr( $tip ) . '">';
 	echo '<span>' . esc_html__( 'Aplică aceeași alegere pentru restul:', 'conex-conect-sync' ) . '</span>';
+
+	// Aceeași formă ca alegerile de pe rând: aceeași acțiune, deci același obiect. Înainte era buton cu chenar
+	// sus și control segmentat pe rând, adică două lucruri diferite pentru aceeași hotărâre.
+	echo '<div class="ccs-alegeri">';
 	foreach ( $opt as $valoare => $eticheta ) {
 		printf(
-			'<button type="button" class="ccs-btn ccs-btn--mic ccs-lot" data-valoare="%1$s" data-ton="%2$s" data-eticheta="%3$s">%4$s</button>',
+			'<button type="button" class="ccs-alegere ccs-lot" data-valoare="%1$s" data-ton="%2$s" data-eticheta="%3$s">%4$s</button>',
 			esc_attr( $valoare ),
 			esc_attr( ccs_ui_ton_decizie( $valoare ) ),
 			esc_attr( $eticheta ),
 			esc_html( $eticheta )
 		);
 	}
+	echo '</div>';
 	echo '<span class="ccs-stare-text"></span>';
 	echo '</div>';
 }
@@ -889,6 +1081,9 @@ function ccs_admin_tab_panou() {
 	// Întâi „merge?”, apoi „cât?”. O cifră citită fără să știi dacă sincronizarea mai rulează poate fi veche de
 	// nouă luni, exact ce s-a întâmplat cu feed-ul vechi.
 	ccs_ui_linie_stare( ccs_ui_fapte_sistem() );
+
+	// Ghidul stă primul cât timp mai e ceva de pus la punct, fiindcă atunci e singurul lucru care contează.
+	ccs_ui_card_pasi();
 	?>
 
 	<div class="ccs-cifre">
@@ -1190,15 +1385,35 @@ function ccs_admin_tab_pret() {
 
 		<div>
 			<h3 class="ccs-subtitlu ccs-subtitlu--prim"><?php esc_html_e( 'Ce se întâmplă cu magazinul', 'conex-conect-sync' ); ?></h3>
-			<table class="ccs-efect">
-				<tbody>
-					<tr><th><?php esc_html_e( 'Prețuri care urcă', 'conex-conect-sync' ); ?></th><td id="ccs-e-sus"></td></tr>
-					<tr><th><?php esc_html_e( 'Prețuri care coboară', 'conex-conect-sync' ); ?></th><td id="ccs-e-jos"></td></tr>
-					<tr><th><?php esc_html_e( 'Prețuri neschimbate', 'conex-conect-sync' ); ?></th><td id="ccs-e-egal"></td></tr>
-					<tr><th><?php esc_html_e( 'Rămân sub cost', 'conex-conect-sync' ); ?></th><td id="ccs-e-subcost"></td></tr>
-					<tr class="ccs-total"><th><?php esc_html_e( 'Marjă brută, la o bucată din fiecare', 'conex-conect-sync' ); ?></th><td id="ccs-e-marja"></td></tr>
-				</tbody>
-			</table>
+			<?php
+			// Aceeași anatomie ca o cifră din Panou: plăcuță de iconiță, etichetă, valoare. Înainte era un tabel
+			// cu eticheta în stânga și cifra lipită de marginea din dreapta, cu un gol mare între ele, iar un
+			// tabel de patru rânduri cu două coloane se citește greu tocmai fiindcă ochiul traversează golul.
+			$efecte = array(
+				array( 'ccs-e-sus', __( 'Prețuri care urcă', 'conex-conect-sync' ), 'arrow-up-alt', 'bine' ),
+				array( 'ccs-e-jos', __( 'Prețuri care coboară', 'conex-conect-sync' ), 'arrow-down-alt', 'atentie' ),
+				array( 'ccs-e-egal', __( 'Prețuri neschimbate', 'conex-conect-sync' ), 'minus', '' ),
+				array( 'ccs-e-subcost', __( 'Rămân sub cost', 'conex-conect-sync' ), 'warning', 'problema' ),
+			);
+			?>
+			<div class="ccs-efect-grila">
+				<?php foreach ( $efecte as $e ) : ?>
+					<div class="ccs-efect-item">
+						<span class="ccs-plac<?php echo $e[3] ? ' ccs-plac--' . esc_attr( $e[3] ) : ''; ?>">
+							<span class="dashicons dashicons-<?php echo esc_attr( $e[2] ); ?>" aria-hidden="true"></span>
+						</span>
+						<span class="ccs-efect-item__corp">
+							<span class="ccs-efect-item__eticheta"><?php echo esc_html( $e[1] ); ?></span>
+							<strong id="<?php echo esc_attr( $e[0] ); ?>"></strong>
+						</span>
+					</div>
+				<?php endforeach; ?>
+			</div>
+
+			<div class="ccs-efect-total">
+				<span><?php esc_html_e( 'Marjă brută, la o bucată din fiecare', 'conex-conect-sync' ); ?></span>
+				<strong id="ccs-e-marja"></strong>
+			</div>
 
 			<h3 class="ccs-subtitlu"><?php esc_html_e( 'Pe produse concrete', 'conex-conect-sync' ); ?></h3>
 			<div class="ccs-tabel-cadru">
@@ -2513,10 +2728,44 @@ function ccs_admin_tab_stoc() {
 	?>
 	<div class="ccs-cifre">
 		<?php
-		ccs_ui_cifra( __( 'Cantități de schimbat', 'conex-conect-sync' ), ccs_nr( $r['stoc'] ) );
-		ccs_ui_cifra( __( 'Ar trece pe epuizat', 'conex-conect-sync' ), ccs_nr( $r['de_epuizat'] ) );
-		ccs_ui_cifra( __( 'S-ar reactiva', 'conex-conect-sync' ), ccs_nr( $r['de_reactivat'] ) );
-		ccs_ui_cifra( __( 'Fără nicio schimbare', 'conex-conect-sync' ), ccs_nr( $r['neatinse'] ) );
+		ccs_ui_cifra(
+			__( 'Cantități de schimbat', 'conex-conect-sync' ),
+			ccs_nr( $r['stoc'] ),
+			$r['stoc'] ? 'atentie' : 'bine',
+			array(
+				'icon' => 'archive',
+				'sub'  => $setari['mod_raport']
+					? __( 'doar propuse', 'conex-conect-sync' )
+					: __( 'se aplică automat', 'conex-conect-sync' ),
+			)
+		);
+		ccs_ui_cifra(
+			__( 'Ar trece pe epuizat', 'conex-conect-sync' ),
+			ccs_nr( $r['de_epuizat'] ),
+			$r['de_epuizat'] ? 'atentie' : 'bine',
+			array(
+				'icon' => 'hidden',
+				'sub'  => __( 'ies din vânzare', 'conex-conect-sync' ),
+			)
+		);
+		ccs_ui_cifra(
+			__( 'S-ar reactiva', 'conex-conect-sync' ),
+			ccs_nr( $r['de_reactivat'] ),
+			$r['de_reactivat'] ? 'bine' : '',
+			array(
+				'icon' => 'visibility',
+				'sub'  => __( 'revin la vânzare', 'conex-conect-sync' ),
+			)
+		);
+		ccs_ui_cifra(
+			__( 'Fără nicio schimbare', 'conex-conect-sync' ),
+			ccs_nr( $r['neatinse'] ),
+			'',
+			array(
+				'icon' => 'yes-alt',
+				'sub'  => __( 'rămân cum sunt', 'conex-conect-sync' ),
+			)
+		);
 		?>
 	</div>
 	<?php
