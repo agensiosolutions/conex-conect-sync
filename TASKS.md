@@ -120,6 +120,22 @@ Sursa pentru pagina de taskuri (/start). Claude ține fișierul la zi; pagina do
 
 ## Gata
 
+- [x] Iconițele panoului, de la Dashicons la Lucide (27.11.2026)
+      25 de iconițe lipite ca SVG în `includes/iconite.php`, generat cu `tools/adu-iconite.py`, nu luate de pe un
+      CDN. Cheile au rămas numele vechi, fiindcă descriu rolul, nu desenul: alt pachet se schimbă rescriind numai
+      fișierul generat. Mărimea vine acum din apel, nu dintr-o regulă CSS globală.
+- [x] Butonul „Arată pașii”, în antet (27.11.2026)
+      Apare doar după ce ghidul a fost ascuns și doar cât mai e ceva de pus la punct, și duce pe Panou, fiindcă
+      numai acolo se randează cardul cu pași.
+- [x] Explicația „Scrierea pe site e oprită”, mutată în pastilă (27.11.2026)
+      `ccs_ui_pastila_info()`: pastila își poartă singură explicația, iar hover-ul prinde pe tot textul, nu pe o
+      iconiță de lângă. Același tipar și în mesajul din Catalogul furnizorului.
+- [x] Corecturile cerute după ce Iulian s-a uitat pe live (27.11.2026)
+      Butoanele din „Aplică aceeași alegere pentru toate” arătau inactive, rândurile aveau un hover rămas de la
+      altă stilizare, iar Catalogul afișa zero fără să spună de ce. Zeroul e real: tabela de poze e goală și toate
+      produsele nelegate sunt oprite de condiția „fără poză”. Jobul de poze rulează la 19:10.
+- [x] Resursele poartă data fișierului în versiune (27.11.2026)
+      Versiunea pluginului nu se mișcă într-o sesiune de schimbări de CSS, deci browserul servea fișierul vechi.
 - [x] Maparea manuală a căilor, din panou (26.11.2026)
       Cele 98 de căi fără raion, sortate după câte produse ar debloca, fiecare cu un selector de categorie.
       Probat pe uleiuri: o singură alegere a mutat 307 produse din „așteaptă” în „gata de adus”, iar regula

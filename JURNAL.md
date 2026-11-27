@@ -129,6 +129,42 @@ aceleași grupuri se calculează cu o interogare pe `_sku` și un `LEFT JOIN`, p
 
 ## 27 noiembrie 2026
 
+**Panoul, corectat bucată cu bucată după ce Iulian s-a uitat pe live.** Nu o listă de dorințe, ci lucruri
+văzute pe ecran: butoanele din „Aplică aceeași alegere pentru toate” arătau inactive deși erau active, rândurile
+din tabele aveau un hover rămas de la altă stilizare, iar Catalogul furnizorului afișa zero fără să spună de ce.
+Zeroul avea un motiv adevărat: tabela de poze e goală, iar toate cele 16.778 de produse nelegate sunt oprite de
+condiția „fără poză”. Jobul de poze rulează la 19:10, deci catalogul se umple diseară. Mesajul spune acum exact
+asta, nu „nu sunt produse”.
+
+**Explicația a trecut din bandă în tooltip, apoi în pastilă.** Întâi am pus o bandă sus care explica de ce e
+oprită scrierea pe site. Iulian a tăiat-o pe captură: voia o iconiță de info, nu un paragraf. Am pus iconița
+lângă pastilă, și iar n-a fost bine: trebuia *în* pastilă, ca hover-ul să prindă pe text. Varianta bună e
+`ccs_ui_pastila_info()`, o pastilă care își poartă singură explicația.
+
+**Iconițele au trecut de la Dashicons la Lucide.** Dashicons e setul livrat cu WordPress, din 2012, desenat la
+20px, și se vedea: eticheta de preț era o formă plină fără contur, iar categoria un dosar generic. Lucide e
+desenat pe o grilă de 24 cu contur de 2px și rămâne citibil la 14px, mărimea la care îl folosim cel mai des. Cele
+25 de iconițe stau lipite ca SVG în `includes/iconite.php`, generat de `tools/adu-iconite.py`, nu luate de pe un
+CDN: o pagină de admin care așteaptă un server străin ca să își deseneze iconițele se strică atunci când serverul
+ăla are o zi proastă. Cheile au rămas numele vechi, de la Dashicons, fiindcă ele descriu rolul din panou, nu
+desenul: alt pachet se schimbă rescriind numai fișierul generat.
+
+Tot atunci a apărut și butonul „Arată pașii” din antet. Iulian apăsase „Nu îmi mai arăta pașii” și n-avea cum
+să-i aducă înapoi. Butonul apare doar după ce ghidul a fost ascuns și doar cât mai e ceva de pus la punct, și
+duce pe Panou, fiindcă numai acolo se randează cardul.
+
+`Lecție:` Inventariază un simbol în tot proiectul, nu în fișierul la care lucrezi. Am înlocuit paisprezece apeluri
+de iconiță în `admin-ui.php` și am declarat treaba gata; iconițele de navigație stăteau în `admin.php` și s-au
+randat ca nimic. Simptomul: după o înlocuire „completă”, un element lipsește exact într-un singur loc.
+
+`Lecție:` Versionează resursele după data fișierului, nu după versiunea produsului. Într-o sesiune de zeci de
+schimbări de CSS versiunea pluginului nu se mișcă, deci browserul servește fișierul vechi și ajungi să depanezi o
+schimbare care e deja pe disc. Simptomul: „am pus pe live, dar arată la fel”.
+
+`Lecție:` Când clientul respinge o explicație de două ori, a doua oară nu mai schimba textul, mută-l. O explicație
+trebuie să stea pe lucrul pe care îl explică și să se deschidă la hover pe cuvintele citite, nu într-o bandă
+deasupra a tot și nu pe o iconiță de 14px de lângă.
+
 **Ghidul e în panou, nu într-un fișier, iar rularea automată e pornită pe live.** Iulian a întrebat dacă nu e
 mai simplu un ghidaj în panou decât un document. Este, din două motive: un document trebuie deschis, și
 îmbătrânește. Cardul „Ce mai e de pus la punct” citește starea reală, deci nu poate minți, și arată un singur pas
