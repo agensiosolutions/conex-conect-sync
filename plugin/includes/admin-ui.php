@@ -1699,7 +1699,7 @@ function ccs_ui_catalog_bare( $c, $grupuri, $pot, $m ) {
 		__( 'Pe site-ul tău', 'conex-conect-sync' ),
 		array(
 			array( 'verde', __( 'sincronizate cu Conex', 'conex-conect-sync' ), $legate ),
-			array( 'galben', __( 'rămase din feed-ul vechi', 'conex-conect-sync' ), $din_feed ),
+			array( 'atentie', __( 'rămase din feed-ul vechi', 'conex-conect-sync' ), $din_feed ),
 			array( 'albastru', __( 'introduse de echipă', 'conex-conect-sync' ), $manuale ),
 			array( 'gri', __( 'altele', 'conex-conect-sync' ), $altele ),
 		)
@@ -1710,7 +1710,7 @@ function ccs_ui_catalog_bare( $c, $grupuri, $pot, $m ) {
 		array(
 			array( 'verde', __( 'deja pe site', 'conex-conect-sync' ), $legate ),
 			array( 'verde-moale', __( 'pot fi importate', 'conex-conect-sync' ), $c['gata'] ),
-			array( 'galben', __( 'fără categorie asociată', 'conex-conect-sync' ), $c['fara_categorie'] ),
+			array( 'atentie', __( 'fără categorie asociată', 'conex-conect-sync' ), $c['fara_categorie'] ),
 			array( 'gri', __( 'fără poză la furnizor', 'conex-conect-sync' ), $c['fara_poza'] ),
 			array( 'gri-moale', __( 'fără stoc', 'conex-conect-sync' ), $c['fara_stoc'] ),
 		)
@@ -2321,7 +2321,7 @@ function ccs_ui_catalog_dispare( $grupuri ) {
 			'titlu'   => __( 'Rămase din feed-ul vechi', 'conex-conect-sync' ),
 			'desc'    => __( 'Provin din importul Mega Drive, oprit în noiembrie 2025. Nu mai există în catalogul Conex.', 'conex-conect-sync' ),
 			'icon'    => 'archive',
-			'culoare' => 'galben',
+			'culoare' => 'atentie',
 			'retrage' => true,
 		),
 		'excluse'  => array(

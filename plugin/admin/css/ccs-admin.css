@@ -53,8 +53,8 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   --c-accent-fundal: #eff6ff;
   --c-verde: #16a34a;
   --c-verde-fundal: #f0fdf4;
-  --c-galben: #a16207;
-  --c-galben-fundal: #fefce8;
+  --c-atentie: #c2410c;
+  --c-atentie-fundal: #fff7ed;
   --c-rosu: #dc2626;
   --c-rosu-fundal: #fef2f2;
 
@@ -111,7 +111,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 /* Câte răspunsuri lipsesc din tabul acela. Dispare când nu mai e niciunul. */
 .ccs-nav__rest {
   flex: none; min-width: 20px; padding: 0 6px;
-  border-radius: 4px; background: var(--c-galben-fundal); color: var(--c-galben);
+  border-radius: 4px; background: var(--c-atentie-fundal); color: var(--c-atentie);
   font-family: var(--c-mono); font-size: 12px; line-height: 20px; text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -188,7 +188,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 }
 .ccs-plac .dashicons { width: 18px; height: 18px; font-size: 18px; }
 .ccs-plac--bine { background: var(--c-verde-fundal); color: var(--c-verde); }
-.ccs-plac--atentie { background: var(--c-galben-fundal); color: var(--c-galben); }
+.ccs-plac--atentie { background: var(--c-atentie-fundal); color: var(--c-atentie); }
 .ccs-plac--problema { background: var(--c-rosu-fundal); color: var(--c-rosu); }
 .ccs-plac--info { background: var(--c-accent-fundal); color: var(--c-accent-inchis); }
 
@@ -301,7 +301,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-linie-stare__fapt b { font-weight: 600; color: var(--c-text); }
 .ccs-bulina { width: 8px; height: 8px; border-radius: 50%; background: var(--c-text-3); flex: 0 0 auto; }
 .ccs-bulina--bine { background: var(--c-verde); }
-.ccs-bulina--atentie { background: var(--c-galben); }
+.ccs-bulina--atentie { background: var(--c-atentie); }
 .ccs-bulina--problema { background: var(--c-rosu); }
 /* Pulsează numai cât timp chiar rulează ceva. Starea finală e statică: altfel pagina pare mereu ocupată. */
 .ccs-bulina--lucreaza { background: var(--c-accent); animation: ccs-puls 1.6s var(--c-curba) infinite; }
@@ -337,7 +337,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   background: var(--c-ridicat); color: var(--c-text-3);
 }
 .ccs-stare--bine .ccs-stare__icon { background: var(--c-verde-fundal); color: var(--c-verde); }
-.ccs-stare--atentie .ccs-stare__icon { background: var(--c-galben-fundal); color: var(--c-galben); }
+.ccs-stare--atentie .ccs-stare__icon { background: var(--c-atentie-fundal); color: var(--c-atentie); }
 .ccs-stare--problema .ccs-stare__icon { background: var(--c-rosu-fundal); color: var(--c-rosu); }
 
 /* ---------------------------------------------------------------- de rezolvat */
@@ -387,23 +387,23 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 
 /* O singură regulă de culoare, aceeași peste tot: verde înseamnă că pluginul schimbă produsul, chihlimbar că îl
    lasă cum e. Culoarea apare la hover și rămâne după alegere, deci un tabel parcurs pe jumătate se citește dintr-o
-   privire: ce e verde se aplică, ce e galben rămâne pe loc. */
+   privire: ce e verde se aplică, ce e portocaliu rămâne pe loc. */
 .ccs-alegere[data-ton="bine"]:hover { color: var(--c-verde); }
-.ccs-alegere[data-ton="atentie"]:hover { color: var(--c-galben); }
+.ccs-alegere[data-ton="atentie"]:hover { color: var(--c-atentie); }
 .ccs-alegere[aria-pressed="true"][data-ton="bine"] {
   background: var(--c-verde-fundal); color: var(--c-verde);
   box-shadow: var(--c-umbra), 0 0 0 1px rgba(22, 163, 74, .3);
 }
 .ccs-alegere[aria-pressed="true"][data-ton="atentie"] {
-  background: var(--c-galben-fundal); color: var(--c-galben);
-  box-shadow: var(--c-umbra), 0 0 0 1px rgba(161, 98, 7, .3);
+  background: var(--c-atentie-fundal); color: var(--c-atentie);
+  box-shadow: var(--c-umbra), 0 0 0 1px rgba(194, 65, 12, .3);
 }
 
 /* Butoanele din bara „la fel pentru toate” poartă aceleași tonuri, ca să însemne același lucru. */
 .ccs-btn[data-ton="bine"] { border-color: rgba(22, 163, 74, .32); color: var(--c-verde); }
 .ccs-btn[data-ton="bine"]:hover { background: var(--c-verde-fundal); color: var(--c-verde); }
-.ccs-btn[data-ton="atentie"] { border-color: rgba(161, 98, 7, .32); color: var(--c-galben); }
-.ccs-btn[data-ton="atentie"]:hover { background: var(--c-galben-fundal); color: var(--c-galben); }
+.ccs-btn[data-ton="atentie"] { border-color: rgba(194, 65, 12, .32); color: var(--c-atentie); }
+.ccs-btn[data-ton="atentie"]:hover { background: var(--c-atentie-fundal); color: var(--c-atentie); }
 .ccs-alegere:disabled { opacity: .5; cursor: default; }
 
 /* ---------------------------------------------------------------- pastile și mesaje */
@@ -416,7 +416,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 }
 .ccs-pastila .dashicons { width: 12px; height: 12px; font-size: 12px; }
 .ccs-pastila--bine { background: var(--c-verde-fundal); color: var(--c-verde); }
-.ccs-pastila--atentie { background: var(--c-galben-fundal); color: var(--c-galben); }
+.ccs-pastila--atentie { background: var(--c-atentie-fundal); color: var(--c-atentie); }
 .ccs-pastila--problema { background: var(--c-rosu-fundal); color: var(--c-rosu); }
 .ccs-pastila--info { background: var(--c-accent-fundal); color: var(--c-accent-inchis); }
 /* O cifră măsurată, nu o decizie: rămâne neutră, dar cu greutate de mono, ca să se citească. */
@@ -424,7 +424,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 
 .ccs-mesaj { margin-bottom: 16px; padding: 12px 16px; border: 1px solid; border-radius: 8px; font-size: 14px; }
 .ccs-mesaj--bine { background: var(--c-verde-fundal); border-color: var(--c-verde); color: var(--c-verde); }
-.ccs-mesaj--atentie { background: var(--c-galben-fundal); border-color: var(--c-galben); color: var(--c-galben); }
+.ccs-mesaj--atentie { background: var(--c-atentie-fundal); border-color: var(--c-atentie); color: var(--c-atentie); }
 .ccs-mesaj--problema { background: var(--c-rosu-fundal); border-color: var(--c-rosu); color: var(--c-rosu); }
 
 .ccs-stare-text { font-size: 12px; line-height: 16px; color: var(--c-verde); }
@@ -440,7 +440,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   font-family: var(--c-mono); font-size: 12px; line-height: 20px; color: var(--c-text-3);
 }
 .ccs-delta--sus .ccs-delta__cat { background: var(--c-verde-fundal); color: var(--c-verde); }
-.ccs-delta--jos .ccs-delta__cat { background: var(--c-galben-fundal); color: var(--c-galben); }
+.ccs-delta--jos .ccs-delta__cat { background: var(--c-atentie-fundal); color: var(--c-atentie); }
 
 /* ---------------------------------------------------------------- câmpuri */
 .ccs-admin .ccs-intrare {
@@ -491,7 +491,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   width: 40px !important; height: 40px !important;
   border-radius: 10px; font-size: 20px !important; color: #fff;
 }
-.ccs-grup--galben .ccs-grup__icon { background: var(--c-galben-plin); }
+.ccs-grup--atentie .ccs-grup__icon { background: var(--c-atentie-plin); }
 .ccs-grup--albastru .ccs-grup__icon { background: var(--c-albastru-plin); }
 .ccs-grup--gri .ccs-grup__icon { background: var(--c-gri-plin); }
 .ccs-grup--verde .ccs-grup__icon { background: var(--c-verde-plin); }
@@ -502,7 +502,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 
 /* Cat din grup e deja retras. */
 .ccs-grup__progres { display: flex; align-items: center; gap: 10px; margin: 12px 0 0; }
-.ccs-grup__pista { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--c-galben-moale); overflow: hidden; }
+.ccs-grup__pista { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--c-atentie-moale); overflow: hidden; }
 .ccs-grup__pista span { display: block; height: 100%; background: var(--c-verde-plin); }
 .ccs-grup__stare { font-size: 12px; color: var(--c-text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ccs-grup .ccs-butoane { margin: 12px 0 0; }
@@ -597,8 +597,8 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   --c-albastru-moale: #93c5fd;
   --c-albastru-fundal: #eff6ff;
   --c-albastru-inchis: #1d4ed8;
-  --c-galben-plin: #d97706;
-  --c-galben-moale: #fcd34d;
+  --c-atentie-plin: #ea580c;
+  --c-atentie-moale: #fdba74;
   --c-gri-plin: #9ca3af;
   --c-gri-moale: #e5e7eb;
 }
@@ -614,7 +614,7 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-bara__bucata:hover { filter: brightness(1.08); }
 .ccs-bara__bucata--verde { background: var(--c-verde-plin); }
 .ccs-bara__bucata--albastru { background: var(--c-albastru-plin); }
-.ccs-bara__bucata--galben { background: var(--c-galben-plin); }
+.ccs-bara__bucata--atentie { background: var(--c-atentie-plin); }
 .ccs-bara__bucata--gri { background: var(--c-gri-plin); }
 .ccs-bara__bucata--verde-moale { background: var(--c-verde-moale); }
 .ccs-bara__bucata--gri-moale { background: var(--c-gri-moale); }
@@ -665,7 +665,7 @@ a.ccs-tile:hover .ccs-tile__verb { color: var(--c-accent-inchis); }
   border-radius: 10px; font-size: 20px; font-weight: 600; color: #fff;
 }
 .ccs-miscare__semn--intra { background: var(--c-verde-plin); }
-.ccs-miscare__semn--iese { background: var(--c-galben-plin); }
+.ccs-miscare__semn--iese { background: var(--c-atentie-plin); }
 .ccs-miscare__cifra { display: block; font-size: 20px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
 .ccs-miscare__eticheta { display: block; font-size: 13px; color: var(--c-text-3); }
 
@@ -681,8 +681,8 @@ a.ccs-tile:hover .ccs-tile__verb { color: var(--c-accent-inchis); }
 .ccs-mapare__dest { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--c-text); }
 .ccs-mapare__dest::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--c-verde-plin); flex: none; }
 .ccs-mapare__rand--cuvant .ccs-mapare__dest::before { background: var(--c-albastru-plin); }
-.ccs-mapare__rand--fara .ccs-mapare__dest { color: var(--c-galben); }
-.ccs-mapare__rand--fara .ccs-mapare__dest::before { background: var(--c-galben-plin); }
+.ccs-mapare__rand--fara .ccs-mapare__dest { color: var(--c-atentie); }
+.ccs-mapare__rand--fara .ccs-mapare__dest::before { background: var(--c-atentie-plin); }
 .ccs-mapare__bara { height: 6px; border-radius: 3px; background: var(--c-gri-moale); overflow: hidden; }
 .ccs-mapare__bara span { display: block; height: 100%; background: var(--c-verde-plin); }
 .ccs-mapare__n { font-size: 12px; color: var(--c-text-3); text-align: right; font-variant-numeric: tabular-nums; }
@@ -730,7 +730,7 @@ a.ccs-tile:hover .ccs-tile__verb { color: var(--c-accent-inchis); }
 .ccs-de-mapat__rand--gata { background: var(--c-verde-fundal); }
 .ccs-de-mapat__stanga { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .ccs-de-mapat__cale { font-size: 13px; color: var(--c-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ccs-de-mapat__n { font-size: 12px; color: var(--c-galben); font-weight: 500; font-variant-numeric: tabular-nums; }
+.ccs-de-mapat__n { font-size: 12px; color: var(--c-atentie); font-weight: 500; font-variant-numeric: tabular-nums; }
 .ccs-de-mapat__rand--gata .ccs-de-mapat__n { color: var(--c-verde); }
 .ccs-admin .ccs-de-mapat__select { max-width: none; min-height: 32px; padding: 4px 10px; font-size: 13px; }
 
