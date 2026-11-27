@@ -341,19 +341,6 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 .ccs-stare--problema .ccs-stare__icon { background: var(--c-rosu-fundal); color: var(--c-rosu); }
 
 /* ---------------------------------------------------------------- de rezolvat */
-.ccs-de-rezolvat { margin: 0; padding: 0; list-style: none; }
-.ccs-de-rezolvat li {
-  display: flex; align-items: flex-start; gap: 12px;
-  margin: 0; padding: 16px 0; border-top: 1px solid var(--c-linie);
-}
-.ccs-de-rezolvat .ccs-btn { align-self: center; }
-.ccs-de-rezolvat li:first-child { border-top: 0; padding-top: 0; }
-.ccs-de-rezolvat li:last-child { padding-bottom: 0; }
-.ccs-de-rezolvat > li > div { flex: 1 1 auto; min-width: 0; }
-.ccs-de-rezolvat .dashicons { flex: none; width: 20px; height: 20px; font-size: 20px; line-height: 20px; color: var(--c-galben); }
-.ccs-de-rezolvat strong { display: block; font-size: 14px; font-weight: 500; color: var(--c-text); }
-.ccs-de-rezolvat p { margin: 4px 0 0; font-size: 13px; color: var(--c-text-3); }
-
 /* ---------------------------------------------------------------- butoane */
 .ccs-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -640,29 +627,35 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
 /* ---------------------------------------------------------------- carduri de acțiune */
 /* Cardurile de acțiune: fundal alb ca tot panoul, iar culoarea stă în iconița din colț și în cifră. Pline de
    culoare erau citibile, dar trei dreptunghiuri tari unul lângă altul strigă mai tare decât conținutul lor. */
-.ccs-actiuni-mari { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px; }
-.ccs-actiune {
-  position: relative;
+/* ---------------------------------------------------------------- cardul de actiune */
+/* Acelasi obiect ca si cardul de produs din catalog, pe care Iulian l-a aprobat: chenar subtire, colturi de 12px,
+   si o reactie la hover. Inainte erau doua limbaje in paralel, unul cu placute pline si cifre colorate aici,
+   altul cu o lista simpla in Panou. Doua limbaje pentru acelasi lucru inseamna ca omul invata de doua ori. */
+.ccs-tile-grila {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px; margin-bottom: 20px;
+}
+.ccs-tile {
   display: flex; flex-direction: column; gap: 6px;
-  padding: 20px; padding-right: 64px;
-  background: var(--c-card); border: 1px solid var(--c-linie); border-radius: 12px; box-shadow: var(--c-umbra);
+  padding: 16px; background: var(--c-card); border: 1px solid var(--c-linie);
+  border-radius: 12px; box-shadow: var(--c-umbra); text-decoration: none;
+  transition: border-color .18s var(--c-curba), box-shadow .18s var(--c-curba);
 }
-.ccs-actiune__icon {
-  position: absolute; top: 16px; right: 16px;
-  display: grid !important; place-items: center;
-  width: 36px !important; height: 36px !important;
-  border-radius: 10px; font-size: 20px !important; color: #fff;
+a.ccs-tile:hover { border-color: var(--c-linie-tare); box-shadow: 0 2px 8px rgba(0, 0, 0, .06); }
+a.ccs-tile:focus-visible { box-shadow: var(--c-inel); outline: none; }
+
+/* Placuta si cifra pe acelasi rand: placuta duce tonul, cifra ramane neagra. O cifra colorata plus o placuta
+   colorata plus o pastila colorata ar fi de trei ori acelasi mesaj. */
+.ccs-tile__cap { display: flex; align-items: center; gap: 12px; }
+.ccs-tile__cifra {
+  font-size: 28px; line-height: 32px; font-weight: 600; color: var(--c-text);
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
 }
-.ccs-actiune--verde .ccs-actiune__icon { background: var(--c-verde-plin); }
-.ccs-actiune--galben .ccs-actiune__icon { background: var(--c-galben-plin); }
-.ccs-actiune--albastru .ccs-actiune__icon { background: var(--c-albastru-plin); }
-.ccs-actiune__cifra { font-size: 32px; line-height: 36px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.ccs-actiune--verde .ccs-actiune__cifra { color: var(--c-verde-plin); }
-.ccs-actiune--galben .ccs-actiune__cifra { color: var(--c-galben-plin); }
-.ccs-actiune--albastru .ccs-actiune__cifra { color: var(--c-albastru-plin); }
-.ccs-actiune__titlu { font-size: 15px; font-weight: 500; color: var(--c-text); }
-.ccs-actiune__desc { font-size: 13px; line-height: 18px; color: var(--c-text-3); }
-.ccs-actiune .ccs-btn { align-self: flex-start; margin-top: 8px; }
+.ccs-tile__titlu { font-size: 14px; font-weight: 500; color: var(--c-text); }
+.ccs-tile__desc { font-size: 13px; line-height: 18px; color: var(--c-text-3); }
+.ccs-tile__jos { display: flex; align-items: center; gap: 12px; margin-top: auto; padding-top: 8px; }
+.ccs-tile__verb { font-size: 13px; font-weight: 500; color: var(--c-accent); }
+a.ccs-tile:hover .ccs-tile__verb { color: var(--c-accent-inchis); }
 
 /* ---------------------------------------------------------------- mișcarea */
 .ccs-miscare { display: flex; flex-wrap: wrap; gap: 24px; }

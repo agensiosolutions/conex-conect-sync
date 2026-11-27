@@ -391,6 +391,65 @@ function ccs_ui_fapte_sistem() {
 }
 
 /**
+ * Cardul de acțiune, în limbajul cardurilor de produs din catalog.
+ *
+ * Același obiect peste tot: plăcuță de iconiță și cifră sus, titlu, o explicație scurtă, iar jos ce poți face.
+ * Înainte existau două limbaje în paralel, unul cu plăcuțe pline și cifre colorate în Catalog, altul cu o listă
+ * simplă în Panou. Două limbaje pentru același lucru înseamnă că omul învață de două ori.
+ *
+ * Culoarea stă tot în plăcuță și în pastile, niciodată pe card și niciodată pe cifră.
+ *
+ * @param array $a cifra, titlu, desc, icon, ton, href, jos (HTML), atribute (string), clase.
+ * @return void
+ */
+function ccs_ui_tile( $a ) {
+	$a = wp_parse_args(
+		$a,
+		array(
+			'cifra'     => '',
+			'titlu'     => '',
+			'desc'      => '',
+			'icon'      => 'marker',
+			'ton'       => '',
+			'href'      => '',
+			'jos'       => '',
+			'atribute'  => '',
+			'clase'     => '',
+		)
+	);
+
+	$etichetă = $a['href'] ? 'a' : 'div';
+	printf(
+		'<%1$s class="ccs-tile%2$s"%3$s%4$s>',
+		$etichetă, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- literal din cod.
+		$a['clase'] ? ' ' . esc_attr( $a['clase'] ) : '',
+		$a['href'] ? ' href="' . esc_url( $a['href'] ) . '"' : '',
+		$a['atribute'] ? ' ' . $a['atribute'] : '' // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit de noi.
+	);
+
+	echo '<span class="ccs-tile__cap">';
+	printf(
+		'<span class="ccs-plac%1$s"><span class="dashicons dashicons-%2$s" aria-hidden="true"></span></span>',
+		$a['ton'] ? ' ccs-plac--' . esc_attr( $a['ton'] ) : '',
+		esc_attr( $a['icon'] )
+	);
+	if ( '' !== (string) $a['cifra'] ) {
+		printf( '<span class="ccs-tile__cifra">%s</span>', esc_html( $a['cifra'] ) );
+	}
+	echo '</span>';
+
+	printf( '<span class="ccs-tile__titlu">%s</span>', esc_html( $a['titlu'] ) );
+	if ( $a['desc'] ) {
+		printf( '<span class="ccs-tile__desc">%s</span>', esc_html( $a['desc'] ) );
+	}
+	if ( $a['jos'] ) {
+		printf( '<span class="ccs-tile__jos">%s</span>', $a['jos'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit de noi.
+	}
+
+	printf( '</%s>', $etichetă ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- literal din cod.
+}
+
+/**
  * Un rând de fapte despre sistem, deasupra cifrelor.
  *
  * Răspunde la „merge?”, întrebarea dinaintea oricărei cifre. Fără cutii: bulină, eticheta în gri, valoarea în
@@ -819,43 +878,45 @@ function ccs_admin_tab_panou() {
 			__( 'De hotărât', 'conex-conect-sync' ),
 			__( 'Până la primirea unui răspuns, produsele respective rămân neschimbate.', 'conex-conect-sync' )
 		);
-		echo '<ul class="ccs-de-rezolvat">';
 		$intrebari = array(
 			'potriviri' => array(
 				'potrivire',
 				__( 'Produse de confirmat', 'conex-conect-sync' ),
 				__( 'Codul corespunde unui produs de la Conex, dar denumirile indică produse diferite.', 'conex-conect-sync' ),
+				'randomize',
 			),
 			'scaderi'   => array(
 				'scadere',
 				__( 'Prețuri care ar coborî mult', 'conex-conect-sync' ),
 				__( 'Regula de preț le-ar reduce la mai puțin de jumătate din valoarea actuală.', 'conex-conect-sync' ),
+				'arrow-down-alt',
 			),
 			'subcost'   => array(
 				'sub_cost',
 				__( 'Produse vândute sub cost', 'conex-conect-sync' ),
 				__( 'Prețul de vânzare este sub costul de achiziție.', 'conex-conect-sync' ),
+				'warning',
 			),
 		);
+
+		echo '<div class="ccs-tile-grila">';
 		foreach ( $intrebari as $slug => $i ) {
 			if ( empty( $rest[ $i[0] ] ) ) {
 				continue;
 			}
-			printf(
-				'<li><span class="dashicons dashicons-warning" aria-hidden="true"></span><div><strong>%1$s</strong><p>%2$s</p></div><a class="ccs-btn ccs-btn--mic" href="%3$s">%4$s</a></li>',
-				esc_html( $i[1] ),
-				esc_html( $i[2] ),
-				esc_url( ccs_admin_url( $slug ) ),
-				esc_html(
-					sprintf(
-						/* translators: %d: câte produse. */
-						_n( 'Vezi %d produs', 'Vezi %d produse', $rest[ $i[0] ], 'conex-conect-sync' ),
-						$rest[ $i[0] ]
-					)
+			ccs_ui_tile(
+				array(
+					'cifra' => ccs_nr( $rest[ $i[0] ] ),
+					'titlu' => $i[1],
+					'desc'  => $i[2],
+					'icon'  => $i[3],
+					'ton'   => 'atentie',
+					'href'  => ccs_admin_url( $slug ),
+					'jos'   => '<span class="ccs-tile__verb">' . esc_html__( 'Deschide', 'conex-conect-sync' ) . '</span>',
 				)
 			);
 		}
-		echo '</ul>';
+		echo '</div>';
 		ccs_ui_card_sfarsit();
 	}
 
@@ -1573,37 +1634,44 @@ function ccs_admin_tab_catalog() {
 function ccs_ui_catalog_actiuni( $c, $grupuri, $m ) {
 	$de_retras = isset( $grupuri['din_feed'] ) ? ccs_retragere_de_atins( array_keys( $grupuri['din_feed'] ) ) : 0;
 
-	echo '<div class="ccs-actiuni-mari">';
+	echo '<div class="ccs-tile-grila">';
 
-	printf(
-		'<div class="ccs-actiune ccs-actiune--verde"><span class="ccs-actiune__icon dashicons dashicons-download" aria-hidden="true"></span><span class="ccs-actiune__cifra">%s</span><span class="ccs-actiune__titlu">%s</span><span class="ccs-actiune__desc">%s</span></div>',
-		esc_html( ccs_nr( $c['gata'] ) ),
-		esc_html__( 'produse pot fi importate', 'conex-conect-sync' ),
-		esc_html__( 'Au imagine, cost de achiziție, stoc și o categorie asociată. Importul va porni din acest panou.', 'conex-conect-sync' )
+	ccs_ui_tile(
+		array(
+			'cifra' => ccs_nr( $c['gata'] ),
+			'titlu' => __( 'produse pot fi importate', 'conex-conect-sync' ),
+			'desc'  => __( 'Au imagine, cost de achiziție, stoc și o categorie asociată.', 'conex-conect-sync' ),
+			'icon'  => 'download',
+			'ton'   => 'bine',
+		)
 	);
 
 	if ( $de_retras ) {
-		?>
-		<div class="ccs-actiune ccs-actiune--galben" data-grup="din_feed">
-			<span class="ccs-actiune__icon dashicons dashicons-archive" aria-hidden="true"></span>
-			<span class="ccs-actiune__cifra"><?php echo esc_html( ccs_nr( $de_retras ) ); ?></span>
-			<span class="ccs-actiune__titlu"><?php esc_html_e( 'produse indisponibile la furnizor', 'conex-conect-sync' ); ?></span>
-			<span class="ccs-actiune__desc"><?php esc_html_e( 'Sunt disponibile pe site, dar nu mai pot fi comandate de la furnizor. Trec pe stoc epuizat, fără să fie șterse.', 'conex-conect-sync' ); ?></span>
-			<button type="button" class="ccs-btn ccs-btn--mic ccs-retrage" data-grup="din_feed"
-				data-eticheta="<?php esc_attr_e( 'Retrage de la vânzare', 'conex-conect-sync' ); ?>">
-				<?php esc_html_e( 'Retrage de la vânzare', 'conex-conect-sync' ); ?>
-			</button>
-			<span class="ccs-stare-text"></span>
-		</div>
-		<?php
+		ccs_ui_tile(
+			array(
+				'cifra'    => ccs_nr( $de_retras ),
+				'titlu'    => __( 'produse indisponibile la furnizor', 'conex-conect-sync' ),
+				'desc'     => __( 'Sunt disponibile pe site, dar nu mai pot fi comandate. Trec pe stoc epuizat, fără să fie șterse.', 'conex-conect-sync' ),
+				'icon'     => 'archive',
+				'ton'      => 'atentie',
+				'atribute' => 'data-grup="din_feed"',
+				'jos'      => sprintf(
+					'<button type="button" class="ccs-btn ccs-btn--mic ccs-retrage" data-grup="din_feed" data-eticheta="%1$s">%1$s</button> <span class="ccs-stare-text"></span>',
+					esc_attr__( 'Retrage de la vânzare', 'conex-conect-sync' )
+				),
+			)
+		);
 	}
 
 	if ( $c['fara_categorie'] ) {
-		printf(
-			'<div class="ccs-actiune ccs-actiune--albastru"><span class="ccs-actiune__icon dashicons dashicons-category" aria-hidden="true"></span><span class="ccs-actiune__cifra">%s</span><span class="ccs-actiune__titlu">%s</span><span class="ccs-actiune__desc">%s</span></div>',
-			esc_html( ccs_nr( $c['fara_categorie'] ) ),
-			esc_html__( 'produse așteaptă încadrarea pe categorie', 'conex-conect-sync' ),
-			esc_html__( 'Au imagine, cost și stoc. Singurul element care lipsește este categoria din magazin.', 'conex-conect-sync' )
+		ccs_ui_tile(
+			array(
+				'cifra' => ccs_nr( $c['fara_categorie'] ),
+				'titlu' => __( 'produse așteaptă încadrarea pe categorie', 'conex-conect-sync' ),
+				'desc'  => __( 'Au imagine, cost și stoc. Singurul element care lipsește este categoria din magazin.', 'conex-conect-sync' ),
+				'icon'  => 'category',
+				'ton'   => 'info',
+			)
 		);
 	}
 
