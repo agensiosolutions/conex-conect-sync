@@ -167,7 +167,10 @@ body.ccs-pagina #wpbody-content > .updated { margin: 16px 24px 0 4px; }
   border-radius: 12px; box-shadow: var(--c-umbra);
 }
 .ccs-cifra__corp { min-width: 0; }
-.ccs-cifra span { display: block; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
+/* Eticheta are clasa ei. Prima variantă folosea `.ccs-cifra span`, care lovea și plăcuța de iconiță, tot un
+   `span`, și o făcea `display: block`: iconița ateriza în colțul din stânga sus în loc să fie centrată. O regulă
+   pe element, într-o componentă care are mai multe elemente de același fel, e o capcană. */
+.ccs-cifra__eticheta { display: block; font-size: 12px; line-height: 16px; color: var(--c-text-3); }
 .ccs-cifra strong {
   display: block; margin-top: 2px;
   font-size: 26px; line-height: 32px; font-weight: 600; color: var(--c-text);

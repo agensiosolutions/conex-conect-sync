@@ -94,7 +94,7 @@ function ccs_ui_cifra( $eticheta, $valoare, $ton = '', $optiuni = array() ) {
 	);
 
 	echo '<span class="ccs-cifra__corp">';
-	printf( '<span>%s</span>', esc_html( $eticheta ) );
+	printf( '<span class="ccs-cifra__eticheta">%s</span>', esc_html( $eticheta ) );
 	printf(
 		'<strong>%1$s%2$s</strong>',
 		esc_html( $valoare ),
