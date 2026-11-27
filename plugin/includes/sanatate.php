@@ -132,15 +132,19 @@ function ccs_sanatate_categorii() {
 }
 
 /**
- * Atribute ale furnizorului care ar intra peste atribute ale magazinului.
+ * Atribute ale magazinului în care s-ar vărsa valori noi de la furnizor.
  *
  * Harta noastră de slug-uri se ferește de ciocniri între numele furnizorului, dar nu se uită la atributele pe
  * care și le-a făcut magazinul. Când un nume de la Conex dă același slug cu un atribut existent, pluginul nu
  * creează nimic: scrie valorile furnizorului în atributul omului.
  *
- * Uneori exact asta vrei, dacă înseamnă același lucru. Alteori „Material” al magazinului are valori alese cu
- * mâna, iar peste ele vin codurile furnizorului. Diferența o poate spune numai cineva care se uită, deci asta
- * facem: o spunem, nu hotărâm în locul lui.
+ * Prima versiune a verificării se oprea la nume și scria „Material -> Material”, ceea ce nu spunea nimic: e
+ * evident că Material intră în Material. Riscul nu stă niciodată în nume, stă în valori. „Tip montare” la
+ * Cez Auto înseamnă cum se prinde un portbagaj („Haion/Portbagaj”, „Magnetica pe cupola”); la Conex înseamnă
+ * tipul unei bucșe de suspensie („hidrolagar”, „Bucșa cauciuc-metal”). Același nume, două noțiuni.
+ *
+ * Deci comparăm mulțimile de valori, nu numele, și tăcem când furnizorul n-ar adăuga nimic nou: două
+ * vocabulare care se potrivesc sunt exact ce vrei, nu o problemă.
  *
  * @return array
  */
@@ -165,30 +169,97 @@ function ccs_sanatate_atribute() {
 
 	$ale_noastre = (array) get_option( 'ccs_atribute_create', array() );
 
-	$comune = array();
+	$peste = array();
 	foreach ( $nume as $n ) {
 		$slug = ccs_atribut_slug( $n, false );
-		if ( isset( $ale_magazinului[ $slug ] ) && ! in_array( $slug, $ale_noastre, true ) ) {
-			$comune[] = sprintf( '%s  ->  %s', $n, $ale_magazinului[ $slug ] );
+		if ( ! isset( $ale_magazinului[ $slug ] ) || in_array( $slug, $ale_noastre, true ) ) {
+			continue;
 		}
+
+		$ale_lui = get_terms(
+			array(
+				'taxonomy'   => 'pa_' . $slug,
+				'hide_empty' => false,
+				'fields'     => 'names',
+			)
+		);
+		$ale_lui = is_wp_error( $ale_lui ) ? array() : (array) $ale_lui;
+
+		// Comparăm fără majuscule și fără spații la capete: „Negru” și „negru” sunt aceeași valoare pentru om,
+		// iar o avertizare care nu știe asta ar striga la fiecare diferență de scriere.
+		$cheie = array_map(
+			static function ( $v ) {
+				return function_exists( 'mb_strtolower' ) ? mb_strtolower( trim( $v ) ) : strtolower( trim( $v ) );
+			},
+			$ale_lui
+		);
+
+		$valorile_lui = (array) $wpdb->get_col(
+			// phpcs:ignore WordPress.DB.PreparedSQL -- numele tabelei vine din prefixul WordPress.
+			$wpdb->prepare( "SELECT DISTINCT valoare FROM $tabel WHERE nume = %s", $n )
+		);
+
+		$noi = array();
+		foreach ( $valorile_lui as $v ) {
+			$jos = function_exists( 'mb_strtolower' ) ? mb_strtolower( trim( $v ) ) : strtolower( trim( $v ) );
+			if ( '' !== $jos && ! in_array( $jos, $cheie, true ) ) {
+				$noi[] = $v;
+			}
+		}
+
+		if ( ! $noi ) {
+			continue;
+		}
+
+		$peste[] = array(
+			'eticheta' => $ale_magazinului[ $slug ],
+			'nume'     => $n,
+			'are'      => count( $ale_lui ),
+			'noi'      => count( $noi ),
+			'ale_lui'  => array_slice( $ale_lui, 0, 4 ),
+			'adaugate' => array_slice( $noi, 0, 6 ),
+		);
 	}
 
-	if ( ! $comune ) {
+	if ( ! $peste ) {
 		return array();
+	}
+
+	// Cel mai rău caz sus: un atribut cu trei valori peste care vin opt e altceva decât unul cu cincizeci peste
+	// care vine una.
+	usort(
+		$peste,
+		static function ( $a, $b ) {
+			return $b['noi'] <=> $a['noi'];
+		}
+	);
+
+	// Fara indentare cu spatii: in panou textul ajunge in HTML, unde spatiile de la inceput de rand se
+	// colapseaza, deci alinierea s-ar vedea doar in email. Un singur format care se citeste in amandoua.
+	$linii = array();
+	foreach ( $peste as $x ) {
+		$linii[] = sprintf(
+			/* translators: 1: atributul, 2: câte valori are acum, 3: câte s-ar adăuga, 4: valorile de acum, 5: cele noi. */
+			__( "%1\$s: are acum %2\$d valori, Conex ar adăuga %3\$d noi.\nacum: %4\$s\ns-ar adăuga: %5\$s", 'conex-conect-sync' ),
+			$x['eticheta'],
+			$x['are'],
+			$x['noi'],
+			implode( ', ', $x['ale_lui'] ) . ( $x['are'] > 4 ? ', …' : '' ),
+			implode( ', ', $x['adaugate'] ) . ( $x['noi'] > 6 ? ', …' : '' )
+		);
 	}
 
 	return array(
 		'atribute_comune' => array(
 			sprintf(
 				/* translators: %d: câte atribute. */
-				_n( '%d atribut de la furnizor ar intra peste un atribut al magazinului', '%d atribute de la furnizor ar intra peste atribute ale magazinului', count( $comune ), 'conex-conect-sync' ),
-				count( $comune )
+				_n( '%d atribut al magazinului ar primi valori noi de la Conex', '%d atribute ale magazinului ar primi valori noi de la Conex', count( $peste ), 'conex-conect-sync' ),
+				count( $peste )
 			),
 			sprintf(
-				/* translators: 1: câte atribute, 2: lista perechilor. */
-				__( "La importul de produse noi, valorile acestor atribute de la Conex s-ar scrie în atribute pe care le are deja magazinul, nu în atribute noi:\n\n%2\$s\n\nDacă înseamnă același lucru, e în regulă și nu trebuie făcut nimic. Dacă nu, valorile furnizorului se amestecă peste cele alese de voi, iar filtrele din magazin construite pe ele ar arăta două liste de valori diferite.\n\nSunt %1\$d în total.", 'conex-conect-sync' ),
-				count( $comune ),
-				'  ' . implode( "\n  ", array_slice( $comune, 0, 10 ) )
+				/* translators: %s: lista atributelor cu valorile lor. */
+				__( "La importul de produse noi, valorile de la Conex s-ar scrie în atribute pe care magazinul le are deja, nu în atribute noi. Atât timp cât înseamnă același lucru, e în regulă. Când nu înseamnă, filtrele din magazin ajung să arate două vocabulare amestecate.\n\n%s\n\nCâteva valori noi sunt de obicei normale. Multe valori noi peste puține existente înseamnă, de regulă, că cele două atribute poartă același nume din întâmplare.", 'conex-conect-sync' ),
+				implode( "\n\n", $linii )
 			),
 		),
 	);
