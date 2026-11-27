@@ -129,6 +129,25 @@ aceleași grupuri se calculează cu o interogare pe `_sku` și un `LEFT JOIN`, p
 
 ## 27 noiembrie 2026
 
+**Ghidul e în panou, nu într-un fișier, iar rularea automată e pornită pe live.** Iulian a întrebat dacă nu e
+mai simplu un ghidaj în panou decât un document. Este, din două motive: un document trebuie deschis, și
+îmbătrânește. Cardul „Ce mai e de pus la punct” citește starea reală, deci nu poate minți, și arată un singur pas
+deschis, primul neterminat. Fișierul rămâne, dar nu mai e livrabilul.
+
+**Joburile pornite pe live, și un bug găsit exact atunci.** Am dat comanda, a răspuns „Joburile sunt pornite”, și
+nu s-a programat nimic. Programarea se făcea doar din hook-ul de schimbare a setării, iar dacă setarea e deja
+pornită `update_option()` nu schimbă nimic, deci hook-ul nu se declanșează. Acum există o verificare pe
+`admin_init` care repune joburile dacă setarea le cere și coada e goală.
+
+`Lecție:` Nu lega o acțiune doar de hook-ul de schimbare a unei setări. `update_option()` nu declanșează nimic
+când valoarea e aceeași, deci o stare care s-a pierdut din alt motiv nu se mai reface niciodată, iar interfața
+raportează vesel că totul merge. Simptomul: butonul spune „pornit”, dar nu se întâmplă nimic. Pune și o
+verificare care compară ce ar trebui să existe cu ce există.
+
+`Lecție:` După ce repari o funcție WordPress care urmează limba adminului, caută-i rudele. Am reparat
+`human_time_diff()` dimineața și am crezut că am terminat; `mysql2date()` și `wp_date()` cu nume de lună scriau în
+continuare „26 November” în același panou. Caută tot ce formatează timp, numere sau liste, nu doar ce ai văzut.
+
 **Tot ce lipsea din ofertă e construit, plus un redesign cerut de Iulian, iar 0.9.0 e pe live.** Zi lungă, deci
 țin minte doar ce schimbă felul în care lucrăm data viitoare.
 
